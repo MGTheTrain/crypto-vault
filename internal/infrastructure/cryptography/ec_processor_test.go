@@ -6,160 +6,133 @@ package cryptography
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/settings"
 	"encoding/hex"
 	"math/big"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"crypto_vault_service/internal/domain/crypto"
+	pkgTesting "crypto_vault_service/internal/pkg/testing"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-type ecProcessorTests struct {
-	processor ECProcessor
+func setupECProcessor(t *testing.T) crypto.ECProcessor {
+	t.Helper()
+	logger := pkgTesting.SetupTestLogger(t)
+	processor, err := NewECProcessor(logger)
+	require.NoError(t, err)
+	return processor
 }
 
-// NewECProcessorTests initializes the ECProcessor test suite
-func NewECProcessorTests(t *testing.T) *ecProcessorTests {
-	loggerSettings := &settings.LoggerSettings{
-		LogLevel: "info",
-		LogType:  "console",
-		FilePath: "",
-	}
+func TestECProcessor(t *testing.T) {
+	processor := setupECProcessor(t)
 
-	logInstance, err := logger.GetLogger(loggerSettings)
-	if err != nil {
-		t.Fatalf("Error creating logger: %v", err)
-	}
+	t.Run("GenerateKeys", func(t *testing.T) {
+		priv, pub, err := processor.GenerateKeys(elliptic.P256())
+		assert.NoError(t, err)
+		assert.NotNil(t, priv)
+		assert.NotNil(t, pub)
+		assert.Equal(t, elliptic.P256(), priv.PublicKey.Curve)
+		assert.Equal(t, elliptic.P256(), pub.Curve)
+	})
 
-	ec, err := NewECProcessor(logInstance)
-	if err != nil {
-		t.Fatalf("Error creating EC processor: %v", err)
-	}
+	t.Run("SignVerify", func(t *testing.T) {
+		priv, pub, err := processor.GenerateKeys(elliptic.P256())
+		assert.NoError(t, err)
 
-	return &ecProcessorTests{
-		processor: ec,
-	}
-}
+		msg := []byte("This is a test message.")
+		sig, err := processor.Sign(msg, priv)
+		assert.NoError(t, err)
+		assert.NotNil(t, sig)
 
-func (et *ecProcessorTests) TestGenerateKeys(t *testing.T) {
-	priv, pub, err := et.processor.GenerateKeys(elliptic.P256())
-	assert.NoError(t, err)
-	assert.NotNil(t, priv)
-	assert.NotNil(t, pub)
-	assert.Equal(t, elliptic.P256(), priv.PublicKey.Curve)
-	assert.Equal(t, elliptic.P256(), pub.Curve)
-}
+		valid, err := processor.Verify(msg, sig, pub)
+		assert.NoError(t, err)
+		assert.True(t, valid)
 
-func (et *ecProcessorTests) TestSignVerify(t *testing.T) {
-	priv, pub, err := et.processor.GenerateKeys(elliptic.P256())
-	assert.NoError(t, err)
+		invalidMsg := []byte("Modified message.")
+		valid, err = processor.Verify(invalidMsg, sig, pub)
+		assert.NoError(t, err)
+		assert.False(t, valid)
+	})
 
-	msg := []byte("This is a test message.")
-	sig, err := et.processor.Sign(msg, priv)
-	assert.NoError(t, err)
-	assert.NotNil(t, sig)
+	t.Run("SaveAndReadKeys", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		privateFile := filepath.Join(tmpDir, "private_test.pem")
+		publicFile := filepath.Join(tmpDir, "public_test.pem")
 
-	valid, err := et.processor.Verify(msg, sig, pub)
-	assert.NoError(t, err)
-	assert.True(t, valid)
+		priv, pub, err := processor.GenerateKeys(elliptic.P256())
+		assert.NoError(t, err)
 
-	invalidMsg := []byte("Modified message.")
-	valid, err = et.processor.Verify(invalidMsg, sig, pub)
-	assert.NoError(t, err)
-	assert.False(t, valid)
-}
+		err = processor.SavePrivateKeyToFile(priv, privateFile)
+		assert.NoError(t, err)
 
-func (et *ecProcessorTests) TestSaveAndReadKeys(t *testing.T) {
-	priv, pub, err := et.processor.GenerateKeys(elliptic.P256())
-	assert.NoError(t, err)
+		err = processor.SavePublicKeyToFile(pub, publicFile)
+		assert.NoError(t, err)
 
-	privateFile := "private_test.pem"
-	publicFile := "public_test.pem"
+		readPriv, err := processor.ReadPrivateKey(privateFile, elliptic.P256())
+		assert.NoError(t, err)
+		assert.Equal(t, priv.D, readPriv.D)
+		assert.Equal(t, priv.PublicKey.X, readPriv.PublicKey.X)
+		assert.Equal(t, priv.PublicKey.Y, readPriv.PublicKey.Y)
 
-	err = et.processor.SavePrivateKeyToFile(priv, privateFile)
-	assert.NoError(t, err)
+		readPub, err := processor.ReadPublicKey(publicFile, elliptic.P256())
+		assert.NoError(t, err)
+		assert.Equal(t, pub.X, readPub.X)
+		assert.Equal(t, pub.Y, readPub.Y)
+	})
 
-	err = et.processor.SavePublicKeyToFile(pub, publicFile)
-	assert.NoError(t, err)
+	t.Run("SaveSignatureToFile", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		sigFile := filepath.Join(tmpDir, "signature_test.hex")
 
-	readPriv, err := et.processor.ReadPrivateKey(privateFile, elliptic.P256())
-	assert.NoError(t, err)
-	assert.Equal(t, priv.D, readPriv.D)
-	assert.Equal(t, priv.PublicKey.X, readPriv.PublicKey.X)
-	assert.Equal(t, priv.PublicKey.Y, readPriv.PublicKey.Y)
+		priv, _, err := processor.GenerateKeys(elliptic.P256())
+		assert.NoError(t, err)
 
-	readPub, err := et.processor.ReadPublicKey(publicFile, elliptic.P256())
-	assert.NoError(t, err)
-	assert.Equal(t, pub.X, readPub.X)
-	assert.Equal(t, pub.Y, readPub.Y)
+		msg := []byte("This is a test message.")
+		sig, err := processor.Sign(msg, priv)
+		assert.NoError(t, err)
 
-	os.Remove(privateFile)
-	os.Remove(publicFile)
-}
+		err = processor.SaveSignatureToFile(sigFile, sig)
+		assert.NoError(t, err)
 
-func (et *ecProcessorTests) TestSaveSignatureToFile(t *testing.T) {
-	priv, _, err := et.processor.GenerateKeys(elliptic.P256())
-	assert.NoError(t, err)
+		hexData, err := os.ReadFile(sigFile)
+		assert.NoError(t, err)
 
-	msg := []byte("This is a test message.")
-	sig, err := et.processor.Sign(msg, priv)
-	assert.NoError(t, err)
+		decoded, err := hex.DecodeString(string(hexData))
+		assert.NoError(t, err)
+		assert.Equal(t, sig, decoded)
+	})
 
-	sigFile := "signature_test.hex"
-	err = et.processor.SaveSignatureToFile(sigFile, sig)
-	assert.NoError(t, err)
+	t.Run("SignWithInvalidPrivateKey", func(t *testing.T) {
+		invalidPriv := &ecdsa.PrivateKey{
+			D: new(big.Int).SetInt64(0),
+			PublicKey: ecdsa.PublicKey{
+				Curve: elliptic.P256(),
+			},
+		}
+		_, err := processor.Sign([]byte("Invalid signing"), invalidPriv)
+		assert.Error(t, err)
+	})
 
-	hexData, err := os.ReadFile(filepath.Clean(sigFile))
-	assert.NoError(t, err)
+	t.Run("VerifyWithInvalidPublicKey", func(t *testing.T) {
+		priv, _, err := processor.GenerateKeys(elliptic.P256())
+		assert.NoError(t, err)
 
-	decoded, err := hex.DecodeString(string(hexData))
-	assert.NoError(t, err)
-	assert.Equal(t, sig, decoded)
+		msg := []byte("Test message")
+		sig, err := processor.Sign(msg, priv)
+		assert.NoError(t, err)
 
-	os.Remove(sigFile)
-}
-
-func (et *ecProcessorTests) TestSignWithInvalidPrivateKey(t *testing.T) {
-	invalidPriv := &ecdsa.PrivateKey{
-		D: new(big.Int).SetInt64(0),
-		PublicKey: ecdsa.PublicKey{
+		invalidPub := &ecdsa.PublicKey{
 			Curve: elliptic.P256(),
-		},
-	}
-	_, err := et.processor.Sign([]byte("Invalid signing"), invalidPriv)
-	assert.Error(t, err)
-}
+			X:     big.NewInt(0),
+			Y:     big.NewInt(0),
+		}
 
-func (et *ecProcessorTests) TestVerifyWithInvalidPublicKey(t *testing.T) {
-	priv, _, err := et.processor.GenerateKeys(elliptic.P256())
-	assert.NoError(t, err)
-
-	msg := []byte("Test message")
-	sig, err := et.processor.Sign(msg, priv)
-	assert.NoError(t, err)
-
-	invalidPub := &ecdsa.PublicKey{
-		Curve: elliptic.P256(),
-		X:     big.NewInt(0),
-		Y:     big.NewInt(0),
-	}
-
-	valid, err := et.processor.Verify(msg, sig, invalidPub)
-	assert.NoError(t, err)
-	assert.False(t, valid)
-}
-
-// TestECDSA runs all ECProcessor tests
-func TestECDSA(t *testing.T) {
-	suite := NewECProcessorTests(t)
-
-	t.Run("GenerateKeys", suite.TestGenerateKeys)
-	t.Run("SignVerify", suite.TestSignVerify)
-	t.Run("SaveAndReadKeys", suite.TestSaveAndReadKeys)
-	t.Run("SaveSignatureToFile", suite.TestSaveSignatureToFile)
-	t.Run("SignWithInvalidPrivateKey", suite.TestSignWithInvalidPrivateKey)
-	t.Run("VerifyWithInvalidPublicKey", suite.TestVerifyWithInvalidPublicKey)
+		valid, err := processor.Verify(msg, sig, invalidPub)
+		assert.NoError(t, err)
+		assert.False(t, valid)
+	})
 }

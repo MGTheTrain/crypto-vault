@@ -1,62 +1,24 @@
 package cryptography
 
 import (
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/settings"
-	"crypto_vault_service/internal/infrastructure/utils"
+	"crypto_vault_service/internal/domain/crypto"
+	"crypto_vault_service/internal/pkg/config"
+	"crypto_vault_service/internal/pkg/logger"
+	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
 )
 
-// Token represents a PKCS#11 token with its label and other metadata.
-type Token struct {
-	SlotID       string
-	Label        string
-	Manufacturer string
-	Model        string
-	SerialNumber string
-}
-
-// TokenObject represents a PKCS#11 object (e.g. public or private key) with metadata.
-type TokenObject struct {
-	Label  string
-	Type   string // The type of the object (e.g. RSA, ECDSA)
-	Usage  string // The usage of the object (e.g. encrypt, sign, decrypt)
-	Access string // Access controls for the object (e.g. sensitive, always sensitive)
-}
-
-// PKCS11Handler defines the operations for working with a PKCS#11 token
-type PKCS11Handler interface {
-	// ListTokenSlots lists all available tokens in the available slots
-	ListTokenSlots() ([]Token, error)
-	// ListObjects lists all objects (e.g. keys) in a specific token based on the token label
-	ListObjects(tokenLabel string) ([]TokenObject, error)
-	// InitializeToken initializes the token with the provided label and pins
-	InitializeToken(label string) error
-	// AddKey adds the selected key (ECDSA or RSA) to the token
-	AddKey(label, objectLabel, keyType string, keySize uint) error
-	// Encrypt encrypts data using the cryptographic capabilities of the PKCS#11 token
-	Encrypt(label, objectLabel, inputFilePath, outputFilePath, keyType string) error
-	// Decrypt decrypts data using the cryptographic capabilities of the PKCS#11 token
-	Decrypt(label, objectLabel, inputFilePath, outputFilePath, keyType string) error
-	// Sign signs data using the cryptographic capabilities of the PKCS#11 token
-	Sign(label, objectLabel, dataFilePath, signatureFilePath, keyType string) error
-	// Verify verifies the signature of data using the cryptographic capabilities of the PKCS#11 token
-	Verify(label, objectLabel, dataFilePath, signatureFilePath, keyType string) (bool, error)
-	// DeleteObject deletes a key or object from the token
-	DeleteObject(label, objectType, objectLabel string) error
-}
-
 // pkcs11Handler represents the parameters and operations for interacting with a PKCS#11 token
 type pkcs11Handler struct {
-	Settings *settings.PKCS11Settings
+	Settings *config.PKCS11Settings
 	Logger   logger.Logger
 }
 
 // NewPKCS11Handler creates and returns a new instance of PKCS11Handler
-func NewPKCS11Handler(settings *settings.PKCS11Settings, logger logger.Logger) (PKCS11Handler, error) {
+func NewPKCS11Handler(settings *config.PKCS11Settings, logger logger.Logger) (crypto.PKCS11Handler, error) {
 	if err := settings.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate settings: %w", err)
 	}
@@ -78,7 +40,7 @@ func (token *pkcs11Handler) executePKCS11ToolCommand(args []string) (string, err
 }
 
 // ListTokenSlots lists all available tokens in the available slots
-func (token *pkcs11Handler) ListTokenSlots() ([]Token, error) {
+func (token *pkcs11Handler) ListTokenSlots() ([]crypto.Token, error) {
 	if err := utils.CheckNonEmptyStrings(token.Settings.ModulePath); err != nil {
 		return nil, fmt.Errorf("failed to check non-empty string for ModulePath='%s': %w", token.Settings.ModulePath, err)
 	}
@@ -93,9 +55,9 @@ func (token *pkcs11Handler) ListTokenSlots() ([]Token, error) {
 		return nil, fmt.Errorf("failed to list tokens with pkcs11-tool: %w\nOutput: %s", err, output)
 	}
 
-	var tokens []Token
+	var tokens []crypto.Token
 	lines := strings.Split(string(output), "\n")
-	var currentToken *Token
+	var currentToken *crypto.Token
 
 	for _, line := range lines {
 
@@ -104,7 +66,7 @@ func (token *pkcs11Handler) ListTokenSlots() ([]Token, error) {
 				tokens = append(tokens, *currentToken)
 			}
 
-			currentToken = &Token{
+			currentToken = &crypto.Token{
 				SlotID:       "",
 				Label:        "",
 				Manufacturer: "",
@@ -141,7 +103,7 @@ func (token *pkcs11Handler) ListTokenSlots() ([]Token, error) {
 }
 
 // ListObjects lists all objects (e.g. keys) in a specific token based on the token label.
-func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]TokenObject, error) {
+func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]crypto.TokenObject, error) {
 	if err := utils.CheckNonEmptyStrings(tokenLabel, token.Settings.ModulePath); err != nil {
 		return nil, fmt.Errorf("failed to check non-empty strings for tokenLabel='%s' and ModulePath='%s': %w", tokenLabel, token.Settings.ModulePath, err)
 	}
@@ -156,9 +118,9 @@ func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]TokenObject, error
 		return nil, fmt.Errorf("failed to list objects with pkcs11-tool: %w\nOutput: %s", err, output)
 	}
 
-	var objects []TokenObject
+	var objects []crypto.TokenObject
 	lines := strings.Split(string(output), "\n")
-	var currentObject *TokenObject
+	var currentObject *crypto.TokenObject
 
 	for _, line := range lines {
 
@@ -167,7 +129,7 @@ func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]TokenObject, error
 				objects = append(objects, *currentObject)
 			}
 
-			currentObject = &TokenObject{
+			currentObject = &crypto.TokenObject{
 				Label:  "",
 				Type:   "",
 				Usage:  "",
@@ -239,8 +201,8 @@ func (token *pkcs11Handler) InitializeToken(label string) error {
 	return nil
 }
 
-// AddKey adds the selected key (ECDSA or RSA) to the token
-func (token *pkcs11Handler) AddKey(label, objectLabel, keyType string, keySize uint) error {
+// AddSignKey adds a signing key (ECDSA or RSA) to the token
+func (token *pkcs11Handler) AddSignKey(label, objectLabel, keyType string, keySize uint) error {
 	if err := utils.CheckNonEmptyStrings(label, objectLabel, keyType); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', keyType='%s': %w", label, objectLabel, keyType, err)
 	}
@@ -253,6 +215,20 @@ func (token *pkcs11Handler) AddKey(label, objectLabel, keyType string, keySize u
 	default:
 		return fmt.Errorf("unsupported key type: %s", keyType)
 	}
+}
+
+// AddEncryptKey adds an encryption key (RSA only currently) to the token
+func (token *pkcs11Handler) AddEncryptKey(label, objectLabel, keyType string, keySize uint) error {
+	if err := utils.CheckNonEmptyStrings(label, objectLabel, keyType); err != nil {
+		return fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', keyType='%s': %w", label, objectLabel, keyType, err)
+	}
+
+	// Currently only RSA is supported for encryption
+	if keyType != "RSA" {
+		return fmt.Errorf("only RSA keys are supported for encryption, got: %s", keyType)
+	}
+
+	return token.addRSAEncryptKey(label, objectLabel, keySize)
 }
 
 // addECDSASignKey adds an ECDSA signing key to the token
@@ -329,6 +305,43 @@ func (token *pkcs11Handler) addRSASignKey(label, objectLabel string, keySize uin
 	}
 
 	token.Logger.Info(fmt.Sprintf("RSA key with label '%s' added to token '%s'", objectLabel, label))
+	return nil
+}
+
+// addRSAEncryptKey adds an RSA encryption/decryption key to the token
+func (token *pkcs11Handler) addRSAEncryptKey(label, objectLabel string, keySize uint) error {
+	if err := utils.CheckNonEmptyStrings(label, objectLabel); err != nil {
+		return fmt.Errorf("failed to check non-empty strings for label='%s' and objectLabel='%s': %w", label, objectLabel, err)
+	}
+
+	supportedRSASizes := []uint{2048, 3072, 4096}
+	validKeySize := false
+	for _, size := range supportedRSASizes {
+		if keySize == size {
+			validKeySize = true
+			break
+		}
+	}
+
+	if !validKeySize {
+		return fmt.Errorf("RSA key size must be one of %v bits, but got %d", supportedRSASizes, keySize)
+	}
+
+	args := []string{
+		"--module", token.Settings.ModulePath,
+		"--token-label", label,
+		"--keypairgen",
+		"--key-type", fmt.Sprintf("RSA:%d", keySize),
+		"--label", objectLabel,
+		"--pin", token.Settings.UserPin,
+		"--usage-decrypt",
+	}
+	_, err := token.executePKCS11ToolCommand(args)
+	if err != nil {
+		return fmt.Errorf("failed to add RSA encryption key to token: %w", err)
+	}
+
+	token.Logger.Info(fmt.Sprintf("RSA encryption key with label '%s' added to token '%s'", objectLabel, label))
 	return nil
 }
 

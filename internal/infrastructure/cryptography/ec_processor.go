@@ -5,7 +5,8 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto_vault_service/internal/infrastructure/logger"
+	"crypto_vault_service/internal/domain/crypto"
+	"crypto_vault_service/internal/pkg/logger"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
@@ -15,25 +16,13 @@ import (
 	"path/filepath"
 )
 
-// ECProcessor Interface
-type ECProcessor interface {
-	GenerateKeys(curve elliptic.Curve) (*ecdsa.PrivateKey, *ecdsa.PublicKey, error)
-	Sign(message []byte, privateKey *ecdsa.PrivateKey) ([]byte, error)
-	Verify(message, signature []byte, publicKey *ecdsa.PublicKey) (bool, error)
-	SaveSignatureToFile(filename string, data []byte) error
-	SavePrivateKeyToFile(privateKey *ecdsa.PrivateKey, filename string) error
-	SavePublicKeyToFile(publicKey *ecdsa.PublicKey, filename string) error
-	ReadPrivateKey(privateKeyPath string, curve elliptic.Curve) (*ecdsa.PrivateKey, error)
-	ReadPublicKey(publicKeyPath string, curve elliptic.Curve) (*ecdsa.PublicKey, error)
-}
-
 // ecProcessor struct that implements the ECProcessor interface
 type ecProcessor struct {
 	logger logger.Logger
 }
 
 // NewECProcessor creates and returns a new instance of ecProcessor
-func NewECProcessor(logger logger.Logger) (ECProcessor, error) {
+func NewECProcessor(logger logger.Logger) (crypto.ECProcessor, error) {
 	return &ecProcessor{
 		logger: logger,
 	}, nil
