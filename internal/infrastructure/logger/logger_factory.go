@@ -3,67 +3,69 @@ package logger
 import (
 	"crypto_vault_service/internal/infrastructure/settings"
 	"fmt"
+	"log/slog"
 	"sync"
-
-	"github.com/sirupsen/logrus"
 )
-
-// Logger defines the logging interface
-type Logger interface {
-	Info(args ...interface{})
-	Warn(args ...interface{})
-	Error(args ...interface{})
-	Fatal(args ...interface{})
-	Panic(args ...interface{})
-}
 
 var (
-	// Singleton logger instance, shared across the application
 	loggerInstance Logger
-	loggerOnce     sync.Once  // Guarantees that the logger is created only once
-	loggerMutex    sync.Mutex // Ensures thread-safe access to the logger instance
+	loggerErr      error
+	loggerOnce     sync.Once
 )
 
-// GetLogger returns a singleton logger instance, shared across the application.
-func GetLogger(settings *settings.LoggerSettings) (Logger, error) {
-	// Ensure that the logger is created only once
+// InitLogger initializes the singleton logger.
+func InitLogger(settings *settings.LoggerSettings) error {
 	loggerOnce.Do(func() {
-		// Create the logger based on the config
-		logger, err := newLogger(settings)
-		if err == nil {
-			loggerInstance = logger
-		}
+		loggerInstance, loggerErr = newLogger(settings)
 	})
-
-	// Lock access to loggerInstance to ensure thread safety when returning it
-	loggerMutex.Lock()
-	defer loggerMutex.Unlock()
-
-	if loggerInstance != nil {
-		return loggerInstance, nil
-	}
-
-	return nil, fmt.Errorf("failed to create logger")
+	return loggerErr
 }
 
-// newLogger creates a logger based on the given configuration.
-func newLogger(config *settings.LoggerSettings) (Logger, error) {
-	err := config.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("failed to validate config: %w", err)
+// GetLogger returns the initialized logger instance.
+func GetLogger() (Logger, error) {
+	if loggerInstance == nil {
+		return nil, fmt.Errorf("logger not initialized: call InitLogger first")
 	}
+	return loggerInstance, nil
+}
 
-	level, err := logrus.ParseLevel(config.LogLevel)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse log level '%s': %w", config.LogLevel, err)
+func newLogger(config *settings.LoggerSettings) (Logger, error) {
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
 	switch config.LogType {
-	case "console":
-		return NewConsoleLogger(level), nil
-	case "file":
-		return NewFileLogger(level, config.FilePath), nil
+	case settings.LogTypeConsole:
+		return NewConsoleLogger(config.LogLevel), nil
+	case settings.LogTypeFile:
+		if config.FilePath == "" {
+			return nil, fmt.Errorf("file path required for file logger")
+		}
+		return NewFileLogger(config.LogLevel, config.FilePath, config.MaxSize, config.MaxBackups, config.MaxAge), nil
 	default:
 		return nil, fmt.Errorf("unsupported log type: %s", config.LogType)
 	}
+}
+
+// Helper functions
+func parseLevel(level string) slog.Level {
+	switch level {
+	case settings.LogLevelDebug:
+		return slog.LevelDebug
+	case settings.LogLevelInfo:
+		return slog.LevelInfo
+	case settings.LogLevelWarning:
+		return slog.LevelWarn
+	case settings.LogLevelError:
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
+}
+
+func formatArgs(args ...interface{}) string {
+	if len(args) == 0 {
+		return ""
+	}
+	return fmt.Sprint(args...)
 }

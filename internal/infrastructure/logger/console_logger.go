@@ -1,43 +1,50 @@
 package logger
 
-import "github.com/sirupsen/logrus"
+import (
+	"log/slog"
+	"os"
+)
 
 // ConsoleLogger is an implementation of Logger that logs to the console.
 type ConsoleLogger struct {
-	logger *logrus.Logger
+	logger *slog.Logger
 }
 
 // NewConsoleLogger creates a new console logger with the specified log level.
-func NewConsoleLogger(level logrus.Level) *ConsoleLogger {
-	logger := logrus.New()
-	logger.SetFormatter(&logrus.TextFormatter{
-		FullTimestamp: true,
-	})
-	logger.SetLevel(level)
+func NewConsoleLogger(level string) Logger {
+	opts := &slog.HandlerOptions{
+		Level: parseLevel(level),
+	}
+	handler := slog.NewTextHandler(os.Stdout, opts)
+	logger := slog.New(handler)
+
 	return &ConsoleLogger{logger: logger}
 }
 
-// Info logs an informational message to the console using the underlying logger.
+// Info logs an informational message to the console.
 func (l *ConsoleLogger) Info(args ...interface{}) {
-	l.logger.Info(args...)
+	l.logger.Info(formatArgs(args...))
 }
 
-// Warn logs a warning message to the console using the underlying logger.
+// Warn logs a warning message to the console.
 func (l *ConsoleLogger) Warn(args ...interface{}) {
-	l.logger.Warn(args...)
+	l.logger.Warn(formatArgs(args...))
 }
 
-// Error logs an error message to the console using the underlying logger.
+// Error logs an error message to the console.
 func (l *ConsoleLogger) Error(args ...interface{}) {
-	l.logger.Error(args...)
+	l.logger.Error(formatArgs(args...))
 }
 
-// Fatal logs a fatal message to the console using the underlying logger and then exits the program.
+// Fatal logs a fatal message and exits.
 func (l *ConsoleLogger) Fatal(args ...interface{}) {
-	l.logger.Fatal(args...)
+	l.logger.Error(formatArgs(args...))
+	os.Exit(1)
 }
 
-// Panic logs a panic message to the console using the underlying logger and then panics.
+// Panic logs a panic message and panics.
 func (l *ConsoleLogger) Panic(args ...interface{}) {
-	l.logger.Panic(args...)
+	msg := formatArgs(args...)
+	l.logger.Error(msg)
+	panic(msg)
 }

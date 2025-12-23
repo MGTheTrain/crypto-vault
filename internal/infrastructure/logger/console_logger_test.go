@@ -5,30 +5,44 @@ package logger
 
 import (
 	"bytes"
+	"crypto_vault_service/internal/infrastructure/settings"
+	"log/slog"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewConsoleLoggerAndLogging(t *testing.T) {
-	var buffer bytes.Buffer
+func TestConsoleLogger_LogsToOutput(t *testing.T) {
+	var buf bytes.Buffer
 
-	// Create console logger
-	l := NewConsoleLogger(logrus.InfoLevel)
-	require.NotNil(t, l, "expected console logger to be initialized")
+	// Create logger with custom output for testing
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}
+	handler := slog.NewTextHandler(&buf, opts)
+	logger := &ConsoleLogger{logger: slog.New(handler)}
 
-	// Redirect logger output to buffer for inspection
-	l.logger.SetOutput(&buffer)
+	// Log messages at different levels
+	logger.Info("info message")
+	logger.Warn("warn message")
+	logger.Error("error message")
 
-	// These should not panic
-	require.NotPanics(t, func() { l.Info("console info message") })
-	require.NotPanics(t, func() { l.Warn("console warn message") })
-	require.NotPanics(t, func() { l.Error("console error message") })
+	// Verify output contains all messages
+	output := buf.String()
+	assert.Contains(t, output, "info message")
+	assert.Contains(t, output, "warn message")
+	assert.Contains(t, output, "error message")
+}
 
-	// Assert log contents
-	logOutput := buffer.String()
-	require.Contains(t, logOutput, "console info message")
-	require.Contains(t, logOutput, "console warn message")
-	require.Contains(t, logOutput, "console error message")
+func TestNewConsoleLogger(t *testing.T) {
+	logger := NewConsoleLogger(settings.LogLevelInfo)
+	require.NotNil(t, logger)
+
+	// Verify it satisfies the Logger interface and doesn't panic
+	require.NotPanics(t, func() {
+		logger.Info("test")
+		logger.Warn("test")
+		logger.Error("test")
+	})
 }

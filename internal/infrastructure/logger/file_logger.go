@@ -1,54 +1,60 @@
 package logger
 
 import (
+	"log/slog"
+	"os"
+
 	"github.com/natefinch/lumberjack"
-	"github.com/sirupsen/logrus"
 )
 
 // FileLogger is an implementation of Logger that logs to a file.
 type FileLogger struct {
-	logger *logrus.Logger
+	logger *slog.Logger
 }
 
-// NewFileLogger creates a new file logger with the specified log level and file path.
-func NewFileLogger(level logrus.Level, filePath string) *FileLogger {
-	logger := logrus.New()
-
-	logger.SetOutput(&lumberjack.Logger{
+// NewFileLogger creates a new file logger with rotation settings.
+func NewFileLogger(level string, filePath string, maxSize int, maxBackups int, maxAge int) Logger {
+	writer := &lumberjack.Logger{
 		Filename:   filePath,
-		MaxSize:    10, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28, // number of days to retain logs
-	})
+		MaxSize:    maxSize,
+		MaxBackups: maxBackups,
+		MaxAge:     maxAge,
+		Compress:   true,
+	}
 
-	logger.SetFormatter(&logrus.TextFormatter{
-		FullTimestamp: true,
-	})
-	logger.SetLevel(level)
+	opts := &slog.HandlerOptions{
+		Level: parseLevel(level),
+	}
+	handler := slog.NewJSONHandler(writer, opts)
+	logger := slog.New(handler)
+
 	return &FileLogger{logger: logger}
 }
 
-// Info logs an informational message using the underlying logger.
+// Info logs an informational message.
 func (l *FileLogger) Info(args ...interface{}) {
-	l.logger.Info(args...)
+	l.logger.Info(formatArgs(args...))
 }
 
-// Warn logs a warning message using the underlying logger.
+// Warn logs a warning message.
 func (l *FileLogger) Warn(args ...interface{}) {
-	l.logger.Warn(args...)
+	l.logger.Warn(formatArgs(args...))
 }
 
-// Error logs an error message using the underlying logger.
+// Error logs an error message.
 func (l *FileLogger) Error(args ...interface{}) {
-	l.logger.Error(args...)
+	l.logger.Error(formatArgs(args...))
 }
 
-// Fatal logs a fatal message using the underlying logger and then exits the program.
+// Fatal logs a fatal message and exits.
 func (l *FileLogger) Fatal(args ...interface{}) {
-	l.logger.Fatal(args...)
+	l.logger.Error(formatArgs(args...))
+	os.Exit(1)
 }
 
-// Panic logs a panic message using the underlying logger and then panics.
+// Panic logs a panic message and panics.
 func (l *FileLogger) Panic(args ...interface{}) {
-	l.logger.Panic(args...)
+	msg := formatArgs(args...)
+	l.logger.Error(msg)
+	panic(msg)
 }

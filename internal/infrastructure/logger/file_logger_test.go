@@ -4,29 +4,39 @@
 package logger
 
 import (
+	"crypto_vault_service/internal/infrastructure/settings"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewFileLoggerAndLogging(t *testing.T) {
-	// Create a temporary file path (won't actually open the file now)
+func TestNewFileLogger(t *testing.T) {
 	tmpDir := t.TempDir()
-	logFilePath := filepath.Join(tmpDir, "test.log")
+	logPath := filepath.Join(tmpDir, "test.log")
 
-	// Initialize file logger
-	l := NewFileLogger(logrus.InfoLevel, logFilePath)
-	require.NotNil(t, l, "expected logger to be initialized")
+	logger := NewFileLogger(settings.LogLevelInfo, logPath, 10, 3, 28)
+	require.NotNil(t, logger)
 
-	// These should not panic
-	require.NotPanics(t, func() { l.Info("This is an info message") })
-	require.NotPanics(t, func() { l.Warn("This is a warning message") })
-	require.NotPanics(t, func() { l.Error("This is an error message") })
+	logger.Info("info message")
+	logger.Warn("warn message")
+	logger.Error("error message")
 
-	// Optional: Check if the file was created
-	_, err := os.Stat(logFilePath)
-	require.NoError(t, err, "expected log file to be created")
+	// Verify file exists
+	_, err := os.Stat(logPath)
+	assert.NoError(t, err)
+
+	// Verify log content
+	content, err := os.ReadFile(logPath)
+	require.NoError(t, err)
+
+	logOutput := string(content)
+	assert.Contains(t, logOutput, "info message")
+	assert.Contains(t, logOutput, "warn message")
+	assert.Contains(t, logOutput, "error message")
+	assert.Contains(t, logOutput, "INFO")
+	assert.Contains(t, logOutput, "WARN")
+	assert.Contains(t, logOutput, "ERROR")
 }
