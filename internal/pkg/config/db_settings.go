@@ -8,9 +8,9 @@ import (
 
 // DatabaseSettings holds configuration settings for connecting to a database, including type, DSN and name
 type DatabaseSettings struct {
-	Type string `mapstructure:"type" validate:"required"`
-	DSN  string `mapstructure:"dsn" validate:"required"`
-	Name string `mapstructure:"name" validate:"required"`
+	Type   string `mapstructure:"type" validate:"required"`
+	DSN    string `mapstructure:"dsn" validate:"required"`
+	DBName string `mapstructure:"db_name" validate:"required"`
 }
 
 // Validate checks that all fields in DatabaseSettings are valid (non-empty in this case)

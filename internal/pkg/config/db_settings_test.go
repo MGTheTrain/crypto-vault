@@ -18,25 +18,25 @@ func TestDatabaseSettingsValidation(t *testing.T) {
 		{
 			name: "valid settings",
 			settings: &DatabaseSettings{
-				Type: "mysql",
-				DSN:  "user:password@tcp(localhost:3306)/dbname",
-				Name: "mydb",
+				Type:   "mysql",
+				DSN:    "user:password@tcp(localhost:3306)/dbname",
+				DBName: "mydb",
 			},
 			expectedError: false,
 		},
 		{
 			name: "missing type",
 			settings: &DatabaseSettings{
-				DSN:  "user:password@tcp(localhost:3306)/dbname",
-				Name: "mydb",
+				DSN:    "user:password@tcp(localhost:3306)/dbname",
+				DBName: "mydb",
 			},
 			expectedError: true,
 		},
 		{
 			name: "missing DSN",
 			settings: &DatabaseSettings{
-				Type: "mysql",
-				Name: "mydb",
+				Type:   "mysql",
+				DBName: "mydb",
 			},
 			expectedError: true,
 		},
@@ -51,9 +51,9 @@ func TestDatabaseSettingsValidation(t *testing.T) {
 		{
 			name: "empty fields",
 			settings: &DatabaseSettings{
-				Type: "",
-				DSN:  "",
-				Name: "",
+				Type:   "",
+				DSN:    "",
+				DBName: "",
 			},
 			expectedError: true,
 		},

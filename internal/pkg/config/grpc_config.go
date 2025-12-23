@@ -41,7 +41,7 @@ func InitializeGrpcConfig(path string) (*GrpcConfig, error) {
 			config.Database.DSN = dbDSN
 		}
 		if dbName := viper.GetString("DATABASE_NAME"); dbName != "" {
-			config.Database.Name = dbName
+			config.Database.DBName = dbName
 		}
 
 		if blobCloudProvider := viper.GetString("BLOB_CONNECTOR_CLOUD_PROVIDER"); blobCloudProvider != "" {
