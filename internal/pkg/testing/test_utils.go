@@ -1,7 +1,9 @@
-package testutils
+package testing
 
 import (
-	"crypto_vault_service/internal/infrastructure/utils"
+	"crypto_vault_service/internal/pkg/config"
+	"crypto_vault_service/internal/pkg/logger"
+	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 	"mime/multipart"
 	"os"
@@ -9,6 +11,24 @@ import (
 
 	"github.com/stretchr/testify/require"
 )
+
+// SetupTestLogger sets up a logger for testing purposes.
+func SetupTestLogger(t *testing.T) logger.Logger {
+	t.Helper()
+
+	settings := &config.LoggerSettings{
+		LogLevel: config.LogLevelInfo,
+		LogType:  config.LogTypeConsole,
+	}
+
+	err := logger.InitLogger(settings)
+	require.NoError(t, err)
+
+	log, err := logger.GetLogger()
+	require.NoError(t, err)
+
+	return log
+}
 
 // CreateTestFile create a test files
 func CreateTestFile(fileName string, content []byte) error {

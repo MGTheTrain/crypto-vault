@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/pkg/config"
+	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
 	"time"
 
@@ -23,7 +23,7 @@ type azureVaultConnector struct {
 
 // NewAzureVaultConnector creates a new instance of azureVaultConnector, which connects to Azure Blob Storage.
 // This method can be updated in the future to support a more sophisticated key management system like Azure Key Vault.
-func NewAzureVaultConnector(ctx context.Context, settings *settings.KeyConnectorSettings, logger logger.Logger) (VaultConnector, error) {
+func NewAzureVaultConnector(ctx context.Context, settings *config.KeyConnectorSettings, logger logger.Logger) (keys.VaultConnector, error) {
 	if err := settings.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate settings: %w", err)
 	}
@@ -33,10 +33,9 @@ func NewAzureVaultConnector(ctx context.Context, settings *settings.KeyConnector
 		return nil, fmt.Errorf("failed to create Azure Blob client: %w", err)
 	}
 
-	_, _ = client.CreateContainer(ctx, settings.ContainerName, nil)
-	// if err != nil {
-	// 	log.Printf("Failed to create Azure container: %v\n", err)
-	// }
+	if _, err := client.CreateContainer(ctx, settings.ContainerName, nil); err != nil {
+		logger.Warn("container creation failed (may already exist)", "error", err)
+	}
 
 	return &azureVaultConnector{
 		client:        client,

@@ -1,6 +1,8 @@
 package keys
 
-import "context"
+import (
+	"context"
+)
 
 // CryptoKeyUploadService defines methods for uploading cryptographic keys.
 type CryptoKeyUploadService interface {
@@ -38,4 +40,19 @@ type CryptoKeyRepository interface {
 	GetByID(ctx context.Context, keyID string) (*CryptoKeyMeta, error)
 	UpdateByID(ctx context.Context, key *CryptoKeyMeta) error
 	DeleteByID(ctx context.Context, keyID string) error
+}
+
+// VaultConnector is an interface for interacting with custom key storage.
+// The current implementation uses Azure Blob Storage, but this may be replaced
+// with Azure Key Vault, AWS KMS, or any other cloud-based key management system in the future.
+type VaultConnector interface {
+	// Upload uploads bytes of a single file to Blob Storage
+	// and returns the metadata for each uploaded byte stream.
+	Upload(ctx context.Context, bytes []byte, userID, keyPairID, keyType, keyAlgorihm string, keySize uint32) (*CryptoKeyMeta, error)
+
+	// Download retrieves a key's content by its IDs and type and returns the data as a byte slice.
+	Download(ctx context.Context, keyID, keyPairID, keyType string) ([]byte, error)
+
+	// Delete deletes a key from Vault Storage by its IDs and type and returns any error encountered.
+	Delete(ctx context.Context, keyID, keyPairID, keyType string) error
 }

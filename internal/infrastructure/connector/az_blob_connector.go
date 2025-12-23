@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/pkg/config"
+	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
 	"io"
 	"log"
@@ -26,7 +26,7 @@ type azureBlobConnector struct {
 
 // NewAzureBlobConnector creates a new azureBlobConnector instance using a connection string.
 // It returns the connector and any error encountered during the initialization.
-func NewAzureBlobConnector(ctx context.Context, settings *settings.BlobConnectorSettings, logger logger.Logger) (BlobConnector, error) {
+func NewAzureBlobConnector(ctx context.Context, settings *config.BlobConnectorSettings, logger logger.Logger) (blobs.BlobConnector, error) {
 	if err := settings.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate settings: %w", err)
 	}
@@ -36,10 +36,9 @@ func NewAzureBlobConnector(ctx context.Context, settings *settings.BlobConnector
 		return nil, fmt.Errorf("failed to create Azure Blob client: %w", err)
 	}
 
-	_, _ = client.CreateContainer(ctx, settings.ContainerName, nil)
-	// if err != nil {
-	// 	fmt.Printf("Failed to create Azure container: %v\n", err)
-	// }
+	if _, err := client.CreateContainer(ctx, settings.ContainerName, nil); err != nil {
+		logger.Warn("container creation failed (may already exist)", "error", err)
+	}
 
 	return &azureBlobConnector{
 		client:        client,
@@ -163,7 +162,7 @@ func (abc *azureBlobConnector) Delete(ctx context.Context, blobID, blobName stri
 
 	_, err := abc.client.DeleteBlob(ctx, abc.containerName, fullBlobName, nil)
 	if err != nil {
-		return fmt.Errorf("failed to delete blob in %s", fullBlobName)
+		return fmt.Errorf("failed to delete blob %s: %w", fullBlobName, err)
 	}
 
 	abc.logger.Info(fmt.Sprintf("Blob '%s' deleted successfully", fullBlobName))
