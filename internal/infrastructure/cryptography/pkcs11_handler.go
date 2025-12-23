@@ -168,11 +168,11 @@ func (token *pkcs11Handler) isTokenSet(label string) (bool, error) {
 	}
 
 	if strings.Contains(output, label) && strings.Contains(output, "token initialized") {
-		token.Logger.Info(fmt.Sprintf("Token with label '%s' exists.\n", label))
+		token.Logger.Info("Token with label '%s' exists.\n", label)
 		return true, nil
 	}
 
-	token.Logger.Info(fmt.Sprintf("Token with label '%s' does not exist.\n", label))
+	token.Logger.Info("Token with label '%s' does not exist.\n", label)
 	return false, nil
 }
 
@@ -197,7 +197,7 @@ func (token *pkcs11Handler) InitializeToken(label string) error {
 		return fmt.Errorf("failed to initialize token with label '%s': %w", label, err)
 	}
 
-	token.Logger.Info(fmt.Sprintf("Token with label '%s' initialized successfully.\n", label))
+	token.Logger.Info("Token with label '%s' initialized successfully.\n", label)
 	return nil
 }
 
@@ -265,7 +265,7 @@ func (token *pkcs11Handler) addECDSASignKey(label, objectLabel string, keySize u
 		return fmt.Errorf("failed to add ECDSA key to token: %w", err)
 	}
 
-	token.Logger.Info(fmt.Sprintf("ECDSA key with label '%s' added to token '%s'", objectLabel, label))
+	token.Logger.Info("ECDSA key with label '%s' added to token '%s'", objectLabel, label)
 	return nil
 }
 
@@ -304,7 +304,7 @@ func (token *pkcs11Handler) addRSASignKey(label, objectLabel string, keySize uin
 		return fmt.Errorf("failed to add RSA key to token: %w", err)
 	}
 
-	token.Logger.Info(fmt.Sprintf("RSA key with label '%s' added to token '%s'", objectLabel, label))
+	token.Logger.Info("RSA key with label '%s' added to token '%s'", objectLabel, label)
 	return nil
 }
 
@@ -341,7 +341,7 @@ func (token *pkcs11Handler) addRSAEncryptKey(label, objectLabel string, keySize 
 		return fmt.Errorf("failed to add RSA encryption key to token: %w", err)
 	}
 
-	token.Logger.Info(fmt.Sprintf("RSA encryption key with label '%s' added to token '%s'", objectLabel, label))
+	token.Logger.Info("RSA encryption key with label '%s' added to token '%s'", objectLabel, label)
 	return nil
 }
 
@@ -376,7 +376,7 @@ func (token *pkcs11Handler) Encrypt(label, objectLabel, inputFilePath, outputFil
 		return fmt.Errorf("failed to encrypt data with OpenSSL: %w\nOutput: %s", err, encryptOutput)
 	}
 
-	token.Logger.Info(fmt.Sprintf("Encryption successful. Encrypted data written to %s", outputFilePath))
+	token.Logger.Info("Encryption successful. Encrypted data written to %s", outputFilePath)
 	return nil
 }
 
@@ -411,7 +411,7 @@ func (token *pkcs11Handler) Decrypt(label, objectLabel, inputFilePath, outputFil
 		return fmt.Errorf("failed to decrypt data with OpenSSL: %w\nOutput: %s", err, decryptOutput)
 	}
 
-	token.Logger.Info(fmt.Sprintf("Decryption successful. Decrypted data written to %s", outputFilePath))
+	token.Logger.Info("Decryption successful. Decrypted data written to %s", outputFilePath)
 	return nil
 }
 
@@ -465,7 +465,7 @@ func (token *pkcs11Handler) Sign(label, objectLabel, dataFilePath, signatureFile
 		return fmt.Errorf("failed to sign data: %w\nOutput: %s", err, signOutput)
 	}
 
-	token.Logger.Info(fmt.Sprintf("Signing successful. Signature written to %s", signatureFilePath))
+	token.Logger.Info("Signing successful. Signature written to %s", signatureFilePath)
 	return nil
 }
 
@@ -561,6 +561,6 @@ func (token *pkcs11Handler) DeleteObject(label, objectType, objectLabel string) 
 		return fmt.Errorf("failed to delete object of type '%s' with label '%s': %w", objectType, objectLabel, err)
 	}
 
-	token.Logger.Info(fmt.Sprintf("Object of type '%s' with label '%s' deleted successfully.\n", objectType, objectLabel))
+	token.Logger.Info("Object of type '%s' with label '%s' deleted successfully.\n", objectType, objectLabel)
 	return nil
 }

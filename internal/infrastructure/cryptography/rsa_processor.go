@@ -172,7 +172,7 @@ func (r *rsaProcessor) SavePrivateKeyToFile(privateKey *rsa.PrivateKey, filename
 		return fmt.Errorf("failed to encode private key: %w", err)
 	}
 
-	r.logger.Info(fmt.Sprintf("Saved RSA private key %s", filename))
+	r.logger.Info("Saved RSA private key %s", filename)
 	return nil
 }
 
@@ -203,7 +203,7 @@ func (r *rsaProcessor) SavePublicKeyToFile(publicKey *rsa.PublicKey, filename st
 		return fmt.Errorf("failed to encode public key: %w", err)
 	}
 
-	r.logger.Info(fmt.Sprintf("Saved RSA public key %s", filename))
+	r.logger.Info("Saved RSA public key %s", filename)
 
 	return nil
 }

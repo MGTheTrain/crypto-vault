@@ -37,7 +37,7 @@ func (r *gormCryptoKeyRepository) Create(ctx context.Context, key *keys.CryptoKe
 		return fmt.Errorf("failed to create cryptographic key: %w", err)
 	}
 
-	r.logger.Info(fmt.Sprintf("Created key metadata with id %s", key.ID))
+	r.logger.Info("Created key metadata with id %s", key.ID)
 	return nil
 }
 
@@ -112,7 +112,7 @@ func (r *gormCryptoKeyRepository) UpdateByID(ctx context.Context, key *keys.Cryp
 		return fmt.Errorf("failed to update cryptographic key: %w", err)
 	}
 
-	r.logger.Info(fmt.Sprintf("Updated key metadata with id %s", key.ID))
+	r.logger.Info("Updated key metadata with id %s", key.ID)
 	return nil
 }
 
@@ -121,6 +121,6 @@ func (r *gormCryptoKeyRepository) DeleteByID(ctx context.Context, keyID string) 
 	if err := r.db.WithContext(ctx).Where("id = ?", keyID).Delete(&keys.CryptoKeyMeta{}).Error; err != nil {
 		return fmt.Errorf("failed to delete cryptographic key: %w", err)
 	}
-	r.logger.Info(fmt.Sprintf("Deleted key metadata with id %s", keyID))
+	r.logger.Info("Deleted key metadata with id %s", keyID)
 	return nil
 }

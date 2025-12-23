@@ -110,7 +110,7 @@ func (abc *azureBlobConnector) Upload(ctx context.Context, form *multipart.Form,
 			return nil, err
 		}
 
-		abc.logger.Info(fmt.Sprintf("Blob '%s' uploaded successfully", blob.Name))
+		abc.logger.Info("Blob '%s' uploaded successfully", blob.Name)
 
 		blobMeta = append(blobMeta, blob)
 	}
@@ -123,9 +123,9 @@ func (abc *azureBlobConnector) rollbackUploadedBlobs(ctx context.Context, blobs 
 	for _, blob := range blobs {
 		err := abc.Delete(ctx, blob.ID, blob.Name)
 		if err != nil {
-			abc.logger.Info(fmt.Sprintf("Failed to delete blob '%s' during rollback: %v", blob.Name, err))
+			abc.logger.Info("Failed to delete blob '%s' during rollback: %v", blob.Name, err)
 		} else {
-			abc.logger.Info(fmt.Sprintf("Blob '%s' deleted during rollback", blob.Name))
+			abc.logger.Info("Blob '%s' deleted during rollback", blob.Name)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func (abc *azureBlobConnector) Download(ctx context.Context, blobID, blobName st
 		return nil, fmt.Errorf("failed to close retryReader for blob '%s': %w", fullBlobName, err)
 	}
 
-	abc.logger.Info(fmt.Sprintf("Blob '%s' downloaded successfully", fullBlobName))
+	abc.logger.Info("Blob '%s' downloaded successfully", fullBlobName)
 	return downloadedData.Bytes(), nil
 }
 
@@ -165,6 +165,6 @@ func (abc *azureBlobConnector) Delete(ctx context.Context, blobID, blobName stri
 		return fmt.Errorf("failed to delete blob %s: %w", fullBlobName, err)
 	}
 
-	abc.logger.Info(fmt.Sprintf("Blob '%s' deleted successfully", fullBlobName))
+	abc.logger.Info("Blob '%s' deleted successfully", fullBlobName)
 	return nil
 }
