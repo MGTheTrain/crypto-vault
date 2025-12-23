@@ -1,9 +1,9 @@
-package repository
+package persistence
 
 import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/infrastructure/logger"
+	"crypto_vault_service/internal/pkg/logger"
 	"errors"
 	"fmt"
 

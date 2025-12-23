@@ -1,10 +1,9 @@
-package repository
+package persistence
 
 import (
 	"crypto_vault_service/internal/domain/blobs"
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/settings"
+	pkgTesting "crypto_vault_service/internal/pkg/testing"
 	"fmt"
 	"log"
 	"strings"
@@ -77,17 +76,7 @@ func SetupTestDB(t *testing.T, dbType string) *TestDBContext {
 		t.Fatalf("Failed to migrate schema: %v", err)
 	}
 
-	// Initialize the repositories with the DB instance
-	loggerSettings := &settings.LoggerSettings{
-		LogLevel: "info",
-		LogType:  "console",
-		FilePath: "",
-	}
-
-	logger, err := logger.GetLogger(loggerSettings)
-	if err != nil {
-		log.Fatalf("Error creating logger: %v", err)
-	}
+	logger := pkgTesting.SetupTestLogger(t)
 
 	blobRepo, err := NewGormBlobRepository(db, logger)
 	if err != nil {

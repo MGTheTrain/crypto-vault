@@ -1,4 +1,4 @@
-package repository
+package persistence
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/logger"
+	"crypto_vault_service/internal/pkg/logger"
 )
 
 // gormCryptoKeyRepository is the implementation of the CryptoKeyRepository interface

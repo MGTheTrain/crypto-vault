@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package repository
+package persistence
 
 import (
 	"context"
