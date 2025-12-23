@@ -1,7 +1,7 @@
 //go:build unit
 // +build unit
 
-package settings
+package config
 
 import (
 	"testing"

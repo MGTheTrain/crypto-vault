@@ -1,7 +1,7 @@
 //go:build unit
 // +build unit
 
-package settings
+package config
 
 import (
 	"testing"
@@ -10,18 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInitializeRestConfig(t *testing.T) {
+func TestInitializeGrpcConfig(t *testing.T) {
 	tests := []struct {
 		name           string
 		envVars        map[string]string
 		configFile     string
-		expectedConfig *RestConfig
+		expectedConfig *GrpcConfig
 		expectedError  bool
 	}{
 		{
 			name: "valid environment variables",
 			envVars: map[string]string{
 				"PORT":                             "8080",
+				"GATEWAY_PORT":                     "9090",
 				"DATABASE_TYPE":                    "postgres",
 				"DATABASE_DSN":                     "user:password@tcp(localhost:5432)/dbname",
 				"DATABASE_NAME":                    "mydb",
@@ -38,8 +39,9 @@ func TestInitializeRestConfig(t *testing.T) {
 				"PKCS11_USER_PIN":                  "user-pin",
 				"PKCS11_SLOT_ID":                   "1",
 			},
-			expectedConfig: &RestConfig{
-				Port: "8080",
+			expectedConfig: &GrpcConfig{
+				Port:        "8080",
+				GatewayPort: "9090",
 				Database: DatabaseSettings{
 					Type: "postgres",
 					DSN:  "user:password@tcp(localhost:5432)/dbname",
@@ -87,8 +89,8 @@ func TestInitializeRestConfig(t *testing.T) {
 				// You may need to create a temporary config file here or mock it for test purposes
 			}
 
-			// Initialize RestConfig
-			config, err := InitializeRestConfig(tt.configFile)
+			// Initialize GrpcConfig
+			config, err := InitializeGrpcConfig(tt.configFile)
 
 			// Check for expected errors or successful config
 			if tt.expectedError {

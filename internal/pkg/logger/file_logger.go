@@ -12,7 +12,7 @@ type FileLogger struct {
 	logger *slog.Logger
 }
 
-// NewFileLogger creates a new file logger with rotation settings.
+// NewFileLogger creates a new file logger with rotation config.
 func NewFileLogger(level string, filePath string, maxSize int, maxBackups int, maxAge int) Logger {
 	writer := &lumberjack.Logger{
 		Filename:   filePath,

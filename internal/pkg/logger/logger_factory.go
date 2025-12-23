@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/pkg/config"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -14,7 +14,7 @@ var (
 )
 
 // InitLogger initializes the singleton logger.
-func InitLogger(settings *settings.LoggerSettings) error {
+func InitLogger(settings *config.LoggerSettings) error {
 	loggerOnce.Do(func() {
 		loggerInstance, loggerErr = newLogger(settings)
 	})
@@ -29,34 +29,34 @@ func GetLogger() (Logger, error) {
 	return loggerInstance, nil
 }
 
-func newLogger(config *settings.LoggerSettings) (Logger, error) {
-	if err := config.Validate(); err != nil {
+func newLogger(c *config.LoggerSettings) (Logger, error) {
+	if err := c.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
-	switch config.LogType {
-	case settings.LogTypeConsole:
-		return NewConsoleLogger(config.LogLevel), nil
-	case settings.LogTypeFile:
-		if config.FilePath == "" {
+	switch c.LogType {
+	case config.LogTypeConsole:
+		return NewConsoleLogger(c.LogLevel), nil
+	case config.LogTypeFile:
+		if c.FilePath == "" {
 			return nil, fmt.Errorf("file path required for file logger")
 		}
-		return NewFileLogger(config.LogLevel, config.FilePath, config.MaxSize, config.MaxBackups, config.MaxAge), nil
+		return NewFileLogger(c.LogLevel, c.FilePath, c.MaxSize, c.MaxBackups, c.MaxAge), nil
 	default:
-		return nil, fmt.Errorf("unsupported log type: %s", config.LogType)
+		return nil, fmt.Errorf("unsupported log type: %s", c.LogType)
 	}
 }
 
 // Helper functions
 func parseLevel(level string) slog.Level {
 	switch level {
-	case settings.LogLevelDebug:
+	case config.LogLevelDebug:
 		return slog.LevelDebug
-	case settings.LogLevelInfo:
+	case config.LogLevelInfo:
 		return slog.LevelInfo
-	case settings.LogLevelWarning:
+	case config.LogLevelWarning:
 		return slog.LevelWarn
-	case settings.LogLevelError:
+	case config.LogLevelError:
 		return slog.LevelError
 	default:
 		return slog.LevelInfo

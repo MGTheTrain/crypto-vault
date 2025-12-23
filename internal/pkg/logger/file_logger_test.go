@@ -4,7 +4,7 @@
 package logger
 
 import (
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/pkg/config"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,7 +17,7 @@ func TestNewFileLogger(t *testing.T) {
 	tmpDir := t.TempDir()
 	logPath := filepath.Join(tmpDir, "test.log")
 
-	logger := NewFileLogger(settings.LogLevelInfo, logPath, 10, 3, 28)
+	logger := NewFileLogger(config.LogLevelInfo, logPath, 10, 3, 28)
 	require.NotNil(t, logger)
 
 	logger.Info("info message")

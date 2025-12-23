@@ -5,7 +5,7 @@ package logger
 
 import (
 	"bytes"
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/pkg/config"
 	"log/slog"
 	"testing"
 
@@ -36,7 +36,7 @@ func TestConsoleLogger_LogsToOutput(t *testing.T) {
 }
 
 func TestNewConsoleLogger(t *testing.T) {
-	logger := NewConsoleLogger(settings.LogLevelInfo)
+	logger := NewConsoleLogger(config.LogLevelInfo)
 	require.NotNil(t, logger)
 
 	// Verify it satisfies the Logger interface and doesn't panic

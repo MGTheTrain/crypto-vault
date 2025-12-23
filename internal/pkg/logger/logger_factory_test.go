@@ -4,7 +4,7 @@
 package logger
 
 import (
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/pkg/config"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -24,23 +24,23 @@ func resetLoggerSingleton() {
 func TestInitLogger(t *testing.T) {
 	tests := []struct {
 		name      string
-		settings  *settings.LoggerSettings
+		settings  *config.LoggerSettings
 		wantErr   bool
 		setupTest func(*testing.T) string
 	}{
 		{
 			name: "console logger",
-			settings: &settings.LoggerSettings{
-				LogLevel: settings.LogLevelInfo,
-				LogType:  settings.LogTypeConsole,
+			settings: &config.LoggerSettings{
+				LogLevel: config.LogLevelInfo,
+				LogType:  config.LogTypeConsole,
 			},
 			wantErr: false,
 		},
 		{
 			name: "file logger with rotation",
-			settings: &settings.LoggerSettings{
-				LogLevel:   settings.LogLevelInfo,
-				LogType:    settings.LogTypeFile,
+			settings: &config.LoggerSettings{
+				LogLevel:   config.LogLevelInfo,
+				LogType:    config.LogTypeFile,
 				FilePath:   "",
 				MaxSize:    10,
 				MaxBackups: 3,
@@ -54,25 +54,25 @@ func TestInitLogger(t *testing.T) {
 		},
 		{
 			name: "invalid log level",
-			settings: &settings.LoggerSettings{
+			settings: &config.LoggerSettings{
 				LogLevel: "invalid",
-				LogType:  settings.LogTypeConsole,
+				LogType:  config.LogTypeConsole,
 			},
 			wantErr: true,
 		},
 		{
 			name: "unsupported log type",
-			settings: &settings.LoggerSettings{
-				LogLevel: settings.LogLevelInfo,
+			settings: &config.LoggerSettings{
+				LogLevel: config.LogLevelInfo,
 				LogType:  "unknown",
 			},
 			wantErr: true,
 		},
 		{
 			name: "file logger missing rotation settings",
-			settings: &settings.LoggerSettings{
-				LogLevel: settings.LogLevelInfo,
-				LogType:  settings.LogTypeFile,
+			settings: &config.LoggerSettings{
+				LogLevel: config.LogLevelInfo,
+				LogType:  config.LogTypeFile,
 				FilePath: "/tmp/test.log",
 			},
 			wantErr: true,
@@ -102,7 +102,7 @@ func TestInitLogger(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, logger)
 
-				if tt.settings.LogType == settings.LogTypeFile {
+				if tt.settings.LogType == config.LogTypeFile {
 					logger.Info("test message")
 					_, err := os.Stat(tt.settings.FilePath)
 					assert.NoError(t, err)
@@ -124,9 +124,9 @@ func TestGetLogger_BeforeInit(t *testing.T) {
 func TestInitLogger_Singleton(t *testing.T) {
 	t.Cleanup(resetLoggerSingleton)
 
-	err := InitLogger(&settings.LoggerSettings{
-		LogLevel: settings.LogLevelInfo,
-		LogType:  settings.LogTypeConsole,
+	err := InitLogger(&config.LoggerSettings{
+		LogLevel: config.LogLevelInfo,
+		LogType:  config.LogTypeConsole,
 	})
 	require.NoError(t, err)
 
@@ -142,15 +142,15 @@ func TestInitLogger_Singleton(t *testing.T) {
 func TestInitLogger_Idempotent(t *testing.T) {
 	t.Cleanup(resetLoggerSingleton)
 
-	err1 := InitLogger(&settings.LoggerSettings{
-		LogLevel: settings.LogLevelInfo,
-		LogType:  settings.LogTypeConsole,
+	err1 := InitLogger(&config.LoggerSettings{
+		LogLevel: config.LogLevelInfo,
+		LogType:  config.LogTypeConsole,
 	})
 	require.NoError(t, err1)
 
-	err2 := InitLogger(&settings.LoggerSettings{
-		LogLevel: settings.LogLevelDebug,
-		LogType:  settings.LogTypeConsole,
+	err2 := InitLogger(&config.LoggerSettings{
+		LogLevel: config.LogLevelDebug,
+		LogType:  config.LogTypeConsole,
 	})
 	assert.NoError(t, err2)
 
@@ -164,10 +164,10 @@ func TestParseLevel(t *testing.T) {
 		level    string
 		expected slog.Level
 	}{
-		{settings.LogLevelDebug, slog.LevelDebug},
-		{settings.LogLevelInfo, slog.LevelInfo},
-		{settings.LogLevelWarning, slog.LevelWarn},
-		{settings.LogLevelError, slog.LevelError},
+		{config.LogLevelDebug, slog.LevelDebug},
+		{config.LogLevelInfo, slog.LevelInfo},
+		{config.LogLevelWarning, slog.LevelWarn},
+		{config.LogLevelError, slog.LevelError},
 		{"unknown", slog.LevelInfo}, // default case
 	}
 
