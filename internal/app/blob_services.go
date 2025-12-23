@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
 	"bytes"
@@ -8,11 +8,11 @@ import (
 	crypto_rsa "crypto/rsa"
 	"crypto/x509"
 	"crypto_vault_service/internal/domain/blobs"
+	"crypto_vault_service/internal/domain/crypto"
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/connector"
-	"crypto_vault_service/internal/infrastructure/cryptography"
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/utils"
+
+	"crypto_vault_service/internal/pkg/logger"
+	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 	"io"
 	"log"
@@ -22,20 +22,35 @@ import (
 
 // blobUploadService implements the BlobUploadService interface for handling blob uploads
 type blobUploadService struct {
-	blobConnector  connector.BlobConnector
+	blobConnector  blobs.BlobConnector
 	blobRepository blobs.BlobRepository
-	vaultConnector connector.VaultConnector
+	aesProcessor   crypto.AESProcessor
+	ecProcessor    crypto.ECProcessor
+	rsaProcessor   crypto.RSAProcessor
+	vaultConnector keys.VaultConnector
 	cryptoKeyRepo  keys.CryptoKeyRepository
 	logger         logger.Logger
 }
 
 // NewBlobUploadService creates a new instance of BlobUploadService
-func NewBlobUploadService(blobConnector connector.BlobConnector, blobRepository blobs.BlobRepository, vaultConnector connector.VaultConnector, cryptoKeyRepo keys.CryptoKeyRepository, logger logger.Logger) (blobs.BlobUploadService, error) {
+func NewBlobUploadService(
+	blobConnector blobs.BlobConnector,
+	blobRepository blobs.BlobRepository,
+	vaultConnector keys.VaultConnector,
+	cryptoKeyRepo keys.CryptoKeyRepository,
+	aesProcessor crypto.AESProcessor,
+	ecProcessor crypto.ECProcessor,
+	rsaProcessor crypto.RSAProcessor,
+	logger logger.Logger,
+) (blobs.BlobUploadService, error) {
 	return &blobUploadService{
 		blobConnector:  blobConnector,
 		blobRepository: blobRepository,
 		cryptoKeyRepo:  cryptoKeyRepo,
 		vaultConnector: vaultConnector,
+		aesProcessor:   aesProcessor,
+		ecProcessor:    ecProcessor,
+		rsaProcessor:   rsaProcessor,
 		logger:         logger,
 	}, nil
 }
@@ -52,7 +67,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 			return nil, fmt.Errorf("%w", err)
 		}
 
-		cryptoOperation := "signing"
+		cryptoOperation := OperationSigning
 		contents, fileNames, err := s.applyCryptographicOperation(form, cryptoKeyMeta.Algorithm, cryptoOperation, keyBytes, cryptoKeyMeta.KeySize)
 		if err != nil {
 			return nil, fmt.Errorf("%w", err)
@@ -71,7 +86,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 			return nil, fmt.Errorf("%w", err)
 		}
 
-		cryptoOperation := "encryption"
+		cryptoOperation := OperationEncryption
 		contents, fileNames, err := s.applyCryptographicOperation(form, cryptoKeyMeta.Algorithm, cryptoOperation, keyBytes, cryptoKeyMeta.KeySize)
 		if err != nil {
 			return nil, fmt.Errorf("%w", err)
@@ -159,25 +174,16 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 		var processedBytes []byte
 
 		switch algorithm {
-		case "AES":
-			if operation == "encryption" {
-				aesProcessor, err := cryptography.NewAESProcessor(s.logger)
-				if err != nil {
-					return nil, nil, fmt.Errorf("%w", err)
-				}
-				processedBytes, err = aesProcessor.Encrypt(data, keyBytes)
+		case AlgorithmAES:
+			if operation == OperationEncryption {
+				processedBytes, err = s.aesProcessor.Encrypt(data, keyBytes)
 				if err != nil {
 					return nil, nil, fmt.Errorf("%w", err)
 				}
 			}
-		case "RSA":
-			rsaProcessor, err := cryptography.NewRSAProcessor(s.logger)
-			if err != nil {
-				return nil, nil, fmt.Errorf("%w", err)
-			}
-
+		case AlgorithmRSA:
 			switch operation {
-			case "encryption":
+			case OperationEncryption:
 				publicKeyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 				if err != nil {
 					return nil, nil, fmt.Errorf("error parsing public key: %w", err)
@@ -186,17 +192,17 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 				if !ok {
 					return nil, nil, fmt.Errorf("public key is not of type RSA")
 				}
-				processedBytes, err = rsaProcessor.Encrypt(data, publicKey)
+				processedBytes, err = s.rsaProcessor.Encrypt(data, publicKey)
 				if err != nil {
 					return nil, nil, fmt.Errorf("encryption error: %w", err)
 				}
 
-			case "signing":
+			case OperationSigning:
 				privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
 				if err != nil {
 					return nil, nil, fmt.Errorf("error parsing private key: %w", err)
 				}
-				processedBytes, err = rsaProcessor.Sign(data, privateKey)
+				processedBytes, err = s.rsaProcessor.Sign(data, privateKey)
 				if err != nil {
 					return nil, nil, fmt.Errorf("signing error: %w", err)
 				}
@@ -204,12 +210,8 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 			default:
 				return nil, nil, fmt.Errorf("unsupported operation: %s", operation)
 			}
-		case "EC":
-			if operation == "signing" {
-				ecProcessor, err := cryptography.NewECProcessor(s.logger)
-				if err != nil {
-					return nil, nil, fmt.Errorf("%w", err)
-				}
+		case AlgorithmEC:
+			if operation == OperationSigning {
 
 				privateKeyD := new(big.Int).SetBytes(keyBytes[:32])
 				pubKeyX := new(big.Int).SetBytes(keyBytes[32:64])
@@ -239,7 +241,7 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 					D:         privateKeyD,
 					PublicKey: *publicKey,
 				}
-				processedBytes, err = ecProcessor.Sign(data, privateKey)
+				processedBytes, err = s.ecProcessor.Sign(data, privateKey)
 				if err != nil {
 					return nil, nil, fmt.Errorf("%w", err)
 				}
@@ -257,13 +259,13 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 
 // blobMetadataService implements the BlobMetadataService interface for retrieving and deleting blob metadata
 type blobMetadataService struct {
-	blobConnector  connector.BlobConnector
+	blobConnector  blobs.BlobConnector
 	blobRepository blobs.BlobRepository
 	logger         logger.Logger
 }
 
 // NewBlobMetadataService creates a new instance of blobMetadataService
-func NewBlobMetadataService(blobRepository blobs.BlobRepository, blobConnector connector.BlobConnector, logger logger.Logger) (blobs.BlobMetadataService, error) {
+func NewBlobMetadataService(blobRepository blobs.BlobRepository, blobConnector blobs.BlobConnector, logger logger.Logger) (blobs.BlobMetadataService, error) {
 	return &blobMetadataService{
 		blobConnector:  blobConnector,
 		blobRepository: blobRepository,
@@ -313,20 +315,32 @@ func (s *blobMetadataService) DeleteByID(ctx context.Context, blobID string) err
 
 // blobDownloadService implements the BlobDownloadService interface for downloading blobs
 type blobDownloadService struct {
-	blobConnector  connector.BlobConnector
+	blobConnector  blobs.BlobConnector
 	blobRepository blobs.BlobRepository
-	vaultConnector connector.VaultConnector
+	vaultConnector keys.VaultConnector
 	cryptoKeyRepo  keys.CryptoKeyRepository
+	aesProcessor   crypto.AESProcessor
+	rsaProcessor   crypto.RSAProcessor
 	logger         logger.Logger
 }
 
 // NewBlobDownloadService creates a new instance of BlobDownloadService
-func NewBlobDownloadService(blobConnector connector.BlobConnector, blobRepository blobs.BlobRepository, vaultConnector connector.VaultConnector, cryptoKeyRepo keys.CryptoKeyRepository, logger logger.Logger) (blobs.BlobDownloadService, error) {
+func NewBlobDownloadService(
+	blobConnector blobs.BlobConnector,
+	blobRepository blobs.BlobRepository,
+	vaultConnector keys.VaultConnector,
+	cryptoKeyRepo keys.CryptoKeyRepository,
+	aesProcessor crypto.AESProcessor,
+	rsaProcessor crypto.RSAProcessor,
+	logger logger.Logger,
+) (blobs.BlobDownloadService, error) {
 	return &blobDownloadService{
 		blobConnector:  blobConnector,
 		blobRepository: blobRepository,
 		cryptoKeyRepo:  cryptoKeyRepo,
 		vaultConnector: vaultConnector,
+		aesProcessor:   aesProcessor,
+		rsaProcessor:   rsaProcessor,
 		logger:         logger,
 	}, nil
 }
@@ -354,25 +368,17 @@ func (s *blobDownloadService) DownloadByID(ctx context.Context, blobID string, d
 		}
 
 		switch cryptoKeyMeta.Algorithm {
-		case "AES":
-			aesProcessor, err := cryptography.NewAESProcessor(s.logger)
+		case AlgorithmAES:
+			processedBytes, err = s.aesProcessor.Decrypt(blobBytes, keyBytes)
 			if err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
-			processedBytes, err = aesProcessor.Decrypt(blobBytes, keyBytes)
-			if err != nil {
-				return nil, fmt.Errorf("%w", err)
-			}
-		case "RSA":
-			rsaProcessor, err := cryptography.NewRSAProcessor(s.logger)
-			if err != nil {
-				return nil, fmt.Errorf("%w", err)
-			}
+		case AlgorithmRSA:
 			privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing private key: %w", err)
 			}
-			processedBytes, err = rsaProcessor.Decrypt(blobBytes, privateKey)
+			processedBytes, err = s.rsaProcessor.Decrypt(blobBytes, privateKey)
 			if err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
