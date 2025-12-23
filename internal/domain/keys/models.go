@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"crypto_vault_service/internal/domain/validators"
+	"crypto_vault_service/internal/pkg/validators"
 	"errors"
 	"fmt"
 	"time"

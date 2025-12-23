@@ -2,7 +2,7 @@ package blobs
 
 import (
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/domain/validators"
+	"crypto_vault_service/internal/pkg/validators"
 	"errors"
 	"fmt"
 	"time"
