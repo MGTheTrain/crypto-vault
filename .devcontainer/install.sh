@@ -31,6 +31,9 @@ go install github.com/fullstorydev/grpcurl/cmd/grpcurl@v1.9.3
 # Code formatting
 go install golang.org/x/tools/cmd/goimports@v0.40.0
 
+# Linting
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+
 # Swagger/OpenAPI documentation
 go install github.com/swaggo/swag/cmd/swag@v1.16.6
 

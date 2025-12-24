@@ -9,7 +9,7 @@ jobs:
     uses: ./.github/workflows/_test.yml
 
   docker-push-pre-release-packages:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     environment: qas
     needs: test
     steps:
@@ -39,12 +39,12 @@ jobs:
 
       - name: Build and push Docker image for REST backend
         run: |
-          BACKEND_TAG="${{ secrets.DOCKER_USERNAME }}/crypto-vault-rest-service:${{ steps.get_version.outputs.version }}-alpha${{ github.run_number }}"  
-          docker build -t $BACKEND_TAG -f cmd/crypto-vault-rest-service/Dockerfile .
+          BACKEND_TAG="${{ secrets.DOCKER_USERNAME }}/crypto-vault-rest-api:${{ steps.get_version.outputs.version }}-alpha${{ github.run_number }}"  
+          docker build -t $BACKEND_TAG -f cmd/crypto-vault-rest-api/Dockerfile .
           docker push $BACKEND_TAG
 
       - name: Build and push Docker image for gRPC backend
         run: |
-          BACKEND_TAG="${{ secrets.DOCKER_USERNAME }}/crypto-vault-grpc-service:${{ steps.get_version.outputs.version }}-alpha${{ github.run_number }}"  
-          docker build -t $BACKEND_TAG -f cmd/crypto-vault-grpc-service/Dockerfile .
+          BACKEND_TAG="${{ secrets.DOCKER_USERNAME }}/crypto-vault-grpc-api:${{ steps.get_version.outputs.version }}-alpha${{ github.run_number }}"  
+          docker build -t $BACKEND_TAG -f cmd/crypto-vault-grpc-api/Dockerfile .
           docker push $BACKEND_TAG

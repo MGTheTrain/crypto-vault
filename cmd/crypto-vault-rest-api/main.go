@@ -1,4 +1,4 @@
-// Package main is the entry point for the crypto-vault-rest-service application.
+// Package main is the entry point for the crypto-vault-rest-api application.
 // It sets up and starts the RESTful API server using the Gin framework.
 package main
 

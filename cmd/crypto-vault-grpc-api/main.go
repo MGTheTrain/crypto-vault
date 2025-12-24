@@ -1,4 +1,4 @@
-// Package main is the entry point for the crypto-vault-grpc-service application.
+// Package main is the entry point for the crypto-vault-grpc-api application.
 // It sets up and starts both a gRPC server and a gRPC-Gateway server.
 package main
 
