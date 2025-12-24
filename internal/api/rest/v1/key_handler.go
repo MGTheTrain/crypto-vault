@@ -93,7 +93,7 @@ func (handler *keyHandler) UploadKeys(ctx *gin.Context) {
 
 // ListMetadata handles the GET request to list cryptographic key metadata with optional query parameters
 // @Summary List cryptographic key metadata based on query parameters
-// @Description Fetch a list of cryptographic key metadata based on filters like algorithm, type, and creation date, with pagination and sorting options.
+// @Description Fetch a list of cryptographic key metadata based on filters like algorithm, type and creation date, with pagination and sorting options.
 // @Tags Key
 // @Accept json
 // @Produce json
@@ -174,9 +174,9 @@ func (handler *keyHandler) ListMetadata(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, listResponse)
 }
 
-// GetMetadataByID handles the GET request to retrieve metadata of a key by its ID
-// @Summary Retrieve metadata of a key by its ID
-// @Description Fetch the metadata of a specific cryptographic key by its unique ID, including algorithm, key size, and creation date.
+// GetMetadataByID handles the GET request to retrieve crypto key metadata by ID
+// @Summary Retrieve crypto key metadata by ID
+// @Description Fetch the crypto key metadata by ID, including algorithm, key size and creation date.
 // @Tags Key
 // @Accept json
 // @Produce json
@@ -208,9 +208,9 @@ func (handler *keyHandler) GetMetadataByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, cryptoKeyMetadataResponse)
 }
 
-// DownloadByID handles the GET request to download a key by its ID
-// @Summary Download a cryptographic key by its ID
-// @Description Download the content of a specific cryptographic key by its ID.
+// DownloadByID handles the GET request to download a key by ID
+// @Summary Download a cryptographic key by ID
+// @Description Download the content of a specific cryptographic key by ID.
 // @Tags Key
 // @Accept json
 // @Produce octet-stream
@@ -242,9 +242,9 @@ func (handler *keyHandler) DownloadByID(ctx *gin.Context) {
 	}
 }
 
-// DeleteByID handles the DELETE request to delete a key by its ID
-// @Summary Delete a cryptographic key by its ID
-// @Description Delete a specific cryptographic key and its associated metadata by its ID.
+// DeleteByID handles the DELETE request to delete a key by ID
+// @Summary Delete a cryptographic key by ID
+// @Description Delete a specific cryptographic key and associated metadata by ID.
 // @Tags Key
 // @Accept json
 // @Produce json

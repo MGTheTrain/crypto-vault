@@ -41,9 +41,9 @@ func TestInitializeRestConfig(t *testing.T) {
 			expectedConfig: &RestConfig{
 				Port: "8080",
 				Database: DatabaseSettings{
-					Type: "postgres",
-					DSN:  "user:password@tcp(localhost:5432)/dbname",
-					Name: "mydb",
+					Type:   "postgres",
+					DSN:    "user:password@tcp(localhost:5432)/dbname",
+					DBName: "mydb",
 				},
 				BlobConnector: BlobConnectorSettings{
 					CloudProvider:    "aws",

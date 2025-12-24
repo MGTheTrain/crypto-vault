@@ -106,7 +106,7 @@ func (handler *blobHandler) Upload(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, blobMetadataResponses)
 }
 
-// ListMetadata handles the GET request to fetch metadata of blobs optionally considering query parameters
+// ListMetadata handles the GET request to fetch blobs metadata optionally with query parameters
 // @Summary List blob metadata based on query parameters
 // @Description Fetch a list of metadata for blobs based on query filters like name, size, type, and creation date.
 // @Tags Blob
@@ -199,9 +199,9 @@ func (handler *blobHandler) ListMetadata(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, listResponse)
 }
 
-// GetMetadataByID handles the GET request to fetch metadata of a blob by its ID
-// @Summary Retrieve metadata of a blob by its ID
-// @Description Fetch the metadata of a specific blob by its unique ID, including its name, size, type, encryption and signing key IDs, and creation date.
+// GetMetadataByID handles the GET request to fetch blob metadata by ID
+// @Summary Retrieve blob metadata by ID
+// @Description Fetch the blob metadata by ID, including name, size, type, encryption and signing key IDs, and creation date.
 // @Tags Blob
 // @Accept json
 // @Produce json
@@ -241,9 +241,9 @@ func (handler *blobHandler) GetMetadataByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, blobMetadataResponse)
 }
 
-// DownloadByID handles the GET request to download a blob by its ID
-// @Summary Download a blob by its ID
-// @Description Download the content of a specific blob by its ID, optionally decrypted with a provided decryption key ID.
+// DownloadByID handles the GET request to download a blob by ID
+// @Summary Download a blob by ID
+// @Description Download the content of a specific blob by ID, optionally decrypted with a provided decryption key ID.
 // @Tags Blob
 // @Accept json
 // @Produce octet-stream
@@ -289,9 +289,9 @@ func (handler *blobHandler) DownloadByID(ctx *gin.Context) {
 	}
 }
 
-// DeleteByID handles the DELETE request to delete a blob by its ID
-// @Summary Delete a blob by its ID
-// @Description Delete a specific blob and its associated metadata by its ID.
+// DeleteByID handles the DELETE request to delete a blob by ID
+// @Summary Delete a blob by ID
+// @Description Delete a specific blob and associated metadata by ID.
 // @Tags Blob
 // @Accept json
 // @Produce json

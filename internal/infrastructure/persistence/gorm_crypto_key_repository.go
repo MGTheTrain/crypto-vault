@@ -41,6 +41,7 @@ func (r *gormCryptoKeyRepository) Create(ctx context.Context, key *keys.CryptoKe
 	return nil
 }
 
+// List lists CryptoKeys in the database with optional filter
 func (r *gormCryptoKeyRepository) List(ctx context.Context, query *keys.CryptoKeyQuery) ([]*keys.CryptoKeyMeta, error) {
 	// Validate the query parameters before using them
 	if err := query.Validate(); err != nil {
@@ -88,7 +89,7 @@ func (r *gormCryptoKeyRepository) List(ctx context.Context, query *keys.CryptoKe
 	return cryptoKeyMetas, nil
 }
 
-// GetByID retrieves a CryptoKey by its ID from the database
+// GetByID retrieves a CryptoKey from the database by ID
 func (r *gormCryptoKeyRepository) GetByID(ctx context.Context, keyID string) (*keys.CryptoKeyMeta, error) {
 	var key keys.CryptoKeyMeta
 	if err := r.db.WithContext(ctx).Where("id = ?", keyID).First(&key).Error; err != nil {
@@ -101,7 +102,7 @@ func (r *gormCryptoKeyRepository) GetByID(ctx context.Context, keyID string) (*k
 	return &key, nil
 }
 
-// UpdateByID updates an existing CryptoKey in the database
+// UpdateByID updates a CryptoKey in the database by ID
 func (r *gormCryptoKeyRepository) UpdateByID(ctx context.Context, key *keys.CryptoKeyMeta) error {
 	// Validate the CryptoKey before updating
 	if err := key.Validate(); err != nil {
@@ -116,7 +117,7 @@ func (r *gormCryptoKeyRepository) UpdateByID(ctx context.Context, key *keys.Cryp
 	return nil
 }
 
-// DeleteByID removes a CryptoKey from the database by its ID
+// DeleteByID deleted a CryptoKey in the database by ID
 func (r *gormCryptoKeyRepository) DeleteByID(ctx context.Context, keyID string) error {
 	if err := r.db.WithContext(ctx).Where("id = ?", keyID).Delete(&keys.CryptoKeyMeta{}).Error; err != nil {
 		return fmt.Errorf("failed to delete cryptographic key: %w", err)

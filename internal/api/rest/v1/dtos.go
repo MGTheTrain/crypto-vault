@@ -49,7 +49,7 @@ type InfoResponse struct {
 	Message string `json:"message"` // The informational message
 }
 
-// BlobMetaResponse contains metadata about a blob, such as its ID, size, and encryption details.
+// BlobMetaResponse contains metadata about a blob, such as ID, size, and encryption details.
 type BlobMetaResponse struct {
 	ID              string    `json:"id"`              // Unique identifier for the blob
 	DateTimeCreated time.Time `json:"dateTimeCreated"` // Timestamp when the blob was created

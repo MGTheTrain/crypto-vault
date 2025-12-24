@@ -47,7 +47,7 @@ func NewAzureBlobConnector(ctx context.Context, settings *config.BlobConnectorSe
 	}, nil
 }
 
-// UploadFromForm uploads files to a Blob Storage
+// Upload uploads files to a Blob Storage
 // and returns the metadata for each uploaded byte stream.
 func (abc *azureBlobConnector) Upload(ctx context.Context, form *multipart.Form, userID string, encryptionKeyID, signKeyID *string) ([]*blobs.BlobMeta, error) {
 	var blobMeta []*blobs.BlobMeta
@@ -130,7 +130,7 @@ func (abc *azureBlobConnector) rollbackUploadedBlobs(ctx context.Context, blobs 
 	}
 }
 
-// Download retrieves a blob's content by its ID and name, and returns the data as a stream.
+// Download retrieves a blob's content by ID and name, and returns the data as a stream.
 func (abc *azureBlobConnector) Download(ctx context.Context, blobID, blobName string) ([]byte, error) {
 	fullBlobName := fmt.Sprintf("%s/%s", blobID, blobName)
 
@@ -156,7 +156,7 @@ func (abc *azureBlobConnector) Download(ctx context.Context, blobID, blobName st
 	return downloadedData.Bytes(), nil
 }
 
-// Delete deletes a blob from Azure Blob Storage by its ID and Name, and returns any error encountered.
+// Delete deletes a blob from Azure Blob Storage by ID and Name, and returns any error encountered.
 func (abc *azureBlobConnector) Delete(ctx context.Context, blobID, blobName string) error {
 	fullBlobName := fmt.Sprintf("%s/%s", blobID, blobName)
 

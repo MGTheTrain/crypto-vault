@@ -8,6 +8,7 @@ package __
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -246,9 +247,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BlobMetadataClient interface {
-	// List metadata of blobs
+	// List blobs metadata
 	ListMetadata(ctx context.Context, in *BlobMetaQuery, opts ...grpc.CallOption) (grpc.ServerStreamingClient[BlobMetaResponse], error)
-	// Get metadata by ID
+	// Get blob metadata by ID
 	GetMetadataByID(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*BlobMetaResponse, error)
 	// Delete blob by ID
 	DeleteByID(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*InfoResponse, error)
@@ -305,9 +306,9 @@ func (c *blobMetadataClient) DeleteByID(ctx context.Context, in *IdRequest, opts
 // All implementations must embed UnimplementedBlobMetadataServer
 // for forward compatibility.
 type BlobMetadataServer interface {
-	// List metadata of blobs
+	// List blobs metadata
 	ListMetadata(*BlobMetaQuery, grpc.ServerStreamingServer[BlobMetaResponse]) error
-	// Get metadata by ID
+	// Get blob metadata by ID
 	GetMetadataByID(context.Context, *IdRequest) (*BlobMetaResponse, error)
 	// Delete blob by ID
 	DeleteByID(context.Context, *IdRequest) (*InfoResponse, error)
@@ -648,9 +649,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CryptoKeyMetadataClient interface {
-	// List metadata of crypto keys
+	// List crypto keys metadata
 	ListMetadata(ctx context.Context, in *KeyMetadataQuery, opts ...grpc.CallOption) (grpc.ServerStreamingClient[CryptoKeyMetaResponse], error)
-	// Get metadata by ID
+	// Get crypto key metadata by ID
 	GetMetadataByID(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*CryptoKeyMetaResponse, error)
 	// Delete crypto key by ID
 	DeleteByID(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*InfoResponse, error)
@@ -707,9 +708,9 @@ func (c *cryptoKeyMetadataClient) DeleteByID(ctx context.Context, in *IdRequest,
 // All implementations must embed UnimplementedCryptoKeyMetadataServer
 // for forward compatibility.
 type CryptoKeyMetadataServer interface {
-	// List metadata of crypto keys
+	// List crypto keys metadata
 	ListMetadata(*KeyMetadataQuery, grpc.ServerStreamingServer[CryptoKeyMetaResponse]) error
-	// Get metadata by ID
+	// Get crypto key metadata by ID
 	GetMetadataByID(context.Context, *IdRequest) (*CryptoKeyMetaResponse, error)
 	// Delete crypto key by ID
 	DeleteByID(context.Context, *IdRequest) (*InfoResponse, error)

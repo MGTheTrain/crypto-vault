@@ -128,7 +128,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 	return blobMetas, nil
 }
 
-// getCryptoKeyAndData retrieves the encryption or signing key along with its metadata by ID.
+// getCryptoKeyAndData retrieves the encryption or signing key along with metadata by ID.
 // It downloads the key from the vault and returns the key bytes and associated metadata.
 func (s *blobUploadService) getCryptoKeyAndData(ctx context.Context, cryptoKeyID string) ([]byte, *keys.CryptoKeyMeta, error) {
 	// Get meta info
@@ -283,7 +283,7 @@ func (s *blobMetadataService) List(ctx context.Context, query *blobs.BlobMetaQue
 	return blobMetas, nil
 }
 
-// GetByID retrieves a blob's metadata by its unique ID
+// GetByID retrieves a blob's metadata by ID
 func (s *blobMetadataService) GetByID(ctx context.Context, blobID string) (*blobs.BlobMeta, error) {
 	blobMeta, err := s.blobRepository.GetByID(ctx, blobID)
 	if err != nil {
@@ -292,7 +292,7 @@ func (s *blobMetadataService) GetByID(ctx context.Context, blobID string) (*blob
 	return blobMeta, nil
 }
 
-// DeleteByID deletes a blob and its associated metadata by ID
+// DeleteByID deletes a blob and associated metadata by ID
 func (s *blobMetadataService) DeleteByID(ctx context.Context, blobID string) error {
 
 	blobMeta, err := s.blobRepository.GetByID(ctx, blobID)
@@ -345,7 +345,7 @@ func NewBlobDownloadService(
 	}, nil
 }
 
-// The download function retrieves a blob's content using its ID and also enables data decryption.
+// The download function retrieves a blob's content using ID and also enables data decryption.
 // NOTE: Signing should be performed locally by first downloading the associated key, followed by verification.
 // Optionally, a verify endpoint will be available soon for optional use.
 func (s *blobDownloadService) DownloadByID(ctx context.Context, blobID string, decryptionKeyID *string) ([]byte, error) {
@@ -390,7 +390,7 @@ func (s *blobDownloadService) DownloadByID(ctx context.Context, blobID string, d
 	return blobBytes, nil
 }
 
-// getCryptoKeyAndData retrieves the encryption or signing key along with its metadata by ID.
+// getCryptoKeyAndData retrieves the encryption or signing key along with metadata by ID.
 // It downloads the key from the vault and returns the key bytes and associated metadata.
 func (s *blobDownloadService) getCryptoKeyAndData(ctx context.Context, cryptoKeyID string) ([]byte, *keys.CryptoKeyMeta, error) {
 	// Get meta info

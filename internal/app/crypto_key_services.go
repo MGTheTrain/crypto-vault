@@ -223,7 +223,7 @@ func (s *cryptoKeyMetadataService) List(ctx context.Context, query *keys.CryptoK
 	return crypoKeyMetas, nil
 }
 
-// GetByID retrieves the metadata of a cryptographic key by its ID.
+// GetByID retrieves the crypto key metadata by ID.
 func (s *cryptoKeyMetadataService) GetByID(ctx context.Context, keyID string) (*keys.CryptoKeyMeta, error) {
 	keyMeta, err := s.cryptoKeyRepo.GetByID(ctx, keyID)
 	if err != nil {
@@ -233,7 +233,7 @@ func (s *cryptoKeyMetadataService) GetByID(ctx context.Context, keyID string) (*
 	return keyMeta, nil
 }
 
-// DeleteByID deletes a cryptographic key's metadata by its ID.
+// DeleteByID deletes a cryptographic key's metadata by ID.
 func (s *cryptoKeyMetadataService) DeleteByID(ctx context.Context, keyID string) error {
 	keyMeta, err := s.GetByID(ctx, keyID)
 	if err != nil {
@@ -268,7 +268,7 @@ func NewCryptoKeyDownloadService(vaultConnector keys.VaultConnector, cryptoKeyRe
 	}, nil
 }
 
-// Download retrieves a cryptographic key by its ID.
+// Download retrieves a cryptographic key by ID.
 func (s *cryptoKeyDownloadService) DownloadByID(ctx context.Context, keyID string) ([]byte, error) {
 	keyMeta, err := s.cryptoKeyRepo.GetByID(ctx, keyID)
 	if err != nil {

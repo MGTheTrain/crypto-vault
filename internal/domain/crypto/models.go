@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Token represents a PKCS#11 token with its label and other metadata.
+// Token represents a PKCS#11 token with label and other metadata
 type Token struct {
 	SlotID       string `mapstructure:"slot_id" validate:"required"`
 	Label        string `mapstructure:"label" validate:"required"`

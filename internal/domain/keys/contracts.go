@@ -17,28 +17,33 @@ type CryptoKeyMetadataService interface {
 	// It returns a slice of CryptoKeyMeta and any error encountered during the retrieval process.
 	List(ctx context.Context, query *CryptoKeyQuery) ([]*CryptoKeyMeta, error)
 
-	// GetByID retrieves the metadata of a cryptographic key by its unique ID.
+	// GetByID retrieves the crypto key metadata by ID.
 	// It returns the CryptoKeyMeta and any error encountered during the retrieval process.
 	GetByID(ctx context.Context, keyID string) (*CryptoKeyMeta, error)
 
-	// DeleteByID deletes a cryptographic key and its associated metadata by ID.
+	// DeleteByID deletes a cryptographic key and associated metadata by ID.
 	// It returns any error encountered during the deletion process.
 	DeleteByID(ctx context.Context, keyID string) error
 }
 
 // CryptoKeyDownloadService defines methods for downloading cryptographic keys.
 type CryptoKeyDownloadService interface {
-	// Download retrieves a cryptographic key by its ID
+	// Download retrieves a cryptographic key by ID
 	// It returns the CryptoKeyMeta, the key data as a byte slice, and any error encountered during the download process.
 	DownloadByID(ctx context.Context, keyID string) ([]byte, error)
 }
 
 // CryptoKeyRepository defines the interface for CryptoKey-related operations
 type CryptoKeyRepository interface {
+	// Create adds a new CryptoKey to the database
 	Create(ctx context.Context, key *CryptoKeyMeta) error
+	// List lists CryptoKeys in the database with optional filter
 	List(ctx context.Context, query *CryptoKeyQuery) ([]*CryptoKeyMeta, error)
+	// GetByID retrieves a CryptoKey from the database by ID
 	GetByID(ctx context.Context, keyID string) (*CryptoKeyMeta, error)
+	// UpdateByID updates a CryptoKey in the database by ID
 	UpdateByID(ctx context.Context, key *CryptoKeyMeta) error
+	// DeleteByID deleted a CryptoKey in the database by ID
 	DeleteByID(ctx context.Context, keyID string) error
 }
 
@@ -50,9 +55,9 @@ type VaultConnector interface {
 	// and returns the metadata for each uploaded byte stream.
 	Upload(ctx context.Context, bytes []byte, userID, keyPairID, keyType, keyAlgorihm string, keySize uint32) (*CryptoKeyMeta, error)
 
-	// Download retrieves a key's content by its IDs and type and returns the data as a byte slice.
+	// Download retrieves a key's content by IDs and type and returns the data as a byte slice.
 	Download(ctx context.Context, keyID, keyPairID, keyType string) ([]byte, error)
 
-	// Delete deletes a key from Vault Storage by its IDs and type and returns any error encountered.
+	// Delete deletes a key from Vault Storage by IDs and type and returns any error encountered.
 	Delete(ctx context.Context, keyID, keyPairID, keyType string) error
 }

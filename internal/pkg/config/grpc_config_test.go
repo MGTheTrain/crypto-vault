@@ -43,9 +43,9 @@ func TestInitializeGrpcConfig(t *testing.T) {
 				Port:        "8080",
 				GatewayPort: "9090",
 				Database: DatabaseSettings{
-					Type: "postgres",
-					DSN:  "user:password@tcp(localhost:5432)/dbname",
-					Name: "mydb",
+					Type:   "postgres",
+					DSN:    "user:password@tcp(localhost:5432)/dbname",
+					DBName: "mydb",
 				},
 				BlobConnector: BlobConnectorSettings{
 					CloudProvider:    "aws",

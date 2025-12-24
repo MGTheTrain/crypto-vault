@@ -108,14 +108,14 @@ service BlobDownload {
 }
 
 service BlobMetadata {
-    // List metadata of blobs
+    // List blobs metadata
     rpc ListMetadata (BlobMetaQuery) returns (stream BlobMetaResponse) {
         option (google.api.http) = {
             get: "/api/v1/cvs/blobs"
         };
     }  
 
-    // Get metadata by ID
+    // Get blob metadata by ID
     rpc GetMetadataByID (IdRequest) returns (BlobMetaResponse) {
         option (google.api.http) = {
             get: "/api/v1/cvs/blobs/{id}"
@@ -150,14 +150,14 @@ service CryptoKeyDownload {
 }
 
 service CryptoKeyMetadata {
-    // List metadata of crypto keys
+    // List crypto keys metadata
     rpc ListMetadata (KeyMetadataQuery) returns (stream CryptoKeyMetaResponse) {
         option (google.api.http) = {
             get: "/api/v1/cvs/keys"
         };
     }  
 
-    // Get metadata by ID
+    // Get crypto key metadata by ID
     rpc GetMetadataByID (IdRequest) returns (CryptoKeyMetaResponse) {
         option (google.api.http) = {
             get: "/api/v1/cvs/keys/{id}"

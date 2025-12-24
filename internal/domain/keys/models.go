@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// CryptoKeyMeta represents the encryption key entity
+// CryptoKeyMeta entity
 type CryptoKeyMeta struct {
 	ID              string    `gorm:"primaryKey" validate:"required,uuid4"`
 	KeyPairID       string    `gorm:"index" validate:"required,uuid4"`

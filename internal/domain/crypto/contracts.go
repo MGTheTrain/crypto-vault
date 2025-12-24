@@ -70,7 +70,7 @@ import (
 // 	// It returns any error encountered during the addition of the key.
 // 	AddKeyToToken() error
 
-// 	// DeleteKeyFromToken deletes a cryptographic key from a PKCS#11 token by its type and label.
+// 	// DeleteKeyFromToken deletes a cryptographic key from a PKCS#11 token by type and label.
 // 	// It returns any error encountered during the deletion of the key.
 // 	DeleteKeyFromToken(objectType, objectLabel string) error
 // }

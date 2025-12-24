@@ -7,7 +7,7 @@ import (
 	"mime/multipart"
 )
 
-// CreateForm creates a multipart form with a single file and its associated content
+// CreateForm creates a multipart form containing a single file with its associated content
 func CreateForm(content []byte, fileName string) (*multipart.Form, error) {
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
@@ -36,7 +36,8 @@ func CreateForm(content []byte, fileName string) (*multipart.Form, error) {
 	return form, nil
 }
 
-// CreateMultipleFilesForm creates a multipart form with multiple files and their associated contents.
+// CreateMultipleFilesForm creates a multipart form containing multiple files,
+// each with its corresponding content from the 'contents' and 'fileNames' parameters
 func CreateMultipleFilesForm(contents [][]byte, fileNames []string) (*multipart.Form, error) {
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)

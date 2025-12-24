@@ -80,7 +80,7 @@ func (vc *azureVaultConnector) rollbackUploadedBlobs(ctx context.Context, crypto
 	}
 }
 
-// Download retrieves a key's content by its IDs and Type and returns the data as a byte slice.
+// Download retrieves a key's content by IDs and Type and returns the data as a byte slice.
 func (vc *azureVaultConnector) Download(ctx context.Context, keyID, keyPairID, keyType string) ([]byte, error) {
 
 	fullKeyName := fmt.Sprintf("%s/%s-%s", keyPairID, keyID, keyType)
@@ -100,7 +100,7 @@ func (vc *azureVaultConnector) Download(ctx context.Context, keyID, keyPairID, k
 	return downloadedData.Bytes(), nil
 }
 
-// Delete deletes a key from Azure Blob Storage by its IDs and Type.
+// Delete deletes a key from Azure Blob Storage by IDs and Type.
 func (vc *azureVaultConnector) Delete(ctx context.Context, keyID, keyPairID, keyType string) error {
 	fullKeyName := fmt.Sprintf("%s/%s-%s", keyPairID, keyID, keyType)
 

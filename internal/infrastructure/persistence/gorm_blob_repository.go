@@ -39,6 +39,7 @@ func (r *gormBlobRepository) Create(ctx context.Context, blob *blobs.BlobMeta) e
 	return nil
 }
 
+// List lists Blobs in the database with optional filter
 func (r *gormBlobRepository) List(ctx context.Context, query *blobs.BlobMetaQuery) ([]*blobs.BlobMeta, error) {
 	// Validate the query parameters before using them
 	if err := query.Validate(); err != nil {
@@ -89,7 +90,7 @@ func (r *gormBlobRepository) List(ctx context.Context, query *blobs.BlobMetaQuer
 	return blobMetas, nil
 }
 
-// GetByID retrieves a Blob by its ID from the database
+// GetByID retrieves a Blob from the database by ID
 func (r *gormBlobRepository) GetByID(ctx context.Context, blobID string) (*blobs.BlobMeta, error) {
 	var blob blobs.BlobMeta
 	if err := r.db.WithContext(ctx).Where("id = ?", blobID).First(&blob).Error; err != nil {
@@ -102,7 +103,7 @@ func (r *gormBlobRepository) GetByID(ctx context.Context, blobID string) (*blobs
 	return &blob, nil
 }
 
-// UpdateByID updates an existing Blob in the database
+// UpdateByID updates a Blob in the database by ID
 func (r *gormBlobRepository) UpdateByID(ctx context.Context, blob *blobs.BlobMeta) error {
 	// Validate the Blob before updating
 	if err := blob.Validate(); err != nil {
@@ -116,7 +117,7 @@ func (r *gormBlobRepository) UpdateByID(ctx context.Context, blob *blobs.BlobMet
 	return nil
 }
 
-// DeleteByID removes a Blob from the database by its ID
+// DeleteByID deleted a Blob in the database by ID
 func (r *gormBlobRepository) DeleteByID(ctx context.Context, blobID string) error {
 	if err := r.db.WithContext(ctx).Where("id = ?", blobID).Delete(&blobs.BlobMeta{}).Error; err != nil {
 		return fmt.Errorf("failed to delete blob: %w", err)
