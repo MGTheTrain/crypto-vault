@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/utils"
+	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 
 	pb "proto"
@@ -408,7 +408,7 @@ func (s *CryptoKeyMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequ
 	}, nil
 }
 
-// Register the gRPC handlers for each service
+// Register gRPC handlers for each service
 
 // RegisterBlobUploadServer registers the BlobUpload gRPC service with the server
 func RegisterBlobUploadServer(server *grpc.Server, blobUploadServer *BlobUploadServer) {
@@ -440,7 +440,7 @@ func RegisterCryptoKeyMetadataServer(server *grpc.Server, cryptoKeyMetadataServe
 	pb.RegisterCryptoKeyMetadataServer(server, cryptoKeyMetadataServer)
 }
 
-// Register the gRPC-Gateway handlers for each service
+// Register gRPC-Gateway handlers for each service
 
 // Multipart file uploads are not supported with grpc-gateway. For more details,
 // see: https://grpc-ecosystem.github.io/grpc-gateway/docs/mapping/binary_file_uploads/. As a result, subsequent code can be commented.
