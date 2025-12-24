@@ -35,7 +35,7 @@ go run main.go
 
 ```bash
 # From project root
-make compose-up
+make compose-start
 ```
 
 ### API Documentation
@@ -61,6 +61,7 @@ The port may vary based on your configuration (default: `8080`).
 The service requires a YAML configuration file. See [configs/rest-app.yaml](../../configs/rest-app.yaml) for the template.
 
 Key configuration options:
+
 - Database connection (PostgreSQL/SQLite)
 - Azure Blob Storage credentials
 - Azure Key Vault settings

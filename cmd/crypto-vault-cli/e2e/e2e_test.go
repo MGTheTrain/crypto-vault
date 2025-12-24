@@ -47,7 +47,7 @@ func TestAESEncryptionAndDecryption(t *testing.T) {
 
 	encOutputFile := fmt.Sprintf("data/%s-output.enc", uuid)
 	cmdEncrypt := "go"
-	argsEncrypt := []string{"run", "../../cmd/crypto-vault-cli/main.go", "encrypt-aes", "--input-file", inputFile, "--output-file", encOutputFile, "--symmetric-key", "your-generated-symmetric-key"}
+	argsEncrypt := []string{"run", "../main.go", "encrypt-aes", "--input-file", inputFile, "--output-file", encOutputFile, "--symmetric-key", "your-generated-symmetric-key"}
 
 	_, err := runCommand(t, cmdEncrypt, argsEncrypt)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestAESEncryptionAndDecryption(t *testing.T) {
 
 	decOutputFile := fmt.Sprintf("data/%s-decrypted.txt", uuid)
 	cmdDecrypt := "go"
-	argsDecrypt := []string{"run", "../../cmd/crypto-vault-cli/main.go", "decrypt-aes", "--input-file", encOutputFile, "--output-file", decOutputFile, "--symmetric-key", "your-generated-symmetric-key"}
+	argsDecrypt := []string{"run", "../main.go", "decrypt-aes", "--input-file", encOutputFile, "--output-file", decOutputFile, "--symmetric-key", "your-generated-symmetric-key"}
 
 	_, err = runCommand(t, cmdDecrypt, argsDecrypt)
 	if err != nil {
@@ -70,7 +70,7 @@ func TestRSAEncryptionAndDecryption(t *testing.T) {
 
 	encOutputFile := fmt.Sprintf("data/%s-encrypted.txt", uuid)
 	cmdEncryptRSA := "go"
-	argsEncryptRSA := []string{"run", "../../cmd/crypto-vault-cli/main.go", "encrypt-rsa", "--input-file", inputFile, "--output-file", encOutputFile, "--public-key", "your-generated-public-key"}
+	argsEncryptRSA := []string{"run", "../main.go", "encrypt-rsa", "--input-file", inputFile, "--output-file", encOutputFile, "--public-key", "your-generated-public-key"}
 
 	_, err := runCommand(t, cmdEncryptRSA, argsEncryptRSA)
 	if err != nil {
@@ -79,7 +79,7 @@ func TestRSAEncryptionAndDecryption(t *testing.T) {
 
 	decOutputFile := fmt.Sprintf("data/%s-decrypted.txt", uuid)
 	cmdDecryptRSA := "go"
-	argsDecryptRSA := []string{"run", "../../cmd/crypto-vault-cli/main.go", "decrypt-rsa", "--input-file", encOutputFile, "--output-file", decOutputFile, "--private-key", "your-generated-private-key"}
+	argsDecryptRSA := []string{"run", "../main.go", "decrypt-rsa", "--input-file", encOutputFile, "--output-file", decOutputFile, "--private-key", "your-generated-private-key"}
 
 	_, err = runCommand(t, cmdDecryptRSA, argsDecryptRSA)
 	if err != nil {
@@ -94,7 +94,7 @@ func TestRSASignAndVerify(t *testing.T) {
 
 	// Sign
 	cmdSignRSA := "go"
-	argsSignRSA := []string{"run", "../../cmd/crypto-vault-cli/main.go", "sign-rsa", "--input-file", inputFile, "--output-file", signatureFile, "--private-key", "your-generated-private-key"}
+	argsSignRSA := []string{"run", "../main.go", "sign-rsa", "--input-file", inputFile, "--output-file", signatureFile, "--private-key", "your-generated-private-key"}
 
 	_, err := runCommand(t, cmdSignRSA, argsSignRSA)
 	if err != nil {
@@ -104,7 +104,7 @@ func TestRSASignAndVerify(t *testing.T) {
 	// Verify
 	cmdVerifyRSA := "go"
 	argsVerifyRSA := []string{
-		"run", "../../cmd/crypto-vault-cli/main.go", "verify-rsa", "--input-file", inputFile, "--signature-file", signatureFile, "--public-key", "your-generated-public-key",
+		"run", "../main.go", "verify-rsa", "--input-file", inputFile, "--signature-file", signatureFile, "--public-key", "your-generated-public-key",
 	}
 
 	_, err = runCommand(t, cmdVerifyRSA, argsVerifyRSA)
@@ -120,7 +120,7 @@ func TestSigningAndVerificationECDSA(t *testing.T) {
 
 	// Sign
 	cmdSignECDSA := "go"
-	argsSignECDSA := []string{"run", "../../cmd/crypto-vault-cli/main.go", "sign-ecc", "--input-file", inputFile, "--output-file", signatureFile, "--private-key", "your-generated-private-key"}
+	argsSignECDSA := []string{"run", "../main.go", "sign-ecc", "--input-file", inputFile, "--output-file", signatureFile, "--private-key", "your-generated-private-key"}
 
 	_, err := runCommand(t, cmdSignECDSA, argsSignECDSA)
 	if err != nil {
@@ -130,7 +130,7 @@ func TestSigningAndVerificationECDSA(t *testing.T) {
 	// Verify
 	cmdVerifyECDSA := "go"
 	argsVerifyECDSA := []string{
-		"run", "../../cmd/crypto-vault-cli/main.go", "verify-ecc", "--input-file", inputFile, "--signature-file", signatureFile, "--public-key", "your-generated-public-key",
+		"run", "../main.go", "verify-ecc", "--input-file", inputFile, "--signature-file", signatureFile, "--public-key", "your-generated-public-key",
 	}
 
 	_, err = runCommand(t, cmdVerifyECDSA, argsVerifyECDSA)
@@ -147,7 +147,7 @@ func TestPKCS11EncryptionAndDecryption(t *testing.T) {
 	encOutputFile := fmt.Sprintf("data/%s-encrypted-output.enc", uuid)
 	cmdEncryptPKCS11 := "go"
 	argsEncryptPKCS11 := []string{
-		"run", "../../cmd/crypto-vault-cli/main.go", "encrypt", "--token-label", "my-token", "--object-label", "my-rsa-key", "--key-type", "RSA", "--input-file", inputFile, "--output-file", encOutputFile,
+		"run", "../main.go", "encrypt", "--token-label", "my-token", "--object-label", "my-rsa-key", "--key-type", "RSA", "--input-file", inputFile, "--output-file", encOutputFile,
 	}
 
 	_, err := runCommand(t, cmdEncryptPKCS11, argsEncryptPKCS11)
@@ -158,7 +158,7 @@ func TestPKCS11EncryptionAndDecryption(t *testing.T) {
 	decOutputFile := fmt.Sprintf("data/%s-decrypted-output.txt", uuid)
 	cmdDecryptPKCS11 := "go"
 	argsDecryptPKCS11 := []string{
-		"run", "../../cmd/crypto-vault-cli/main.go", "decrypt", "--token-label", "my-token", "--object-label", "my-rsa-key", "--key-type", "RSA", "--input-file", encOutputFile, "--output-file", decOutputFile,
+		"run", "../main.go", "decrypt", "--token-label", "my-token", "--object-label", "my-rsa-key", "--key-type", "RSA", "--input-file", encOutputFile, "--output-file", decOutputFile,
 	}
 
 	_, err = runCommand(t, cmdDecryptPKCS11, argsDecryptPKCS11)
@@ -172,7 +172,7 @@ func TestPKCS11KeyManagement(t *testing.T) {
 
 	// Add RSA Key
 	cmdAddRSAKey := "go"
-	argsAddRSAKey := []string{"run", "../../cmd/crypto-vault-cli/main.go", "add-key", "--token-label", "my-token", "--object-label", "my-rsa-key", "--key-type", "RSA", "--key-size", "2048"}
+	argsAddRSAKey := []string{"run", "../main.go", "add-key", "--token-label", "my-token", "--object-label", "my-rsa-key", "--key-type", "RSA", "--key-size", "2048"}
 
 	_, err := runCommand(t, cmdAddRSAKey, argsAddRSAKey)
 	if err != nil {
@@ -181,7 +181,7 @@ func TestPKCS11KeyManagement(t *testing.T) {
 
 	// List Objects
 	cmdListObjects := "go"
-	argsListObjects := []string{"run", "../../cmd/crypto-vault-cli/main.go", "list-objects", "--token-label", "my-token"}
+	argsListObjects := []string{"run", "../main.go", "list-objects", "--token-label", "my-token"}
 
 	_, err = runCommand(t, cmdListObjects, argsListObjects)
 	if err != nil {
@@ -190,7 +190,7 @@ func TestPKCS11KeyManagement(t *testing.T) {
 
 	// Delete RSA Key
 	cmdDeleteRSAKey := "go"
-	argsDeleteRSAKey := []string{"run", "../../cmd/crypto-vault-cli/main.go", "delete-object", "--token-label", "my-token", "--object-label", "my-rsa-key", "--object-type", "pubkey"}
+	argsDeleteRSAKey := []string{"run", "../main.go", "delete-object", "--token-label", "my-token", "--object-label", "my-rsa-key", "--object-type", "pubkey"}
 
 	_, err = runCommand(t, cmdDeleteRSAKey, argsDeleteRSAKey)
 	if err != nil {

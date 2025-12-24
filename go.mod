@@ -1,6 +1,6 @@
 module crypto_vault_service
 
-go 1.23
+go 1.25.5
 
 replace proto => ./internal/api/grpc/v1/generated
 

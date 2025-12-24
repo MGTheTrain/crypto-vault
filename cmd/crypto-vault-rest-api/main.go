@@ -176,8 +176,9 @@ func startServerWithGracefulShutdown(cfg *config.RestConfig, deps *appDependenci
 
 	// Create HTTP server
 	srv := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: r,
+		Addr:              ":" + cfg.Port,
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second, // Prevent Slowloris attack
 	}
 
 	// Channel to listen for errors from the server

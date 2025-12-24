@@ -2,7 +2,7 @@
     // Docker images officially provided by Microsoft that can be utilized as base images
     // https://hub.docker.com/_/microsoft-vscode-devcontainers
     "name": "Go project tools",
-    "image": "mcr.microsoft.com/vscode/devcontainers/go:1.23",
+    "image": "mcr.microsoft.com/vscode/devcontainers/go:1.25-bookworm",
     // Features to add to the dev container. More info: https://containers.dev/features
     "features": {
         "ghcr.io/devcontainers/features/docker-in-docker:2": {},

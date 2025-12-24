@@ -157,12 +157,12 @@ go run main.go verify \
 
 ## Supported Algorithms
 
-| Operation | Algorithms | Key Sizes |
-|-----------|-----------|-----------|
-| Symmetric Encryption | AES | 128, 192, 256-bit |
-| Asymmetric Encryption | RSA | 2048, 3072, 4096-bit |
-| Digital Signature | RSA, ECDSA | RSA: 2048-4096 bit<br>ECDSA: P-224, P-256, P-384, P-521 |
-| PKCS#11 | RSA, ECDSA | Same as above |
+| Operation             | Algorithms | Key Sizes                                               |
+| --------------------- | ---------- | ------------------------------------------------------- |
+| Symmetric Encryption  | AES        | 128, 192, 256-bit                                       |
+| Asymmetric Encryption | RSA        | 2048, 3072, 4096-bit                                    |
+| Digital Signature     | RSA, ECDSA | RSA: 2048-4096 bit<br>ECDSA: P-224, P-256, P-384, P-521 |
+| PKCS#11               | RSA, ECDSA | Same as above                                           |
 
 ## Testing
 

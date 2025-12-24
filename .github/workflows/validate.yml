@@ -13,10 +13,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Setup Go 1.23.x 🐹
+    - name: Setup Go 1.25.x 🐹
       uses: actions/setup-go@v4
       with:
-        go-version: '1.23.x'
+        go-version: '1.25.x'
 
     - name: Install packages for with tools for auto-formatting and linting  📦
       run: |

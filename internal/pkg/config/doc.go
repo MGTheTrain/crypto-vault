@@ -1,5 +1,6 @@
-// package config is responsible for loading and managing the application's configuration settings.
-// This package provides functionality to load settings from various sources, validate them,
-// and make them accessible to other parts of the application. It ensures that the configuration is centralized
-// and can be modified or extended without touching the core logic of the application.
+// Package config provides functionality for loading and managing application configuration.
+//
+// This package handles loading settings from various sources, validating them,
+// and making them accessible throughout the application. It centralizes
+// configuration management for easier modification and extension.
 package config

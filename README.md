@@ -6,7 +6,7 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 
 ## References
 
-- [OpenSSL with libp11 for Signing, Verifying and Encrypting, Decrypting](https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pkcs)
+- [OpenSSL with libp11 for Signing, Verifying and Encrypting, Decrypting](https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pkcs)
 - [pkcs11-tool usage](https://docs.nitrokey.com/nethsm/pkcs11-tool#id1)
 - [OpenFGA online editor](https://play.fga.dev/sandbox/?store=github)
 - [Adding gRPC-Gateway annotations to an existing proto file](https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/)
@@ -64,57 +64,50 @@ apt-get install -y openssl opensc softhsm libssl-dev libengine-pkcs11-openssl
 ### Make targets
 
 ```sh
- make help
-Available Makefile targets:
-  format-and-lint                               - Run the format and linting script
-  lint-results                                  - Write golang-ci lint findings to a linter-findings.txt file
-  run-unit-tests                                - Run the unit tests
-  run-integration-tests                         - Run the integration tests
-  run-unit-and-integration-tests                - Run the unit and integration tests
-  check-coverage                                - Run the unit and integration tests and check if code coverage of min 80 percent is achieved
-  run-api-tests                                 - Run the api tests
-  spin-up-integration-test-docker-containers    - Spin up Docker containers for integration tests (Postgres, Azure Blob Storage)
-  spin-up-docker-containers                     - Spin up Docker containers with internal containerized applications
-  shut-down-docker-containers                   - Shut down the application Docker containers
-  generate-swagger-docs                         - Convert Go annotations to Swagger Documentation 2.0
-  generate-grpc-files                           - Generate Go gRPC code from .proto files
-  remove-artifacts                              - Remove artifacts
-```
+Usage: make [target] [PKG=./path/to/package] [TYPE=test,types]
 
-### Formatting and linting
+Available targets:
+  help                                     Show this help message
 
-```sh
-make format-and-lint
-```
+:Development
+  format-and-lint                          Run formatting and linting
+  lint-results                             Write golang-ci lint findings to file
 
-### Run Tests
+:Testing
+  tests                                    Run tests (use PKG=./path TYPE=unit,integration,e2e)
+  coverage-check                           Run unit and integration tests for internal packages and check coverage threshold
 
-To run `unit tests` on Unix-like systems execute
+:Coverage Reports
+  coverage-html                            Generate HTML coverage report. Open HTML file using a HTML viewer in browser
+  coverage-func                            Show coverage by function in terminal
 
-```sh
-make run-unit-tests
-```
+:Docker
+  compose-start-infra                      Start integration test containers (postgres, azure-blob-storage)
+  compose-start                            Start all docker containers
+  compose-stop                             Stop all docker containers
 
-To run `integration tests` on Unix-like systems execute
+:Code Generation
+  swagger-docs-gen                         Generate Swagger documentation
+  grpc-files-gen                           Generate Go gRPC code from proto files
 
-```sh
-make spin-up-integration-test-docker-containers
-make run-integration-tests
-make shut-down-docker-containers
-```
+:Cleanup
+  clean                                    Remove generated artifacts
 
-To run both `unit and integration tests` including a `coverage report in HTML format` on Unix-like systems execute
+Test type options (TYPE parameter):
+  unit         - Run unit tests only
+  integration  - Run integration tests only
+  e2e          - Run end-to-end tests only
+  unit,integration         - Run both unit and integration tests
+  unit,integration,e2e     - Run all test types
 
-```sh
-make spin-up-integration-test-docker-containers
-make run-unit-and-integration-tests
-make shut-down-docker-containers
-```
-
-To run `e2e-tests` on Unix-like systems execute
-
-```sh
-make run-e2e-tests
+Examples:
+  make tests                                              # Run unit tests for all packages
+  make tests PKG=./internal/pkg/config                    # Run unit tests for specific package
+  make tests TYPE=integration                             # Run integration tests for all packages
+  make tests TYPE=unit,integration                        # Run unit and integration tests for all packages
+  make tests PKG=./internal/app TYPE=integration          # Run integration tests for specific package
+  make tests PKG=./cmd/crypto-vault-cli/e2e TYPE=e2e      # Run e2e tests for specific package
+  make coverage-check                                     # Run unit and integration tests for internal package and check code coverage
 ```
 
 ### Applications
@@ -123,4 +116,4 @@ You can find applications utilizing [internal packages](./internal/) in the [cmd
 
 ### Documentation
 
-You can find documentation on architectural decisions, diagrams and concepts [here](./docs).
+You can find documentation [here](./docs).

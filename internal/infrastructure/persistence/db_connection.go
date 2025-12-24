@@ -3,6 +3,7 @@ package persistence
 import (
 	"crypto_vault_service/internal/pkg/config"
 	"fmt"
+	"log"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -50,7 +51,9 @@ func connectPostgres(settings config.DatabaseSettings) (*gorm.DB, error) {
 		_, _ = sqlDB.Exec(fmt.Sprintf("CREATE DATABASE %s", settings.Name))
 
 		// Close initial connection
-		sqlDB.Close()
+		if err := sqlDB.Close(); err != nil {
+			return nil, fmt.Errorf("failed to close initial DB connection: %w", err)
+		}
 
 		// Reconnect to the specific database
 		dsn := fmt.Sprintf("%s dbname=%s", settings.DSN, settings.Name)
@@ -83,22 +86,31 @@ func connectSQLite(settings config.DatabaseSettings) (*gorm.DB, error) {
 func CloseDB(db *gorm.DB) error {
 	sqlDB, err := db.DB()
 	if err != nil {
-		return fmt.Errorf("failed to get DB instance: %w", err)
+		return fmt.Errorf("failed to get database instance: %w", err)
 	}
-	return sqlDB.Close()
+
+	if err := sqlDB.Close(); err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+	return nil
 }
 
 // DropDatabase drops a PostgreSQL database (test cleanup utility)
-func DropDatabase(adminDSN, Name string) error {
+func DropDatabase(adminDSN, dbName string) error {
 	db, err := gorm.Open(postgres.Open(adminDSN), &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
-	defer CloseDB(db)
+	defer func() {
+		if err := CloseDB(db); err != nil {
+			// Log error but don't fail since this is cleanup
+			log.Printf("Warning: failed to close database connection: %v", err)
+		}
+	}()
 
-	err = db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", Name)).Error
+	err = db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbName)).Error
 	if err != nil {
-		return fmt.Errorf("failed to drop database '%s': %w", Name, err)
+		return fmt.Errorf("failed to drop database '%s': %w", dbName, err)
 	}
 
 	return nil

@@ -29,7 +29,7 @@ services:
     restart: on-failure
     
   postgres: 
-    image: postgres
+    image: postgres:16-alpine
     container_name: postgres-db
     environment:
       - POSTGRES_LOGGING=true
@@ -43,7 +43,7 @@ services:
   # command: psql "host=localhost port=5432 user=postgres password=postgres sslmode=prefer"
 
   azure-blob-storage:
-    image: mcr.microsoft.com/azure-storage/azurite
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     container_name: azure-blob-storage
     environment:
       - ACCOUNT_NAME=devstoreaccount1

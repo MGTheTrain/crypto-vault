@@ -36,7 +36,7 @@ go run main.go
 
 ```bash
 # From project root
-make compose-up
+make compose-start
 ```
 
 ### Service Endpoints
@@ -57,6 +57,7 @@ grpcurl -plaintext localhost:50051 list
 ```
 
 Expected output:
+
 ```
 grpc.reflection.v1.ServerReflection
 grpc.reflection.v1alpha.ServerReflection
@@ -92,11 +93,13 @@ rm test.tmp
 #### List Blob Metadata
 
 **Via HTTP Gateway**:
+
 ```bash
 curl -X GET 'http://localhost:8090/api/v1/cvs/blobs' -H 'accept: application/json'
 ```
 
 **Via grpcurl**:
+
 ```bash
 grpcurl -import-path ./internal/api/grpc/v1/proto \
   -proto internal/api/grpc/v1/proto/internal/service.proto \
@@ -107,11 +110,13 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
 #### Get Blob Metadata by ID
 
 **Via HTTP Gateway**:
+
 ```bash
 curl -X GET 'http://localhost:8090/api/v1/cvs/blobs/<blob_id>' -H 'accept: application/json'
 ```
 
 **Via grpcurl**:
+
 ```bash
 grpcurl -import-path ./internal/api/grpc/v1/proto \
   -proto internal/api/grpc/v1/proto/internal/service.proto \
@@ -122,6 +127,7 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
 #### Download Blob
 
 **Via HTTP Gateway**:
+
 ```bash
 curl -X GET 'http://localhost:8090/api/v1/cvs/blobs/<blob_id>/file' \
   -H 'accept: application/json' \
@@ -129,6 +135,7 @@ curl -X GET 'http://localhost:8090/api/v1/cvs/blobs/<blob_id>/file' \
 ```
 
 **Via grpcurl**:
+
 ```bash
 grpcurl -import-path ./internal/api/grpc/v1/proto \
   -proto internal/api/grpc/v1/proto/internal/service.proto \
@@ -139,12 +146,14 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
 #### Delete Blob
 
 **Via HTTP Gateway**:
+
 ```bash
 curl -X DELETE 'http://localhost:8090/api/v1/cvs/blobs/<blob_id>' \
   -H 'accept: application/json'
 ```
 
 **Via grpcurl**:
+
 ```bash
 grpcurl -import-path ./internal/api/grpc/v1/proto \
   -proto internal/api/grpc/v1/proto/internal/service.proto \
@@ -198,6 +207,7 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
 #### Delete Key
 
 **Via HTTP Gateway**:
+
 ```bash
 curl -X DELETE 'http://localhost:8090/api/v1/cvs/keys/<key_id>' \
   -H 'accept: application/json'
@@ -217,6 +227,7 @@ curl -X DELETE 'http://localhost:8090/api/v1/cvs/keys/<key_id>' \
 The service requires a YAML configuration file. See [configs/grpc-app.yaml](../../configs/grpc-app.yaml) for the template.
 
 Key configuration options:
+
 - gRPC server port (default: `50051`)
 - gRPC-Gateway port (default: `8090`)
 - Database connection (PostgreSQL/SQLite)
