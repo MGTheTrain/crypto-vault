@@ -210,7 +210,7 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 			default:
 				return nil, nil, fmt.Errorf("unsupported operation: %s", operation)
 			}
-		case crypto.AlgorithmEC:
+		case crypto.AlgorithmECDSA:
 			if operation == crypto.OperationSigning {
 
 				privateKeyD := new(big.Int).SetBytes(keyBytes[:32])

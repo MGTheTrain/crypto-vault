@@ -20,7 +20,7 @@ func TestCryptoKeyUploadService_Upload_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := crypto.AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmECDSA
 	var keySize uint32 = 256
 	ctx := context.Background()
 
@@ -84,7 +84,7 @@ func TestCryptoKeyMetadataService_GetByID_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := crypto.AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmECDSA
 	var keySize uint32 = 256
 	ctx := context.Background()
 
@@ -101,7 +101,7 @@ func TestCryptoKeyMetadataService_DeleteByID_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := crypto.AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmECDSA
 	var keySize uint32 = 521
 	ctx := context.Background()
 
@@ -121,7 +121,7 @@ func TestCryptoKeyDownloadService_Download_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := crypto.AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmECDSA
 	var keySize uint32 = 256
 	ctx := context.Background()
 
@@ -140,7 +140,7 @@ func TestCryptoKeyMetadataService_List_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// Create multiple keys
-	_, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmEC, 256)
+	_, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
 	require.NoError(t, err)
 
 	_, err = services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)

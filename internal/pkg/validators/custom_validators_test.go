@@ -39,9 +39,9 @@ func TestKeySizeValidation(t *testing.T) {
 		{"RSA invalid", TestKeyConfig{"RSA", 1234}, true},
 
 		// EC cases
-		{"EC valid 256", TestKeyConfig{"EC", 256}, false},
-		{"EC valid 521", TestKeyConfig{"EC", 521}, false},
-		{"EC invalid", TestKeyConfig{"EC", 300}, true},
+		{"EC valid 256", TestKeyConfig{"ECDSA", 256}, false},
+		{"EC valid 521", TestKeyConfig{"ECDSA", 521}, false},
+		{"EC invalid", TestKeyConfig{"ECDSA", 300}, true},
 
 		// Unknown algorithm
 		{"Unknown algorithm", TestKeyConfig{"Unknown", 256}, true},

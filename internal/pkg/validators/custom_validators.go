@@ -14,7 +14,7 @@ func KeySizeValidation(fl validator.FieldLevel) bool {
 	case "RSA":
 		// RSA key sizes should be 512, 1024, 2048, 4096
 		return keySize == 512 || keySize == 1024 || keySize == 2048 || keySize == 4096
-	case "EC":
+	case "ECDSA":
 		// EC key sizes can be 256, 384, or 521
 		return keySize == 256 || keySize == 384 || keySize == 521
 	default:

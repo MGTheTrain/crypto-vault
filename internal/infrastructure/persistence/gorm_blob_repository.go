@@ -35,7 +35,7 @@ func (r *gormBlobRepository) Create(ctx context.Context, blob *blobs.BlobMeta) e
 	if err := r.db.WithContext(ctx).Create(&blob).Error; err != nil {
 		return fmt.Errorf("failed to create blob: %w", err)
 	}
-	r.logger.Info("Created blob metadata with id %s", blob.ID)
+	r.logger.Info("Created blob metadata with id ", blob.ID)
 	return nil
 }
 
@@ -113,7 +113,7 @@ func (r *gormBlobRepository) UpdateByID(ctx context.Context, blob *blobs.BlobMet
 	if err := r.db.WithContext(ctx).Save(&blob).Error; err != nil {
 		return fmt.Errorf("failed to update blob: %w", err)
 	}
-	r.logger.Info("Updated blob metadata with id %s", blob.ID)
+	r.logger.Info("Updated blob metadata with id ", blob.ID)
 	return nil
 }
 
@@ -122,6 +122,6 @@ func (r *gormBlobRepository) DeleteByID(ctx context.Context, blobID string) erro
 	if err := r.db.WithContext(ctx).Where("id = ?", blobID).Delete(&blobs.BlobMeta{}).Error; err != nil {
 		return fmt.Errorf("failed to delete blob: %w", err)
 	}
-	r.logger.Info("Deleted blob metadata with id %s", blobID)
+	r.logger.Info("Deleted blob metadata with id ", blobID)
 	return nil
 }

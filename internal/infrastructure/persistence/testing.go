@@ -26,8 +26,8 @@ const (
 	TestKeyTypePublic  = "public"
 	TestKeyTypePrivate = "private"
 
-	TestAlgorithmEC  = "EC"
-	TestAlgorithmRSA = "RSA"
+	TestAlgorithmECDSA = "ECDSA"
+	TestAlgorithmRSA   = "RSA"
 
 	TestBlobTypeText   = "text"
 	TestBlobTypeBinary = "binary"
@@ -119,7 +119,7 @@ func CreateTestKey(t *testing.T, userID string) *keys.CryptoKeyMeta {
 		ID:              uuid.NewString(),
 		KeyPairID:       uuid.NewString(),
 		Type:            TestKeyTypePublic,
-		Algorithm:       TestAlgorithmEC,
+		Algorithm:       TestAlgorithmECDSA,
 		KeySize:         TestKeySize256,
 		DateTimeCreated: time.Now(),
 		UserID:          userID,

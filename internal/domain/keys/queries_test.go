@@ -23,7 +23,7 @@ func TestCryptoKeyQuery_ValidCases(t *testing.T) {
 	validCases := []CryptoKeyQuery{
 		{Algorithm: "AES", Type: "private", Limit: 5, Offset: 0, SortBy: "ID", SortOrder: "desc"},
 		{Algorithm: "RSA", Type: "public", SortBy: "type", SortOrder: "asc"},
-		{Algorithm: "EC", Limit: 1, Offset: 0},
+		{Algorithm: "ECDSA", Limit: 1, Offset: 0},
 	}
 
 	for _, tc := range validCases {

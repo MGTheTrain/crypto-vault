@@ -25,8 +25,8 @@ func TestUploadKeyRequest_Validate(t *testing.T) {
 		{"Invalid RSA 1234", UploadKeyRequest{Algorithm: "RSA", KeySize: 1234}, true},
 
 		// EC Valid
-		{"Valid EC 256", UploadKeyRequest{Algorithm: "EC", KeySize: 256}, false},
-		{"Invalid EC 999", UploadKeyRequest{Algorithm: "EC", KeySize: 999}, true},
+		{"Valid EC 256", UploadKeyRequest{Algorithm: "ECDSA", KeySize: 256}, false},
+		{"Invalid EC 999", UploadKeyRequest{Algorithm: "ECDSA", KeySize: 999}, true},
 
 		// Empty (Optional fields)
 		{"Empty fields (valid)", UploadKeyRequest{}, false},

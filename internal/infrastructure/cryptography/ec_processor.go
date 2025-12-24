@@ -115,7 +115,7 @@ func (e *ecProcessor) SavePrivateKeyToFile(privateKey *ecdsa.PrivateKey, filenam
 		return fmt.Errorf("failed to encode private key: %w", err)
 	}
 
-	e.logger.Info("Saved EC private key %s", filename)
+	e.logger.Info("Saved EC private key ", filename)
 	return nil
 }
 
@@ -145,7 +145,7 @@ func (e *ecProcessor) SavePublicKeyToFile(publicKey *ecdsa.PublicKey, filename s
 	if err != nil {
 		return fmt.Errorf("failed to encode public key: %w", err)
 	}
-	e.logger.Info("Saved EC public key %s", filename)
+	e.logger.Info("Saved EC public key ", filename)
 
 	return nil
 }
@@ -157,7 +157,7 @@ func (e *ecProcessor) SaveSignatureToFile(filename string, data []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed to write data to file %s: %w", filename, err)
 	}
-	e.logger.Info("Saved signature file %s", filename)
+	e.logger.Info("Saved signature file ", filename)
 	return nil
 }
 

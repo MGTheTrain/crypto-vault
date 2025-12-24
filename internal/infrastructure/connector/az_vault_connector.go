@@ -66,7 +66,7 @@ func (vc *azureVaultConnector) Upload(ctx context.Context, bytes []byte, userID,
 		return nil, fmt.Errorf("failed to upload blob '%s' to storage: %w", fullKeyName, err)
 	}
 
-	vc.logger.Info("uploaded blob %s", fullKeyName)
+	vc.logger.Info("uploaded blob ", fullKeyName)
 	return cryptoKeyMeta, nil
 }
 
@@ -96,7 +96,7 @@ func (vc *azureVaultConnector) Download(ctx context.Context, keyID, keyPairID, k
 		return nil, fmt.Errorf("failed to read data from blob '%s': %w", fullKeyName, err)
 	}
 
-	vc.logger.Info("downloaded blob %s", fullKeyName)
+	vc.logger.Info("downloaded blob ", fullKeyName)
 	return downloadedData.Bytes(), nil
 }
 
@@ -109,6 +109,6 @@ func (vc *azureVaultConnector) Delete(ctx context.Context, keyID, keyPairID, key
 		return fmt.Errorf("failed to delete blob '%s': %w", fullKeyName, err)
 	}
 
-	vc.logger.Info("deleted blob %s", fullKeyName)
+	vc.logger.Info("deleted blob ", fullKeyName)
 	return nil
 }

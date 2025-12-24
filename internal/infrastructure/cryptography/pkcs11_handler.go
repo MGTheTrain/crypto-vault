@@ -13,8 +13,8 @@ import (
 
 // pkcs11Handler represents the parameters and operations for interacting with a PKCS#11 token
 type pkcs11Handler struct {
-	Settings *config.PKCS11Settings
-	Logger   logger.Logger
+	settings *config.PKCS11Settings
+	logger   logger.Logger
 }
 
 // NewPKCS11Handler creates and returns a new instance of PKCS11Handler
@@ -24,8 +24,8 @@ func NewPKCS11Handler(settings *config.PKCS11Settings, logger logger.Logger) (cr
 	}
 
 	return &pkcs11Handler{
-		Settings: settings,
-		Logger:   logger,
+		settings: settings,
+		logger:   logger,
 	}, nil
 }
 
@@ -41,13 +41,13 @@ func (token *pkcs11Handler) executePKCS11ToolCommand(args []string) (string, err
 
 // ListTokenSlots lists all available tokens in the available slots
 func (token *pkcs11Handler) ListTokenSlots() ([]crypto.Token, error) {
-	if err := utils.CheckNonEmptyStrings(token.Settings.ModulePath); err != nil {
-		return nil, fmt.Errorf("failed to check non-empty string for ModulePath='%s': %w", token.Settings.ModulePath, err)
+	if err := utils.CheckNonEmptyStrings(token.settings.ModulePath); err != nil {
+		return nil, fmt.Errorf("failed to check non-empty string for ModulePath='%s': %w", token.settings.ModulePath, err)
 	}
 
 	// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
 	listCmd := exec.Command(
-		"pkcs11-tool", "--module", token.Settings.ModulePath, "-L",
+		"pkcs11-tool", "--module", token.settings.ModulePath, "-L",
 	)
 
 	output, err := listCmd.CombinedOutput()
@@ -104,13 +104,13 @@ func (token *pkcs11Handler) ListTokenSlots() ([]crypto.Token, error) {
 
 // ListObjects lists all objects (e.g. keys) in a specific token based on the token label.
 func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]crypto.TokenObject, error) {
-	if err := utils.CheckNonEmptyStrings(tokenLabel, token.Settings.ModulePath); err != nil {
-		return nil, fmt.Errorf("failed to check non-empty strings for tokenLabel='%s' and ModulePath='%s': %w", tokenLabel, token.Settings.ModulePath, err)
+	if err := utils.CheckNonEmptyStrings(tokenLabel, token.settings.ModulePath); err != nil {
+		return nil, fmt.Errorf("failed to check non-empty strings for tokenLabel='%s' and ModulePath='%s': %w", tokenLabel, token.settings.ModulePath, err)
 	}
 
 	// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
 	listObjectsCmd := exec.Command(
-		"pkcs11-tool", "--module", token.Settings.ModulePath, "-O", "--token-label", tokenLabel, "--pin", token.Settings.UserPin,
+		"pkcs11-tool", "--module", token.settings.ModulePath, "-O", "--token-label", tokenLabel, "--pin", token.settings.UserPin,
 	)
 
 	output, err := listObjectsCmd.CombinedOutput()
@@ -161,18 +161,18 @@ func (token *pkcs11Handler) isTokenSet(label string) (bool, error) {
 		return false, fmt.Errorf("failed to check non-empty string for label='%s': %w", label, err)
 	}
 
-	args := []string{"--module", token.Settings.ModulePath, "-T"}
+	args := []string{"--module", token.settings.ModulePath, "-T"}
 	output, err := token.executePKCS11ToolCommand(args)
 	if err != nil {
 		return false, fmt.Errorf("failed to execute PKCS#11 tool command with args=%v: %w", args, err)
 	}
 
 	if strings.Contains(output, label) && strings.Contains(output, "token initialized") {
-		token.Logger.Info("Token with label '%s' exists.\n", label)
+		token.logger.Info("Token with label ", label, " exists")
 		return true, nil
 	}
 
-	token.Logger.Info("Token with label '%s' does not exist.\n", label)
+	token.logger.Info("Token with label ", label, " does not exist")
 	return false, nil
 }
 
@@ -191,13 +191,13 @@ func (token *pkcs11Handler) InitializeToken(label string) error {
 		return nil
 	}
 
-	args := []string{"--module", token.Settings.ModulePath, "--init-token", "--label", label, "--so-pin", token.Settings.SOPin, "--init-pin", "--pin", token.Settings.UserPin, "--slot", token.Settings.SlotID}
+	args := []string{"--module", token.settings.ModulePath, "--init-token", "--label", label, "--so-pin", token.settings.SOPin, "--init-pin", "--pin", token.settings.UserPin, "--slot", token.settings.SlotID}
 	_, err = token.executePKCS11ToolCommand(args)
 	if err != nil {
 		return fmt.Errorf("failed to initialize token with label '%s': %w", label, err)
 	}
 
-	token.Logger.Info("Token with label '%s' initialized successfully.\n", label)
+	token.logger.Info("Token with label ", label, " initialized successfully")
 	return nil
 }
 
@@ -251,12 +251,12 @@ func (token *pkcs11Handler) addECDSASignKey(label, objectLabel string, keySize u
 	}
 
 	args := []string{
-		"--module", token.Settings.ModulePath,
+		"--module", token.settings.ModulePath,
 		"--token-label", label,
 		"--keypairgen",
 		"--key-type", fmt.Sprintf("EC:%s", curve), // Use the dynamically selected curve
 		"--label", objectLabel,
-		"--pin", token.Settings.UserPin,
+		"--pin", token.settings.UserPin,
 		"--usage-sign",
 	}
 
@@ -265,7 +265,7 @@ func (token *pkcs11Handler) addECDSASignKey(label, objectLabel string, keySize u
 		return fmt.Errorf("failed to add ECDSA key to token: %w", err)
 	}
 
-	token.Logger.Info("ECDSA key with label '%s' added to token '%s'", objectLabel, label)
+	token.logger.Info("ECDSA key with label", label, " added to token ", objectLabel)
 	return nil
 }
 
@@ -291,12 +291,12 @@ func (token *pkcs11Handler) addRSASignKey(label, objectLabel string, keySize uin
 	}
 
 	args := []string{
-		"--module", token.Settings.ModulePath,
+		"--module", token.settings.ModulePath,
 		"--token-label", label,
 		"--keypairgen",
 		"--key-type", fmt.Sprintf("RSA:%d", keySize),
 		"--label", objectLabel,
-		"--pin", token.Settings.UserPin,
+		"--pin", token.settings.UserPin,
 		"--usage-sign",
 	}
 	_, err := token.executePKCS11ToolCommand(args)
@@ -304,7 +304,7 @@ func (token *pkcs11Handler) addRSASignKey(label, objectLabel string, keySize uin
 		return fmt.Errorf("failed to add RSA key to token: %w", err)
 	}
 
-	token.Logger.Info("RSA key with label '%s' added to token '%s'", objectLabel, label)
+	token.logger.Info("RSA key with label ", label, " added to token ", objectLabel)
 	return nil
 }
 
@@ -328,12 +328,12 @@ func (token *pkcs11Handler) addRSAEncryptKey(label, objectLabel string, keySize 
 	}
 
 	args := []string{
-		"--module", token.Settings.ModulePath,
+		"--module", token.settings.ModulePath,
 		"--token-label", label,
 		"--keypairgen",
 		"--key-type", fmt.Sprintf("RSA:%d", keySize),
 		"--label", objectLabel,
-		"--pin", token.Settings.UserPin,
+		"--pin", token.settings.UserPin,
 		"--usage-decrypt",
 	}
 	_, err := token.executePKCS11ToolCommand(args)
@@ -341,7 +341,7 @@ func (token *pkcs11Handler) addRSAEncryptKey(label, objectLabel string, keySize 
 		return fmt.Errorf("failed to add RSA encryption key to token: %w", err)
 	}
 
-	token.Logger.Info("RSA encryption key with label '%s' added to token '%s'", objectLabel, label)
+	token.logger.Info("RSA encryption key with label ", label, " added to token ", objectLabel)
 	return nil
 }
 
@@ -361,7 +361,7 @@ func (token *pkcs11Handler) Encrypt(label, objectLabel, inputFilePath, outputFil
 	}
 
 	// Prepare the URI to use PKCS#11 engine for accessing the public key
-	keyURI := fmt.Sprintf("pkcs11:token=%s;object=%s;type=public;pin-value=%s", label, objectLabel, token.Settings.UserPin)
+	keyURI := fmt.Sprintf("pkcs11:token=%s;object=%s;type=public;pin-value=%s", label, objectLabel, token.settings.UserPin)
 
 	// Run OpenSSL command to encrypt using the public key from the PKCS#11 token
 	// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
@@ -376,7 +376,7 @@ func (token *pkcs11Handler) Encrypt(label, objectLabel, inputFilePath, outputFil
 		return fmt.Errorf("failed to encrypt data with OpenSSL: %w\nOutput: %s", err, encryptOutput)
 	}
 
-	token.Logger.Info("Encryption successful. Encrypted data written to %s", outputFilePath)
+	token.logger.Info("Encryption successful. Encrypted data written to ", outputFilePath)
 	return nil
 }
 
@@ -396,7 +396,7 @@ func (token *pkcs11Handler) Decrypt(label, objectLabel, inputFilePath, outputFil
 	}
 
 	// Prepare the URI to use PKCS#11 engine for accessing the private key
-	keyURI := fmt.Sprintf("pkcs11:token=%s;object=%s;type=private;pin-value=%s", label, objectLabel, token.Settings.UserPin)
+	keyURI := fmt.Sprintf("pkcs11:token=%s;object=%s;type=private;pin-value=%s", label, objectLabel, token.settings.UserPin)
 
 	// Run OpenSSL command to decrypt the data using the private key from the PKCS#11 token
 	// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
@@ -411,7 +411,7 @@ func (token *pkcs11Handler) Decrypt(label, objectLabel, inputFilePath, outputFil
 		return fmt.Errorf("failed to decrypt data with OpenSSL: %w\nOutput: %s", err, decryptOutput)
 	}
 
-	token.Logger.Info("Decryption successful. Decrypted data written to %s", outputFilePath)
+	token.logger.Info("Decryption successful. Decrypted data written to ", outputFilePath)
 	return nil
 }
 
@@ -441,7 +441,7 @@ func (token *pkcs11Handler) Sign(label, objectLabel, dataFilePath, signatureFile
 		// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
 		signCmd = exec.Command(
 			"openssl", "dgst", "-engine", "pkcs11", "-keyform", "engine", "-sign",
-			"pkcs11:token="+label+";object="+objectLabel+";type=private;pin-value="+token.Settings.UserPin,
+			"pkcs11:token="+label+";object="+objectLabel+";type=private;pin-value="+token.settings.UserPin,
 			"-sigopt", signatureFormat,
 			"-sha384", // Use SHA-384
 			"-out", signatureFilePath, dataFilePath,
@@ -451,7 +451,7 @@ func (token *pkcs11Handler) Sign(label, objectLabel, dataFilePath, signatureFile
 		// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
 		signCmd = exec.Command(
 			"openssl", "dgst", "-engine", "pkcs11", "-keyform", "engine", "-sign",
-			"pkcs11:token="+label+";object="+objectLabel+";type=private;pin-value="+token.Settings.UserPin,
+			"pkcs11:token="+label+";object="+objectLabel+";type=private;pin-value="+token.settings.UserPin,
 			"-sha384", // ECDSA typically uses SHA-384
 			"-out", signatureFilePath, dataFilePath,
 		)
@@ -465,7 +465,7 @@ func (token *pkcs11Handler) Sign(label, objectLabel, dataFilePath, signatureFile
 		return fmt.Errorf("failed to sign data: %w\nOutput: %s", err, signOutput)
 	}
 
-	token.Logger.Info("Signing successful. Signature written to %s", signatureFilePath)
+	token.logger.Info("Signing successful. Signature written to ", signatureFilePath)
 	return nil
 }
 
@@ -495,7 +495,7 @@ func (token *pkcs11Handler) Verify(label, objectLabel, dataFilePath, signatureFi
 		// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
 		verifyCmd = exec.Command(
 			"openssl", "dgst", "-engine", "pkcs11", "-keyform", "engine", "-verify",
-			"pkcs11:token="+label+";object="+objectLabel+";type=public;pin-value="+token.Settings.UserPin,
+			"pkcs11:token="+label+";object="+objectLabel+";type=public;pin-value="+token.settings.UserPin,
 			"-sigopt", "rsa_padding_mode:pss",
 			"-sha384", // Use SHA-384 for verification
 			"-signature", signatureFilePath, "-binary", dataFilePath,
@@ -505,7 +505,7 @@ func (token *pkcs11Handler) Verify(label, objectLabel, dataFilePath, signatureFi
 		// #nosec G204 -- TODO(MGTheTrain) validate all inputs used in exec.Command
 		verifyCmd = exec.Command(
 			"openssl", "dgst", "-engine", "pkcs11", "-keyform", "engine", "-verify",
-			"pkcs11:token="+label+";object="+objectLabel+";type=public;pin-value="+token.Settings.UserPin,
+			"pkcs11:token="+label+";object="+objectLabel+";type=public;pin-value="+token.settings.UserPin,
 			"-sha384", // ECDSA typically uses SHA-384
 			"-signature", signatureFilePath, "-binary", dataFilePath,
 		)
@@ -521,10 +521,10 @@ func (token *pkcs11Handler) Verify(label, objectLabel, dataFilePath, signatureFi
 
 	// Check the output from OpenSSL to determine if the verification was successful
 	if strings.Contains(string(verifyOutput), "Verified OK") {
-		token.Logger.Info("The signature is valid")
+		token.logger.Info("The signature is valid")
 		return true, nil
 	}
-	token.Logger.Info("The signature is invalid")
+	token.logger.Info("The signature is invalid")
 	return false, nil
 }
 
@@ -548,9 +548,9 @@ func (token *pkcs11Handler) DeleteObject(label, objectType, objectLabel string) 
 	}
 
 	args := []string{
-		"--module", token.Settings.ModulePath,
+		"--module", token.settings.ModulePath,
 		"--token-label", label,
-		"--pin", token.Settings.UserPin,
+		"--pin", token.settings.UserPin,
 		"--delete-object",
 		"--type", objectType,
 		"--label", objectLabel,
@@ -561,6 +561,6 @@ func (token *pkcs11Handler) DeleteObject(label, objectType, objectLabel string) 
 		return fmt.Errorf("failed to delete object of type '%s' with label '%s': %w", objectType, objectLabel, err)
 	}
 
-	token.Logger.Info("Object of type '%s' with label '%s' deleted successfully.\n", objectType, objectLabel)
+	token.logger.Info("Object of type ", objectType, " with object label ", objectLabel, " deleted successfully")
 	return nil
 }

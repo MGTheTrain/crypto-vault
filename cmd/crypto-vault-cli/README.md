@@ -1,62 +1,80 @@
 # crypto-vault-cli
 
-## Summary
+Command-line tool for cryptographic operations supporting AES, RSA, ECDSA encryption/decryption, signing/verification, and PKCS#11 hardware token integration.
 
-`crypto-vault-cli` is a versatile command-line tool that facilitates secure file operations, including encryption, decryption, digital signing and verification using AES, RSA and ECDSA algorithms. It also integrates with PKCS#11 hardware tokens for key management and cryptographic operations.
+## Quick Start
 
-## Getting Started
-
-### AES example
+### AES (Symmetric Encryption)
 
 ```sh
-uuid=$(cat /proc/sys/kernel/random/uuid)
-# Generate AES keys
-go run main.go generate-aes-keys --key-size 16 --key-dir data/
-# Encryption
-go run main.go encrypt-aes --input-file data/input.txt --output-file data/${uuid}-output.enc --symmetric-key <your generated symmetric key>
-# Decryption
-go run main.go decrypt-aes --input-file data/${uuid}-output.enc --output-file data/${uuid}-decrypted.txt --symmetric-key <your generated symmetric key>
+# Generate key
+go run main.go generate-aes-keys --key-size 16 --key-dir data
+
+# Encrypt
+go run main.go encrypt-aes \
+  --input-file data/input.txt \
+  --output-file data/output.enc \
+  --symmetric-key data/<key-file>
+
+# Decrypt
+go run main.go decrypt-aes \
+  --input-file data/output.enc \
+  --output-file data/decrypted.txt \
+  --symmetric-key data/<key-file>
 ```
 
-### RSA Example
+### RSA (Asymmetric Encryption + Signing)
 
 ```sh
-uuid=$(cat /proc/sys/kernel/random/uuid)
+# Generate keys
+go run main.go generate-rsa-keys --key-size 2048 --key-dir data
 
-# Generate RSA keys
-go run main.go generate-rsa-keys --key-size 2048 --key-dir data/
+# Encrypt/Decrypt
+go run main.go encrypt-rsa \
+  --input-file data/input.txt \
+  --output-file data/encrypted.bin \
+  --public-key data/<public-key>
 
-# Encryption
-go run main.go encrypt-rsa --input-file data/input.txt --output-file data/${uuid}-encrypted.txt --public-key <your generated public key>
+go run main.go decrypt-rsa \
+  --input-file data/encrypted.bin \
+  --output-file data/decrypted.txt \
+  --private-key data/<private-key>
 
-# Decryption
-go run main.go decrypt-rsa --input-file data/${uuid}-encrypted.txt --output-file data/${uuid}-decrypted.txt --private-key <your generated private key>
+# Sign/Verify
+go run main.go sign-rsa \
+  --input-file data/input.txt \
+  --output-file data/signature.bin \
+  --private-key data/<private-key>
 
-# Sign
-go run main.go sign-rsa --input-file data/input.txt --output-file data/${uuid}-signature.bin --private-key <your generated private key>
-
-# Verify
-go run main.go verify-rsa --input-file data/input.txt --signature-file data/${uuid}-signature.bin --public-key <your generated public key>
+go run main.go verify-rsa \
+  --input-file data/input.txt \
+  --signature-file data/signature.bin \
+  --public-key data/<public-key>
 ```
 
-### ECDSA Example
+### ECDSA (Elliptic Curve Signing)
 
 ```sh
-uuid=$(cat /proc/sys/kernel/random/uuid)
+# Generate keys
+go run main.go generate-ecc-keys --key-size 256 --key-dir data
 
-# Generate ECC keys
-go run main.go generate-ecc-keys --key-size 256 --key-dir data/
+# Sign/Verify
+go run main.go sign-ecc \
+  --input-file data/input.txt \
+  --output-file data/signature.bin \
+  --private-key data/<private-key>
 
-# Sign
-go run main.go sign-ecc --input-file data/input.txt  --output-file data/${uuid}-signature.bin --private-key <your generated private key>
-
-# Verify
-go run main.go verify-ecc --input-file data/input.txt --signature-file data/${uuid}-signature.bin --public-key <your generated public key>
+go run main.go verify-ecc \
+  --input-file data/input.txt \
+  --signature-file data/signature.bin \
+  --public-key data/<public-key>
 ```
 
-### PKCS#11 example
+## PKCS#11 Hardware Tokens
 
-Make sure the following environment variables are exported as a prerequisite:
+### Prerequisites
+
+Set required environment variables:
 
 ```sh
 export PKCS11_MODULE_PATH="/usr/lib/softhsm/libsofthsm2.so"
@@ -65,50 +83,97 @@ export PKCS11_USER_PIN="5678"
 export PKCS11_SLOT_ID="0x0"
 ```
 
-Next, execute:
+### Token Operations
 
 ```sh
-# List token slots
+# List available tokens
 go run main.go list-slots
 
-# Initialize a PKCS#11 token
+# Initialize token
 go run main.go initialize-token --token-label my-token
 
-# Adding keys to tokens
-# Add an RSA or EC key pair (consisting of private and public key) to a PKCS#11 token
-go run main.go add-key --token-label my-token --object-label my-rsa-key --key-type RSA --key-size 2048
-go run main.go add-key --token-label my-token --object-label my-ecdsa-key --key-type ECDSA --key-size 256
+# Add key (specify operation: signing or encryption)
+go run main.go add-key \
+  --token-label my-token \
+  --object-label my-rsa-key \
+  --key-type RSA \
+  --key-size 2048 \
+  --key-operation signing
 
-# List token objects
-go run main.go list-objects --token-label "my-token"
+# List objects in token
+go run main.go list-objects --token-label my-token
 
-# Deleting keys from tokens
-# Delete an object (e.g. RSA or EC key) from the PKCS#11 token
-go run main.go delete-object --token-label my-token --object-label my-rsa-key --object-type pubkey
-go run main.go delete-object --token-label my-token --object-label my-rsa-key --object-type privkey
+# Delete key
+go run main.go delete-object \
+  --token-label my-token \
+  --object-label my-rsa-key \
+  --object-type privkey
 
-# RSA-PKCS
-# Encryption
-go run main.go encrypt --token-label my-token --object-label my-rsa-key --key-type RSA --input-file data/input.txt --output-file data/encrypted-output.enc
-
-# Decryption
-go run main.go decrypt --token-label my-token --object-label my-rsa-key --key-type RSA --input-file data/encrypted-output.enc --output-file data/decrypted-output.txt
-
-# RSA-PSS
-# Sign data with a PKCS#11 token
-go run main.go sign --token-label my-token --object-label my-rsa-key --key-type RSA --data-file data/input.txt --signature-file data/signature.sig
-
-# Verify the signature using the generated public key from the PKCS#11 token
-go run main.go verify --token-label my-token --object-label my-rsa-key --key-type RSA --data-file data/input.txt --signature-file data/signature.sig
-
-# ECDSA
-# Sign data with a PKCS#11 token
-go run main.go sign --token-label my-token --object-label my-ecdsa-key --key-type ECDSA --data-file data/input.txt --signature-file data/signature.sig
-
-# Verify the signature using the generated public key from the PKCS#11 token
-go run main.go verify --token-label my-token --object-label my-ecdsa-key --key-type ECDSA --data-file data/input.txt --signature-file data/signature.sig
+go run main.go delete-object \
+  --token-label my-token \
+  --object-label my-rsa-key \
+  --object-type pubkey
 ```
 
-## e2e-test
+### Encryption/Decryption with Token
 
-An [e2e testing](../../test/e2e/e2e_test.go) the entire flow from encryption to decryption, key management, signing and verifying signatures exists.
+```sh
+# Encrypt (RSA-PKCS only)
+go run main.go encrypt \
+  --token-label my-token \
+  --object-label my-rsa-key \
+  --key-type RSA \
+  --input-file data/input.txt \
+  --output-file data/encrypted.bin
+
+# Decrypt
+go run main.go decrypt \
+  --token-label my-token \
+  --object-label my-rsa-key \
+  --key-type RSA \
+  --input-file data/encrypted.bin \
+  --output-file data/decrypted.txt
+```
+
+### Signing/Verification with Token
+
+```sh
+# Sign (supports RSA-PSS and ECDSA)
+go run main.go sign \
+  --token-label my-token \
+  --object-label my-rsa-key \
+  --key-type RSA \
+  --data-file data/input.txt \
+  --signature-file data/signature.sig
+
+# Verify
+go run main.go verify \
+  --token-label my-token \
+  --object-label my-rsa-key \
+  --key-type RSA \
+  --data-file data/input.txt \
+  --signature-file data/signature.sig
+```
+
+## Supported Algorithms
+
+| Operation | Algorithms | Key Sizes |
+|-----------|-----------|-----------|
+| Symmetric Encryption | AES | 128, 192, 256-bit |
+| Asymmetric Encryption | RSA | 2048, 3072, 4096-bit |
+| Digital Signature | RSA, ECDSA | RSA: 2048-4096 bit<br>ECDSA: P-224, P-256, P-384, P-521 |
+| PKCS#11 | RSA, ECDSA | Same as above |
+
+## Testing
+
+End-to-end tests covering the complete flow are available at `../../test/e2e/e2e_test.go`.
+
+## Help
+
+```sh
+# General help
+go run main.go help
+
+# Command-specific help
+go run main.go <command> --help
+```

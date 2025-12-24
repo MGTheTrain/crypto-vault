@@ -13,7 +13,7 @@ import (
 type CryptoKeyMeta struct {
 	ID              string    `gorm:"primaryKey" validate:"required,uuid4"`
 	KeyPairID       string    `gorm:"index" validate:"required,uuid4"`
-	Algorithm       string    `validate:"omitempty,oneof=AES RSA EC"`
+	Algorithm       string    `validate:"omitempty,oneof=AES RSA ECDSA"`
 	KeySize         uint32    `json:"key_size" validate:"omitempty,keySizeValidation"`
 	Type            string    `validate:"omitempty,oneof=private public symmetric"`
 	DateTimeCreated time.Time `validate:"required"`

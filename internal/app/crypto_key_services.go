@@ -51,7 +51,7 @@ func (s *cryptoKeyUploadService) Upload(ctx context.Context, userID, keyAlgorith
 	switch keyAlgorithm {
 	case crypto.AlgorithmAES:
 		cryptKeyMetas, err = s.uploadAESKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
-	case crypto.AlgorithmEC:
+	case crypto.AlgorithmECDSA:
 		cryptKeyMetas, err = s.uploadECKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
 	case crypto.AlgorithmRSA:
 		cryptKeyMetas, err = s.uploadRSAKey(ctx, userID, keyPairID, keyAlgorithm, keySize)

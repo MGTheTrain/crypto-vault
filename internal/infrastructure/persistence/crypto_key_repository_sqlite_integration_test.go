@@ -20,7 +20,7 @@ func TestCryptoKeySqliteRepository_Create(t *testing.T) {
 	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	key := CreateTestKeyWithOptions(t, userID, TestKeyTypePublic, TestAlgorithmEC, TestKeySize521)
+	key := CreateTestKeyWithOptions(t, userID, TestKeyTypePublic, TestAlgorithmECDSA, TestKeySize521)
 
 	err := ctx.CryptoKeyRepo.Create(context.Background(), key)
 	require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestCryptoKeySqliteRepository_List(t *testing.T) {
 
 	userID := uuid.NewString()
 	key1 := CreateTestKeyWithOptions(t, userID, TestKeyTypePrivate, TestAlgorithmRSA, TestKeySize2048)
-	key2 := CreateTestKeyWithOptions(t, userID, TestKeyTypePublic, TestAlgorithmEC, TestKeySize521)
+	key2 := CreateTestKeyWithOptions(t, userID, TestKeyTypePublic, TestAlgorithmECDSA, TestKeySize521)
 
 	require.NoError(t, ctx.CryptoKeyRepo.Create(context.Background(), key1))
 	require.NoError(t, ctx.CryptoKeyRepo.Create(context.Background(), key2))
@@ -120,7 +120,7 @@ func TestCryptoKeySqliteRepository_List_WithFiltersAndSorting(t *testing.T) {
 	key1 := CreateTestKeyWithOptions(t, userID, TestKeyTypePrivate, TestAlgorithmRSA, TestKeySize2048)
 	key1.DateTimeCreated = time.Now().Add(-2 * time.Hour)
 
-	key2 := CreateTestKeyWithOptions(t, userID, TestKeyTypePublic, TestAlgorithmEC, TestKeySize521)
+	key2 := CreateTestKeyWithOptions(t, userID, TestKeyTypePublic, TestAlgorithmECDSA, TestKeySize521)
 	key2.DateTimeCreated = time.Now().Add(-1 * time.Hour)
 
 	require.NoError(t, ctx.CryptoKeyRepo.Create(context.Background(), key1))

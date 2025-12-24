@@ -54,7 +54,7 @@ func TestBlobUploadService_Upload_With_AES_Encryption_And_ECDSA_Signing_Success(
 	ctx := context.Background()
 
 	// Generate EC signing key
-	ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmEC, 256)
+	ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
 	require.NoError(t, err)
 	require.Len(t, ecKeys, 2)
 
