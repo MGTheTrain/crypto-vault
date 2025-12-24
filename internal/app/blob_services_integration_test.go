@@ -6,6 +6,7 @@ package app
 import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
+	"crypto_vault_service/internal/domain/crypto"
 	"crypto_vault_service/internal/pkg/config"
 	pkgTesting "crypto_vault_service/internal/pkg/testing"
 	"testing"
@@ -27,7 +28,7 @@ func TestBlobUploadService_Upload_With_RSA_Encryption_And_Signing_Success(t *tes
 	ctx := context.Background()
 
 	// Generate RSA key pair
-	cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmRSA, 2048)
+	cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)
 	require.NoError(t, err)
 	require.Len(t, cryptoKeyMetas, 2)
 
@@ -53,12 +54,12 @@ func TestBlobUploadService_Upload_With_AES_Encryption_And_ECDSA_Signing_Success(
 	ctx := context.Background()
 
 	// Generate EC signing key
-	ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmEC, 256)
+	ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmEC, 256)
 	require.NoError(t, err)
 	require.Len(t, ecKeys, 2)
 
 	// Generate AES encryption key
-	aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmAES, 256)
+	aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, 256)
 	require.NoError(t, err)
 	require.Len(t, aesKeys, 1)
 
@@ -153,7 +154,7 @@ func TestBlobDownloadService_Download_With_AES_Decryption_Success(t *testing.T) 
 	ctx := context.Background()
 
 	// Generate AES encryption key
-	aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmAES, 256)
+	aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, 256)
 	require.NoError(t, err)
 	require.Len(t, aesKeys, 1)
 
@@ -183,7 +184,7 @@ func TestBlobDownloadService_Download_With_RSA_Decryption_Success(t *testing.T) 
 	ctx := context.Background()
 
 	// Generate RSA key pair
-	rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmRSA, 2048)
+	rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)
 	require.NoError(t, err)
 	require.Len(t, rsaKeys, 2)
 

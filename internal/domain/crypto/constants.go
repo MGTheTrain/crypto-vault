@@ -1,4 +1,4 @@
-package app
+package crypto
 
 const (
 	// Cryptographic operations

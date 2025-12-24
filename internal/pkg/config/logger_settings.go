@@ -6,21 +6,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Log level constants
-const (
-	LogLevelInfo     = "info"
-	LogLevelDebug    = "debug"
-	LogLevelError    = "error"
-	LogLevelWarning  = "warning"
-	LogLevelCritical = "critical"
-)
-
-// Log type constants
-const (
-	LogTypeConsole = "console"
-	LogTypeFile    = "file"
-)
-
 // LoggerSettings holds configuration settings for logging, including log level, type and file path
 type LoggerSettings struct {
 	LogLevel   string `mapstructure:"log_level" validate:"required,oneof=info debug error warning critical"`

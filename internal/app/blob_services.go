@@ -67,7 +67,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 			return nil, fmt.Errorf("%w", err)
 		}
 
-		cryptoOperation := OperationSigning
+		cryptoOperation := crypto.OperationSigning
 		contents, fileNames, err := s.applyCryptographicOperation(form, cryptoKeyMeta.Algorithm, cryptoOperation, keyBytes, cryptoKeyMeta.KeySize)
 		if err != nil {
 			return nil, fmt.Errorf("%w", err)
@@ -86,7 +86,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 			return nil, fmt.Errorf("%w", err)
 		}
 
-		cryptoOperation := OperationEncryption
+		cryptoOperation := crypto.OperationEncryption
 		contents, fileNames, err := s.applyCryptographicOperation(form, cryptoKeyMeta.Algorithm, cryptoOperation, keyBytes, cryptoKeyMeta.KeySize)
 		if err != nil {
 			return nil, fmt.Errorf("%w", err)
@@ -174,16 +174,16 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 		var processedBytes []byte
 
 		switch algorithm {
-		case AlgorithmAES:
-			if operation == OperationEncryption {
+		case crypto.AlgorithmAES:
+			if operation == crypto.OperationEncryption {
 				processedBytes, err = s.aesProcessor.Encrypt(data, keyBytes)
 				if err != nil {
 					return nil, nil, fmt.Errorf("%w", err)
 				}
 			}
-		case AlgorithmRSA:
+		case crypto.AlgorithmRSA:
 			switch operation {
-			case OperationEncryption:
+			case crypto.OperationEncryption:
 				publicKeyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 				if err != nil {
 					return nil, nil, fmt.Errorf("error parsing public key: %w", err)
@@ -197,7 +197,7 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 					return nil, nil, fmt.Errorf("encryption error: %w", err)
 				}
 
-			case OperationSigning:
+			case crypto.OperationSigning:
 				privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
 				if err != nil {
 					return nil, nil, fmt.Errorf("error parsing private key: %w", err)
@@ -210,8 +210,8 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 			default:
 				return nil, nil, fmt.Errorf("unsupported operation: %s", operation)
 			}
-		case AlgorithmEC:
-			if operation == OperationSigning {
+		case crypto.AlgorithmEC:
+			if operation == crypto.OperationSigning {
 
 				privateKeyD := new(big.Int).SetBytes(keyBytes[:32])
 				pubKeyX := new(big.Int).SetBytes(keyBytes[32:64])
@@ -368,12 +368,12 @@ func (s *blobDownloadService) DownloadByID(ctx context.Context, blobID string, d
 		}
 
 		switch cryptoKeyMeta.Algorithm {
-		case AlgorithmAES:
+		case crypto.AlgorithmAES:
 			processedBytes, err = s.aesProcessor.Decrypt(blobBytes, keyBytes)
 			if err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
-		case AlgorithmRSA:
+		case crypto.AlgorithmRSA:
 			privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing private key: %w", err)

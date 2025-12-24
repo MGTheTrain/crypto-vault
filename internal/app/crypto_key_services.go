@@ -49,11 +49,11 @@ func (s *cryptoKeyUploadService) Upload(ctx context.Context, userID, keyAlgorith
 	keyPairID := uuid.New().String()
 	var err error
 	switch keyAlgorithm {
-	case AlgorithmAES:
+	case crypto.AlgorithmAES:
 		cryptKeyMetas, err = s.uploadAESKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
-	case AlgorithmEC:
+	case crypto.AlgorithmEC:
 		cryptKeyMetas, err = s.uploadECKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
-	case AlgorithmRSA:
+	case crypto.AlgorithmRSA:
 		cryptKeyMetas, err = s.uploadRSAKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
 	default:
 		return nil, fmt.Errorf("unsupported algorithm: %s", keyAlgorithm)
@@ -73,11 +73,11 @@ func (s *cryptoKeyUploadService) uploadAESKey(ctx context.Context, userID, keyPa
 	var keySizeInBytes int
 	switch keySize {
 	case 128:
-		keySizeInBytes = AESKeySize128
+		keySizeInBytes = crypto.AESKeySize128
 	case 192:
-		keySizeInBytes = AESKeySize192
+		keySizeInBytes = crypto.AESKeySize192
 	case 256:
-		keySizeInBytes = AESKeySize256
+		keySizeInBytes = crypto.AESKeySize256
 	default:
 		return nil, fmt.Errorf("key size %v not supported for AES", keySize)
 	}
@@ -87,7 +87,7 @@ func (s *cryptoKeyUploadService) uploadAESKey(ctx context.Context, userID, keyPa
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	keyType := KeyTypeSymmetric
+	keyType := crypto.KeyTypeSymmetric
 	cryptoKeyMeta, err := s.vaultConnector.Upload(ctx, symmetricKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -127,7 +127,7 @@ func (s *cryptoKeyUploadService) uploadECKey(ctx context.Context, userID, keyPai
 	// Upload Private Key
 	privateKeyBytes := append(privateKey.D.Bytes(), privateKey.X.Bytes()...)
 	privateKeyBytes = append(privateKeyBytes, privateKey.Y.Bytes()...)
-	keyType := KeyTypePrivate
+	keyType := crypto.KeyTypePrivate
 	cryptoKeyMeta, err := s.vaultConnector.Upload(ctx, privateKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -141,7 +141,7 @@ func (s *cryptoKeyUploadService) uploadECKey(ctx context.Context, userID, keyPai
 
 	// Upload Public Key
 	publicKeyBytes := append(publicKey.X.Bytes(), publicKey.Y.Bytes()...)
-	keyType = KeyTypePublic
+	keyType = crypto.KeyTypePublic
 	cryptoKeyMeta, err = s.vaultConnector.Upload(ctx, publicKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -166,7 +166,7 @@ func (s *cryptoKeyUploadService) uploadRSAKey(ctx context.Context, userID, keyPa
 
 	// Upload Private Key
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
-	keyType := KeyTypePrivate
+	keyType := crypto.KeyTypePrivate
 	cryptoKeyMeta, err := s.vaultConnector.Upload(ctx, privateKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -183,7 +183,7 @@ func (s *cryptoKeyUploadService) uploadRSAKey(ctx context.Context, userID, keyPa
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal public key: %w", err)
 	}
-	keyType = KeyTypePublic
+	keyType = crypto.KeyTypePublic
 	cryptoKeyMeta, err = s.vaultConnector.Upload(ctx, publicKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"crypto_vault_service/internal/domain/crypto"
 	"crypto_vault_service/internal/domain/keys"
 	"crypto_vault_service/internal/pkg/config"
 )
@@ -19,7 +20,7 @@ func TestCryptoKeyUploadService_Upload_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmEC
 	var keySize uint32 = 256
 	ctx := context.Background()
 
@@ -52,7 +53,7 @@ func TestCryptoKeyUploadService_Upload_AES_KeySizes(t *testing.T) {
 			userID := uuid.NewString()
 			ctx := context.Background()
 
-			cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmAES, tt.keySize)
+			cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, tt.keySize)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -73,7 +74,7 @@ func TestCryptoKeyUploadService_Upload_AES_InvalidSize_Fail(t *testing.T) {
 	userID := uuid.NewString()
 	ctx := context.Background()
 
-	cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmAES, 512) // Invalid
+	cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, 512) // Invalid
 	require.Error(t, err)
 	require.Nil(t, cryptoKeyMetas)
 	require.Contains(t, err.Error(), "not supported for AES")
@@ -83,7 +84,7 @@ func TestCryptoKeyMetadataService_GetByID_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmEC
 	var keySize uint32 = 256
 	ctx := context.Background()
 
@@ -100,7 +101,7 @@ func TestCryptoKeyMetadataService_DeleteByID_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmEC
 	var keySize uint32 = 521
 	ctx := context.Background()
 
@@ -120,7 +121,7 @@ func TestCryptoKeyDownloadService_Download_Success(t *testing.T) {
 	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
-	keyAlgorithm := AlgorithmEC
+	keyAlgorithm := crypto.AlgorithmEC
 	var keySize uint32 = 256
 	ctx := context.Background()
 
@@ -139,10 +140,10 @@ func TestCryptoKeyMetadataService_List_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// Create multiple keys
-	_, err := services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmEC, 256)
+	_, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmEC, 256)
 	require.NoError(t, err)
 
-	_, err = services.CryptoKeyUploadService.Upload(ctx, userID, AlgorithmRSA, 2048)
+	_, err = services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)
 	require.NoError(t, err)
 
 	query := &keys.CryptoKeyQuery{}
