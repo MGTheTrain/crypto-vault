@@ -6,6 +6,7 @@ package persistence
 import (
 	"context"
 	"crypto_vault_service/internal/domain/keys"
+	"crypto_vault_service/internal/pkg/config"
 	"testing"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 )
 
 func TestCryptoKeySqliteRepository_Create(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKeyWithOptions(t, userID, TestKeyTypePublic, TestAlgorithmEC, TestKeySize521)
@@ -32,7 +33,7 @@ func TestCryptoKeySqliteRepository_Create(t *testing.T) {
 }
 
 func TestCryptoKeySqliteRepository_GetByID(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKeyWithOptions(t, userID, TestKeyTypePrivate, TestAlgorithmRSA, TestKeySize2048)
@@ -47,7 +48,7 @@ func TestCryptoKeySqliteRepository_GetByID(t *testing.T) {
 }
 
 func TestCryptoKeySqliteRepository_List(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key1 := CreateTestKeyWithOptions(t, userID, TestKeyTypePrivate, TestAlgorithmRSA, TestKeySize2048)
@@ -63,7 +64,7 @@ func TestCryptoKeySqliteRepository_List(t *testing.T) {
 }
 
 func TestCryptoKeySqliteRepository_UpdateByID(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -79,7 +80,7 @@ func TestCryptoKeySqliteRepository_UpdateByID(t *testing.T) {
 }
 
 func TestCryptoKeySqliteRepository_DeleteByID(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -94,7 +95,7 @@ func TestCryptoKeySqliteRepository_DeleteByID(t *testing.T) {
 }
 
 func TestCryptoKeyRepository_GetByID_NotFound(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	key, err := ctx.CryptoKeyRepo.GetByID(context.Background(), uuid.NewString())
 	assert.Nil(t, key)
@@ -103,7 +104,7 @@ func TestCryptoKeyRepository_GetByID_NotFound(t *testing.T) {
 }
 
 func TestCryptoKeyRepository_Create_ValidationError(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	invalidKey := &keys.CryptoKeyMeta{} // Missing required fields
 
@@ -113,7 +114,7 @@ func TestCryptoKeyRepository_Create_ValidationError(t *testing.T) {
 }
 
 func TestCryptoKeySqliteRepository_List_WithFiltersAndSorting(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key1 := CreateTestKeyWithOptions(t, userID, TestKeyTypePrivate, TestAlgorithmRSA, TestKeySize2048)

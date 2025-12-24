@@ -6,6 +6,7 @@ package persistence
 import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
+	"crypto_vault_service/internal/pkg/config"
 	"fmt"
 	"testing"
 
@@ -16,7 +17,7 @@ import (
 )
 
 func TestBlobPostgresRepository_Create(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -33,7 +34,7 @@ func TestBlobPostgresRepository_Create(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_GetByID(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -49,7 +50,7 @@ func TestBlobPostgresRepository_GetByID(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_List(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -69,7 +70,7 @@ func TestBlobPostgresRepository_List(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_UpdateByID(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -88,7 +89,7 @@ func TestBlobPostgresRepository_UpdateByID(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_DeleteByID(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -105,7 +106,7 @@ func TestBlobPostgresRepository_DeleteByID(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_GetByID_NotFound(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	_, err := ctx.BlobRepo.GetByID(context.Background(), "non-existent-id")
 	assert.Error(t, err)
@@ -113,7 +114,7 @@ func TestBlobPostgresRepository_GetByID_NotFound(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_Create_ValidationError(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	invalidBlob := &blobs.BlobMeta{} // Missing required fields
 
@@ -123,7 +124,7 @@ func TestBlobPostgresRepository_Create_ValidationError(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_List_WithFilters(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -144,7 +145,7 @@ func TestBlobPostgresRepository_List_WithFilters(t *testing.T) {
 }
 
 func TestBlobPostgresRepository_List_WithPagination(t *testing.T) {
-	ctx := SetupTestDB(t, PostgresDbType)
+	ctx := SetupTestDB(t, config.PostgresDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)

@@ -16,9 +16,9 @@ func NewDBConnection(settings config.DatabaseSettings) (*gorm.DB, error) {
 	var err error
 
 	switch settings.Type {
-	case PostgresDbType:
+	case config.PostgresDbType:
 		db, err = connectPostgres(settings)
-	case SqliteDbType:
+	case config.SqliteDbType:
 		db, err = connectSQLite(settings)
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", settings.Type)

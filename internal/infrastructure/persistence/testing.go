@@ -49,19 +49,19 @@ func SetupTestDB(t *testing.T, dbType string) *TestContext {
 	var cleanupFunc func()
 
 	switch dbType {
-	case SqliteDbType:
+	case config.SqliteDbType:
 		settings = config.DatabaseSettings{
-			Type: SqliteDbType,
+			Type: config.SqliteDbType,
 			DSN:  ":memory:",
 		}
 		cleanupFunc = func() {
 			// SQLite in-memory cleanup is automatic
 		}
 
-	case PostgresDbType:
+	case config.PostgresDbType:
 		uniqueDBName := "test_" + strings.ReplaceAll(uuid.NewString(), "-", "")[:16]
 		settings = config.DatabaseSettings{
-			Type:   PostgresDbType,
+			Type:   config.PostgresDbType,
 			DSN:    "user=postgres password=postgres host=localhost port=5432 sslmode=disable",
 			DBName: uniqueDBName,
 		}

@@ -12,11 +12,11 @@ import (
 	"gorm.io/gorm"
 
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/persistence"
+	"crypto_vault_service/internal/pkg/config"
 )
 
 func TestCryptoKeyUploadService_Upload_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	keyAlgorithm := AlgorithmEC
@@ -48,7 +48,7 @@ func TestCryptoKeyUploadService_Upload_AES_KeySizes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			services := SetupTestServices(t, persistence.SqliteDbType)
+			services := SetupTestServices(t, config.SqliteDbType)
 			userID := uuid.NewString()
 			ctx := context.Background()
 
@@ -68,7 +68,7 @@ func TestCryptoKeyUploadService_Upload_AES_KeySizes(t *testing.T) {
 }
 
 func TestCryptoKeyUploadService_Upload_AES_InvalidSize_Fail(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	ctx := context.Background()
@@ -80,7 +80,7 @@ func TestCryptoKeyUploadService_Upload_AES_InvalidSize_Fail(t *testing.T) {
 }
 
 func TestCryptoKeyMetadataService_GetByID_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	keyAlgorithm := AlgorithmEC
@@ -97,7 +97,7 @@ func TestCryptoKeyMetadataService_GetByID_Success(t *testing.T) {
 }
 
 func TestCryptoKeyMetadataService_DeleteByID_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	keyAlgorithm := AlgorithmEC
@@ -117,7 +117,7 @@ func TestCryptoKeyMetadataService_DeleteByID_Success(t *testing.T) {
 }
 
 func TestCryptoKeyDownloadService_Download_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	keyAlgorithm := AlgorithmEC
@@ -133,7 +133,7 @@ func TestCryptoKeyDownloadService_Download_Success(t *testing.T) {
 	require.NotEmpty(t, blobData)
 }
 func TestCryptoKeyMetadataService_List_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	ctx := context.Background()

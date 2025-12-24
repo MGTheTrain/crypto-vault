@@ -18,7 +18,7 @@ func TestDatabaseSettingsValidation(t *testing.T) {
 		{
 			name: "valid settings",
 			settings: &DatabaseSettings{
-				Type:   "mysql",
+				Type:   "postgres",
 				DSN:    "user:password@tcp(localhost:3306)/dbname",
 				DBName: "mydb",
 			},

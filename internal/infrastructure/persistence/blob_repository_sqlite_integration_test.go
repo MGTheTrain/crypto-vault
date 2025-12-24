@@ -6,6 +6,7 @@ package persistence
 import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
+	"crypto_vault_service/internal/pkg/config"
 	"fmt"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func TestBlobSqliteRepository_Create(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -33,7 +34,7 @@ func TestBlobSqliteRepository_Create(t *testing.T) {
 }
 
 func TestBlobSqliteRepository_GetByID(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -49,7 +50,7 @@ func TestBlobSqliteRepository_GetByID(t *testing.T) {
 }
 
 func TestBlobRepository_Create_InvalidBlob(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	blob := &blobs.BlobMeta{} // Invalid - missing required fields
 
@@ -59,7 +60,7 @@ func TestBlobRepository_Create_InvalidBlob(t *testing.T) {
 }
 
 func TestBlobRepository_GetByID_NotFound(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	_, err := ctx.BlobRepo.GetByID(context.Background(), "non-existent-id")
 	assert.Error(t, err)
@@ -67,7 +68,7 @@ func TestBlobRepository_GetByID_NotFound(t *testing.T) {
 }
 
 func TestBlobRepository_List_WithFilters(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -88,7 +89,7 @@ func TestBlobRepository_List_WithFilters(t *testing.T) {
 }
 
 func TestBlobRepository_List_SortAndPagination(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	userID := uuid.NewString()
 	key := CreateTestKey(t, userID)
@@ -112,7 +113,7 @@ func TestBlobRepository_List_SortAndPagination(t *testing.T) {
 }
 
 func TestBlobRepository_List_InvalidQuery(t *testing.T) {
-	ctx := SetupTestDB(t, SqliteDbType)
+	ctx := SetupTestDB(t, config.SqliteDbType)
 
 	query := &blobs.BlobMetaQuery{
 		Limit: -1,

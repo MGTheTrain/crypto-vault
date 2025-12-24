@@ -6,7 +6,7 @@ package app
 import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/infrastructure/persistence"
+	"crypto_vault_service/internal/pkg/config"
 	pkgTesting "crypto_vault_service/internal/pkg/testing"
 	"testing"
 
@@ -16,7 +16,7 @@ import (
 )
 
 func TestBlobUploadService_Upload_With_RSA_Encryption_And_Signing_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
@@ -42,7 +42,7 @@ func TestBlobUploadService_Upload_With_RSA_Encryption_And_Signing_Success(t *tes
 }
 
 func TestBlobUploadService_Upload_With_AES_Encryption_And_ECDSA_Signing_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
@@ -73,7 +73,7 @@ func TestBlobUploadService_Upload_With_AES_Encryption_And_ECDSA_Signing_Success(
 }
 
 func TestBlobUploadService_Upload_Without_Encryption_And_Signing_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
@@ -91,7 +91,7 @@ func TestBlobUploadService_Upload_Without_Encryption_And_Signing_Success(t *test
 }
 
 func TestBlobUploadService_Upload_Fail_InvalidEncryptionKey(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
@@ -109,7 +109,7 @@ func TestBlobUploadService_Upload_Fail_InvalidEncryptionKey(t *testing.T) {
 }
 
 func TestBlobDownloadService_Download_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
@@ -130,7 +130,7 @@ func TestBlobDownloadService_Download_Success(t *testing.T) {
 }
 
 func TestBlobDownloadService_Download_Fail_InvalidDecryptionKey(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	blobID := uuid.NewString()
 	invalidDecryptionKeyID := "invalid-decryption-key-id"
@@ -142,7 +142,7 @@ func TestBlobDownloadService_Download_Fail_InvalidDecryptionKey(t *testing.T) {
 }
 
 func TestBlobDownloadService_Download_With_AES_Decryption_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is secret content")
 	testFileName := "secret.txt"
@@ -172,7 +172,7 @@ func TestBlobDownloadService_Download_With_AES_Decryption_Success(t *testing.T) 
 }
 
 func TestBlobDownloadService_Download_With_RSA_Decryption_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("RSA encrypted secret")
 	testFileName := "rsa_secret.txt"
@@ -203,7 +203,7 @@ func TestBlobDownloadService_Download_With_RSA_Decryption_Success(t *testing.T) 
 }
 
 func TestBlobMetadataService_List_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
@@ -225,7 +225,7 @@ func TestBlobMetadataService_List_Success(t *testing.T) {
 }
 
 func TestBlobMetadataService_GetByID_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
@@ -246,7 +246,7 @@ func TestBlobMetadataService_GetByID_Success(t *testing.T) {
 }
 
 func TestBlobMetadataService_DeleteByID_Success(t *testing.T) {
-	services := SetupTestServices(t, persistence.SqliteDbType)
+	services := SetupTestServices(t, config.SqliteDbType)
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"

@@ -6,9 +6,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+const (
+	PostgresDbType = "postgres"
+	SqliteDbType   = "sqlite"
+)
+
 // DatabaseSettings holds configuration settings for connecting to a database, including type, DSN and name
 type DatabaseSettings struct {
-	Type   string `mapstructure:"type" validate:"required"`
+	Type   string `mapstructure:"type" validate:"required,oneof=postgres sqlite"`
 	DSN    string `mapstructure:"dsn" validate:"required"`
 	DBName string `mapstructure:"db_name" validate:"required"`
 }
