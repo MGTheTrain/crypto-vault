@@ -59,15 +59,15 @@ func SetupTestDB(t *testing.T, dbType string) *TestContext {
 		}
 
 	case config.PostgresDbType:
-		uniqueDBName := "test_" + strings.ReplaceAll(uuid.NewString(), "-", "")[:16]
+		uniqueName := "test_" + strings.ReplaceAll(uuid.NewString(), "-", "")[:16]
 		settings = config.DatabaseSettings{
-			Type:   config.PostgresDbType,
-			DSN:    "user=postgres password=postgres host=localhost port=5432 sslmode=disable",
-			DBName: uniqueDBName,
+			Type: config.PostgresDbType,
+			DSN:  "user=postgres password=postgres host=localhost port=5432 sslmode=disable",
+			Name: uniqueName,
 		}
 		cleanupFunc = func() {
-			adminDSN := "user=postgres password=postgres host=localhost port=5432 dbname=postgres sslmode=disable"
-			_ = DropDatabase(adminDSN, uniqueDBName)
+			adminDSN := "user=postgres password=postgres host=localhost port=5432 Name=postgres sslmode=disable"
+			_ = DropDatabase(adminDSN, uniqueName)
 		}
 
 	default:

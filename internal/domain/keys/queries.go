@@ -10,7 +10,7 @@ import (
 
 // CryptoKeyQuery represents the parameters used to query encryption keys.
 type CryptoKeyQuery struct {
-	Algorithm       string    `validate:"omitempty,oneof=AES RSA EC"`               // Type is optional but if provided, must be one of the listed types (AES, RSA, EC)
+	Algorithm       string    `validate:"omitempty,oneof=AES RSA ECDSA"`            // Type is optional but if provided, must be one of the listed types (AES, RSA, ECDSA)
 	Type            string    `validate:"omitempty,oneof=private public symmetric"` // Type is optional but if provided, must be one of the listed types (private-key, public-key, symmetric-key)
 	DateTimeCreated time.Time `validate:"omitempty,gtefield=date_time_created"`     // DateTimeCreated is optional, but can be used for filtering
 

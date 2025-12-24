@@ -39,24 +39,24 @@ func connectPostgres(settings config.DatabaseSettings) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
 
-	// If DBName is specified, ensure it exists
-	if settings.DBName != "" {
+	// If Name is specified, ensure it exists
+	if settings.Name != "" {
 		sqlDB, err := db.DB()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get raw DB connection: %w", err)
 		}
 
 		// Try to create database (idempotent - ignore if exists)
-		_, _ = sqlDB.Exec(fmt.Sprintf("CREATE DATABASE %s", settings.DBName))
+		_, _ = sqlDB.Exec(fmt.Sprintf("CREATE DATABASE %s", settings.Name))
 
 		// Close initial connection
 		sqlDB.Close()
 
 		// Reconnect to the specific database
-		dsn := fmt.Sprintf("%s dbname=%s", settings.DSN, settings.DBName)
+		dsn := fmt.Sprintf("%s dbname=%s", settings.DSN, settings.Name)
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
-			return nil, fmt.Errorf("failed to connect to database '%s': %w", settings.DBName, err)
+			return nil, fmt.Errorf("failed to connect to database '%s': %w", settings.Name, err)
 		}
 	}
 
@@ -89,16 +89,16 @@ func CloseDB(db *gorm.DB) error {
 }
 
 // DropDatabase drops a PostgreSQL database (test cleanup utility)
-func DropDatabase(adminDSN, dbName string) error {
+func DropDatabase(adminDSN, Name string) error {
 	db, err := gorm.Open(postgres.Open(adminDSN), &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
 	defer CloseDB(db)
 
-	err = db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbName)).Error
+	err = db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", Name)).Error
 	if err != nil {
-		return fmt.Errorf("failed to drop database '%s': %w", dbName, err)
+		return fmt.Errorf("failed to drop database '%s': %w", Name, err)
 	}
 
 	return nil

@@ -11,7 +11,7 @@ import (
 
 // UploadKeyRequest represents the request structure for uploading a cryptographic key
 type UploadKeyRequest struct {
-	Algorithm string `json:"algorithm" validate:"omitempty,oneof=AES RSA EC"`
+	Algorithm string `json:"algorithm" validate:"omitempty,oneof=AES RSA ECDSA"`
 	KeySize   uint32 `json:"key_size" validate:"omitempty,keySizeValidation"`
 }
 

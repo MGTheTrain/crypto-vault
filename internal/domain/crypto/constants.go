@@ -6,9 +6,9 @@ const (
 	OperationSigning    = "signing"
 
 	// Key Algorithms
-	AlgorithmAES      = "AES"
-	AlgorithmECDSADSA = "ECDSA"
-	AlgorithmRSA      = "RSA"
+	AlgorithmAES   = "AES"
+	AlgorithmECDSA = "ECDSA"
+	AlgorithmRSA   = "RSA"
 
 	// Key Types
 	KeyTypePrivate   = "private"

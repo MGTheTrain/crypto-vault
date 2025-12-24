@@ -585,7 +585,7 @@ const docTemplate = `{
                     "enum": [
                         "AES",
                         "RSA",
-                        "EC"
+                        "ECDSA"
                     ]
                 },
                 "key_size": {
