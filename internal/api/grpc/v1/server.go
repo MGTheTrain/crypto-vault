@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
 	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/utils"
+	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 
 	pb "proto"
@@ -121,7 +121,7 @@ func NewBlobDownloadServer(blobDownloadService blobs.BlobDownloadService) (*Blob
 	}, nil
 }
 
-// DownloadByID downloads a blob by its ID
+// DownloadByID downloads a blob by ID
 func (s *BlobDownloadServer) DownloadByID(req *pb.BlobDownloadRequest, stream pb.BlobDownload_DownloadByIDServer) error {
 	id := req.Id
 	var decryptionKeyID *string
@@ -162,7 +162,7 @@ func NewBlobMetadataServer(blobMetadataService blobs.BlobMetadataService) (*Blob
 	}, nil
 }
 
-// ListMetadata fetches metadata of blobs optionally considering query parameters
+// ListMetadata fetches blobs metadata with optional query parameters
 func (s *BlobMetadataServer) ListMetadata(req *pb.BlobMetaQuery, stream pb.BlobMetadata_ListMetadataServer) error {
 	query := blobs.NewBlobMetaQuery()
 	if len(req.Name) > 0 {
@@ -217,7 +217,7 @@ func (s *BlobMetadataServer) ListMetadata(req *pb.BlobMetaQuery, stream pb.BlobM
 	return nil
 }
 
-// GetMetadataByID handles the GET request to fetch metadata of a blob by its ID
+// GetMetadataByID handles the GET request to fetch blob metadata by ID
 func (s *BlobMetadataServer) GetMetadataByID(ctx context.Context, req *pb.IdRequest) (*pb.BlobMetaResponse, error) {
 	blobMeta, err := s.blobMetadataService.GetByID(ctx, req.Id)
 	if err != nil {
@@ -244,7 +244,7 @@ func (s *BlobMetadataServer) GetMetadataByID(ctx context.Context, req *pb.IdRequ
 	return blobMetaResponse, nil
 }
 
-// DeleteByID handles the DELETE request to delete a blob by its ID
+// DeleteByID handles the DELETE request to delete a blob by ID
 func (s *BlobMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequest) (*pb.InfoResponse, error) {
 	err := s.blobMetadataService.DeleteByID(ctx, req.Id)
 	if err != nil {
@@ -298,7 +298,7 @@ func NewCryptoKeyDownloadServer(cryptoKeyDownloadService keys.CryptoKeyDownloadS
 	}, nil
 }
 
-// DownloadByID downloads a key by its ID
+// DownloadByID downloads a key by ID
 func (s *CryptoKeyDownloadServer) DownloadByID(req *pb.KeyDownloadRequest, stream pb.CryptoKeyDownload_DownloadByIDServer) error {
 	bytes, err := s.cryptoKeyDownloadService.DownloadByID(stream.Context(), req.Id)
 	if err != nil {
@@ -378,7 +378,7 @@ func (s *CryptoKeyMetadataServer) ListMetadata(req *pb.KeyMetadataQuery, stream 
 	return nil
 }
 
-// GetMetadataByID handles the GET request to retrieve metadata of a key by its ID
+// GetMetadataByID handles the GET request to retrieve key metadata by ID
 func (s *CryptoKeyMetadataServer) GetMetadataByID(ctx context.Context, req *pb.IdRequest) (*pb.CryptoKeyMetaResponse, error) {
 	cryptoKeyMeta, err := s.cryptoKeyMetadataService.GetByID(ctx, req.Id)
 	if err != nil {
@@ -396,7 +396,7 @@ func (s *CryptoKeyMetadataServer) GetMetadataByID(ctx context.Context, req *pb.I
 	}, nil
 }
 
-// DeleteByID deletes a key by its ID
+// DeleteByID deletes a key by ID
 func (s *CryptoKeyMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequest) (*pb.InfoResponse, error) {
 	err := s.cryptoKeyMetadataService.DeleteByID(ctx, req.Id)
 	if err != nil {
@@ -408,7 +408,7 @@ func (s *CryptoKeyMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequ
 	}, nil
 }
 
-// Register the gRPC handlers for each service
+// Register gRPC handlers for each service
 
 // RegisterBlobUploadServer registers the BlobUpload gRPC service with the server
 func RegisterBlobUploadServer(server *grpc.Server, blobUploadServer *BlobUploadServer) {
@@ -440,7 +440,7 @@ func RegisterCryptoKeyMetadataServer(server *grpc.Server, cryptoKeyMetadataServe
 	pb.RegisterCryptoKeyMetadataServer(server, cryptoKeyMetadataServer)
 }
 
-// Register the gRPC-Gateway handlers for each service
+// Register gRPC-Gateway handlers for each service
 
 // Multipart file uploads are not supported with grpc-gateway. For more details,
 // see: https://grpc-ecosystem.github.io/grpc-gateway/docs/mapping/binary_file_uploads/. As a result, subsequent code can be commented.

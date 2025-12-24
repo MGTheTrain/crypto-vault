@@ -6,7 +6,8 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"crypto_vault_service/internal/infrastructure/logger"
+	cryptoDomain "crypto_vault_service/internal/domain/crypto"
+	"crypto_vault_service/internal/pkg/logger"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -15,26 +16,13 @@ import (
 	"path/filepath"
 )
 
-// RSAProcessor Interface
-type RSAProcessor interface {
-	Encrypt(plainText []byte, publicKey *rsa.PublicKey) ([]byte, error)
-	Decrypt(ciphertext []byte, privateKey *rsa.PrivateKey) ([]byte, error)
-	Sign(data []byte, privateKey *rsa.PrivateKey) ([]byte, error)
-	Verify(data []byte, signature []byte, publicKey *rsa.PublicKey) (bool, error)
-	GenerateKeys(keySize int) (*rsa.PrivateKey, *rsa.PublicKey, error)
-	SavePrivateKeyToFile(privateKey *rsa.PrivateKey, filename string) error
-	SavePublicKeyToFile(publicKey *rsa.PublicKey, filename string) error
-	ReadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, error)
-	ReadPublicKey(publicKeyPath string) (*rsa.PublicKey, error)
-}
-
 // rsaProcessor struct that implements the RSAProcessor interface
 type rsaProcessor struct {
 	logger logger.Logger
 }
 
 // NewRSAProcessor creates and returns a new instance of rsaProcessor
-func NewRSAProcessor(logger logger.Logger) (RSAProcessor, error) {
+func NewRSAProcessor(logger logger.Logger) (cryptoDomain.RSAProcessor, error) {
 	return &rsaProcessor{
 		logger: logger,
 	}, nil
@@ -184,7 +172,7 @@ func (r *rsaProcessor) SavePrivateKeyToFile(privateKey *rsa.PrivateKey, filename
 		return fmt.Errorf("failed to encode private key: %w", err)
 	}
 
-	r.logger.Info(fmt.Sprintf("Saved RSA private key %s", filename))
+	r.logger.Info("Saved RSA private key ", filename)
 	return nil
 }
 
@@ -215,7 +203,7 @@ func (r *rsaProcessor) SavePublicKeyToFile(publicKey *rsa.PublicKey, filename st
 		return fmt.Errorf("failed to encode public key: %w", err)
 	}
 
-	r.logger.Info(fmt.Sprintf("Saved RSA public key %s", filename))
+	r.logger.Info("Saved RSA public key ", filename)
 
 	return nil
 }

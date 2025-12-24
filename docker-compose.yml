@@ -1,11 +1,11 @@
 services:
-  crypto-vault-rest-service:
-    image: crypto-vault-rest-service:0.3.0
+  crypto-vault-rest-api:
+    image: crypto-vault-rest-api:0.3.0
     build:
       context: .
-      dockerfile: cmd/crypto-vault-rest-service/Dockerfile
+      dockerfile: cmd/crypto-vault-rest-api/Dockerfile
     env_file:
-      - ./crypto-vault-rest-service.env
+      - ./crypto-vault-rest-api.env
     ports:
       - "8080:8080/tcp"
     depends_on:
@@ -13,13 +13,13 @@ services:
       - azure-blob-storage
     restart: on-failure
   
-  crypto-vault-grpc-service:
-    image: crypto-vault-grpc-service:0.3.0
+  crypto-vault-grpc-api:
+    image: crypto-vault-grpc-api:0.3.0
     build:
       context: .
-      dockerfile: cmd/crypto-vault-grpc-service/Dockerfile
+      dockerfile: cmd/crypto-vault-grpc-api/Dockerfile
     env_file:
-      - ./crypto-vault-grpc-service.env
+      - ./crypto-vault-grpc-api.env
     ports:
       - "8090:8090/tcp"
       - "50051:50051/tcp"
@@ -29,7 +29,7 @@ services:
     restart: on-failure
     
   postgres: 
-    image: postgres
+    image: postgres:16-alpine
     container_name: postgres-db
     environment:
       - POSTGRES_LOGGING=true
@@ -43,7 +43,7 @@ services:
   # command: psql "host=localhost port=5432 user=postgres password=postgres sslmode=prefer"
 
   azure-blob-storage:
-    image: mcr.microsoft.com/azure-storage/azurite
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     container_name: azure-blob-storage
     environment:
       - ACCOUNT_NAME=devstoreaccount1

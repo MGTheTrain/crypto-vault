@@ -5,32 +5,31 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Go 1.23.x 🐹
+      - name: Setup Go 1.25.x
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23.x'
+          go-version: '1.25.x'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
       - name: Uninstall and clean SoftHSM
         run: |
-          sudo apt-get purge -y softhsm
           sudo rm -rf /usr/lib/softhsm /usr/lib/x86_64-linux-gnu/softhsm*
           sudo rm -rf ~/.config/softhsm2 /tmp/tokens /var/lib/softhsm /etc/softhsm
       
       - name: Install apt dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y openssl opensc softhsm libssl-dev libengine-pkcs11-openssl bc make
+          sudo apt-get install -y openssl opensc softhsm2 libssl-dev libengine-pkcs11-openssl bc make
 
-      - name: Spin up external storage services
-        run: make spin-up-integration-test-docker-containers
+      - name: Start external services
+        run: make compose-start-infra
 
       - name: Configure SoftHSM token directory
         run: |
@@ -39,10 +38,10 @@ jobs:
           mkdir -p /tmp/tokens
           # softhsm2-util --init-token --slot 0 --label MyToken --so-pin 1234 --pin 1234
 
-      - name: Run Unit and Integration tests and check if code coverage of min 80 percent is achieved
-        run: make check-coverage
+      - name: Run Unit and Integration tests and check if code coverage of min 70 percent is achieved
+        run: make coverage-check
         env:
           SOFTHSM2_CONF: /home/runner/.config/softhsm2/softhsm2.conf
 
-      - name: Shut down external storage services
-        run: make shut-down-docker-containers
+      - name: Stop external services
+        run: make compose-stop

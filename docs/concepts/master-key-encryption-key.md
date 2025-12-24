@@ -58,7 +58,6 @@ To ensure long-term security, periodically rotate both the master key and the da
 1. **Master Key (KEK)**: AES-256 key stored in AWS KMS or Azure Key Vault.
 2. **Data Encryption Key (DEK)**: AES-256 key generated to encrypt a specific BLOB.
 3. **Process**:
-
    - **Wrap DEK**: Use the master key (AES-256) to encrypt the DEK.
    - **Encrypt Data**: Use the DEK to encrypt the data (BLOB or metadata).
    - **Store Data**: Store the encrypted data and the wrapped DEK in your storage system.

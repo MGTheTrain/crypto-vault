@@ -5,16 +5,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto_vault_service/internal/infrastructure/logger"
+	"crypto_vault_service/internal/domain/crypto"
+	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
 )
-
-// AESProcessor Interface
-type AESProcessor interface {
-	Encrypt(data, key []byte) ([]byte, error)
-	Decrypt(ciphertext, key []byte) ([]byte, error)
-	GenerateKey(keySize int) ([]byte, error)
-}
 
 // aesProcessor struct that implements the AESProcessor interface
 type aesProcessor struct {
@@ -22,7 +16,7 @@ type aesProcessor struct {
 }
 
 // NewAESProcessor creates and returns a new instance of aesProcessor
-func NewAESProcessor(logger logger.Logger) (AESProcessor, error) {
+func NewAESProcessor(logger logger.Logger) (crypto.AESProcessor, error) {
 	return &aesProcessor{
 		logger: logger,
 	}, nil

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/pkg/config"
+	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
 	"io"
 	"log"
@@ -26,7 +26,7 @@ type azureBlobConnector struct {
 
 // NewAzureBlobConnector creates a new azureBlobConnector instance using a connection string.
 // It returns the connector and any error encountered during the initialization.
-func NewAzureBlobConnector(ctx context.Context, settings *settings.BlobConnectorSettings, logger logger.Logger) (BlobConnector, error) {
+func NewAzureBlobConnector(ctx context.Context, settings *config.BlobConnectorSettings, logger logger.Logger) (blobs.BlobConnector, error) {
 	if err := settings.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate settings: %w", err)
 	}
@@ -36,10 +36,9 @@ func NewAzureBlobConnector(ctx context.Context, settings *settings.BlobConnector
 		return nil, fmt.Errorf("failed to create Azure Blob client: %w", err)
 	}
 
-	_, _ = client.CreateContainer(ctx, settings.ContainerName, nil)
-	// if err != nil {
-	// 	fmt.Printf("Failed to create Azure container: %v\n", err)
-	// }
+	if _, err := client.CreateContainer(ctx, settings.ContainerName, nil); err != nil {
+		logger.Warn("container creation failed (may already exist)", "error", err)
+	}
 
 	return &azureBlobConnector{
 		client:        client,
@@ -48,7 +47,7 @@ func NewAzureBlobConnector(ctx context.Context, settings *settings.BlobConnector
 	}, nil
 }
 
-// UploadFromForm uploads files to a Blob Storage
+// Upload uploads files to a Blob Storage
 // and returns the metadata for each uploaded byte stream.
 func (abc *azureBlobConnector) Upload(ctx context.Context, form *multipart.Form, userID string, encryptionKeyID, signKeyID *string) ([]*blobs.BlobMeta, error) {
 	var blobMeta []*blobs.BlobMeta
@@ -111,7 +110,7 @@ func (abc *azureBlobConnector) Upload(ctx context.Context, form *multipart.Form,
 			return nil, err
 		}
 
-		abc.logger.Info(fmt.Sprintf("Blob '%s' uploaded successfully", blob.Name))
+		abc.logger.Info("Blob '%s' uploaded successfully", blob.Name)
 
 		blobMeta = append(blobMeta, blob)
 	}
@@ -124,14 +123,14 @@ func (abc *azureBlobConnector) rollbackUploadedBlobs(ctx context.Context, blobs 
 	for _, blob := range blobs {
 		err := abc.Delete(ctx, blob.ID, blob.Name)
 		if err != nil {
-			abc.logger.Info(fmt.Sprintf("Failed to delete blob '%s' during rollback: %v", blob.Name, err))
+			abc.logger.Info("Failed to delete blob '%s' during rollback: %v", blob.Name, err)
 		} else {
-			abc.logger.Info(fmt.Sprintf("Blob '%s' deleted during rollback", blob.Name))
+			abc.logger.Info("Blob '%s' deleted during rollback", blob.Name)
 		}
 	}
 }
 
-// Download retrieves a blob's content by its ID and name, and returns the data as a stream.
+// Download retrieves a blob's content by ID and name, and returns the data as a stream.
 func (abc *azureBlobConnector) Download(ctx context.Context, blobID, blobName string) ([]byte, error) {
 	fullBlobName := fmt.Sprintf("%s/%s", blobID, blobName)
 
@@ -153,19 +152,19 @@ func (abc *azureBlobConnector) Download(ctx context.Context, blobID, blobName st
 		return nil, fmt.Errorf("failed to close retryReader for blob '%s': %w", fullBlobName, err)
 	}
 
-	abc.logger.Info(fmt.Sprintf("Blob '%s' downloaded successfully", fullBlobName))
+	abc.logger.Info("Blob '%s' downloaded successfully", fullBlobName)
 	return downloadedData.Bytes(), nil
 }
 
-// Delete deletes a blob from Azure Blob Storage by its ID and Name, and returns any error encountered.
+// Delete deletes a blob from Azure Blob Storage by ID and Name, and returns any error encountered.
 func (abc *azureBlobConnector) Delete(ctx context.Context, blobID, blobName string) error {
 	fullBlobName := fmt.Sprintf("%s/%s", blobID, blobName)
 
 	_, err := abc.client.DeleteBlob(ctx, abc.containerName, fullBlobName, nil)
 	if err != nil {
-		return fmt.Errorf("failed to delete blob in %s", fullBlobName)
+		return fmt.Errorf("failed to delete blob %s: %w", fullBlobName, err)
 	}
 
-	abc.logger.Info(fmt.Sprintf("Blob '%s' deleted successfully", fullBlobName))
+	abc.logger.Info("Blob '%s' deleted successfully", fullBlobName)
 	return nil
 }

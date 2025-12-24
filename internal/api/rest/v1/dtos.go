@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"crypto_vault_service/internal/domain/validators"
+	"crypto_vault_service/internal/pkg/validators"
 	"errors"
 	"fmt"
 	"time"
@@ -11,7 +11,7 @@ import (
 
 // UploadKeyRequest represents the request structure for uploading a cryptographic key
 type UploadKeyRequest struct {
-	Algorithm string `json:"algorithm" validate:"omitempty,oneof=AES RSA EC"`
+	Algorithm string `json:"algorithm" validate:"omitempty,oneof=AES RSA ECDSA"`
 	KeySize   uint32 `json:"key_size" validate:"omitempty,keySizeValidation"`
 }
 
@@ -49,7 +49,7 @@ type InfoResponse struct {
 	Message string `json:"message"` // The informational message
 }
 
-// BlobMetaResponse contains metadata about a blob, such as its ID, size, and encryption details.
+// BlobMetaResponse contains metadata about a blob, such as ID, size, and encryption details.
 type BlobMetaResponse struct {
 	ID              string    `json:"id"`              // Unique identifier for the blob
 	DateTimeCreated time.Time `json:"dateTimeCreated"` // Timestamp when the blob was created

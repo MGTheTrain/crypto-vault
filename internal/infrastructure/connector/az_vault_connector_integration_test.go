@@ -8,38 +8,30 @@ import (
 	"testing"
 	"time"
 
-	"crypto_vault_service/internal/infrastructure/logger"
-	"crypto_vault_service/internal/infrastructure/settings"
+	"crypto_vault_service/internal/domain/keys"
+	"crypto_vault_service/internal/pkg/config"
+	pkgTesting "crypto_vault_service/internal/pkg/testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// AzureVaultConnectorTest encapsulates common logic for tests
 type AzureVaultConnectorTest struct {
-	vaultConnector VaultConnector
+	vaultConnector keys.VaultConnector
 }
 
-// NewAzureVaultConnectorTest initializes and returns a new AzureVaultConnectorTest
 func NewAzureVaultConnectorTest(t *testing.T, cloudProvider, connectionString, containerName string) *AzureVaultConnectorTest {
+	t.Helper()
+	logger := pkgTesting.SetupTestLogger(t)
 
-	loggerSettings := &settings.LoggerSettings{
-		LogLevel: "info",
-		LogType:  "console",
-		FilePath: "",
-	}
-	logger, err := logger.GetLogger(loggerSettings)
-	require.NoError(t, err)
-
-	keyConnectorSettings := &settings.KeyConnectorSettings{
+	keyConnectorSettings := &config.KeyConnectorSettings{
 		CloudProvider:    cloudProvider,
 		ConnectionString: connectionString,
 		ContainerName:    containerName,
 	}
 
 	ctx := context.Background()
-
 	vaultConnector, err := NewAzureVaultConnector(ctx, keyConnectorSettings, logger)
 	require.NoError(t, err)
 
@@ -49,23 +41,25 @@ func NewAzureVaultConnectorTest(t *testing.T, cloudProvider, connectionString, c
 }
 
 func TestAzureVaultConnector_Upload(t *testing.T) {
-	avct := NewAzureVaultConnectorTest(t, "azure", "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;", "testblobs")
+	avct := NewAzureVaultConnectorTest(t, TestCloudProvider, TestConnectionString, TestContainerName)
 
 	testFileContent := []byte("This is a test file content.")
-
 	userID := uuid.New().String()
 	keyPairID := uuid.New().String()
 	keyAlgorithm := "RSA"
 	keyType := "private"
-	keySize := 2048
+	keySize := uint32(2048)
 	ctx := context.Background()
 
-	cryptoKeyMeta, err := avct.vaultConnector.Upload(ctx, testFileContent, userID, keyPairID, keyType, keyAlgorithm, uint32(keySize))
+	cryptoKeyMeta, err := avct.vaultConnector.Upload(ctx, testFileContent, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	require.NoError(t, err)
 
 	assert.NotEmpty(t, cryptoKeyMeta.ID)
 	assert.Equal(t, keyType, cryptoKeyMeta.Type)
+	assert.Equal(t, keyAlgorithm, cryptoKeyMeta.Algorithm)
+	assert.Equal(t, keySize, cryptoKeyMeta.KeySize)
 	assert.Equal(t, userID, cryptoKeyMeta.UserID)
+	assert.Equal(t, keyPairID, cryptoKeyMeta.KeyPairID)
 	assert.WithinDuration(t, time.Now(), cryptoKeyMeta.DateTimeCreated, time.Second)
 
 	err = avct.vaultConnector.Delete(ctx, cryptoKeyMeta.ID, cryptoKeyMeta.KeyPairID, cryptoKeyMeta.Type)
@@ -73,47 +67,69 @@ func TestAzureVaultConnector_Upload(t *testing.T) {
 }
 
 func TestAzureVaultConnector_Download(t *testing.T) {
-	avct := NewAzureVaultConnectorTest(t, "azure", "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;", "testblobs")
+	avct := NewAzureVaultConnectorTest(t, TestCloudProvider, TestConnectionString, TestContainerName)
 
 	testFileContent := []byte("This is a test file content.")
-
 	userID := uuid.New().String()
 	keyPairID := uuid.New().String()
 	keyAlgorithm := "RSA"
 	keyType := "private"
-	keySize := 2048
+	keySize := uint32(2048)
 	ctx := context.Background()
 
-	cryptoKeyMeta, err := avct.vaultConnector.Upload(ctx, testFileContent, userID, keyPairID, keyType, keyAlgorithm, uint32(keySize))
+	cryptoKeyMeta, err := avct.vaultConnector.Upload(ctx, testFileContent, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	require.NoError(t, err)
 
 	downloadedData, err := avct.vaultConnector.Download(ctx, cryptoKeyMeta.ID, cryptoKeyMeta.KeyPairID, cryptoKeyMeta.Type)
 	require.NoError(t, err)
-
 	assert.Equal(t, testFileContent, downloadedData)
 
 	err = avct.vaultConnector.Delete(ctx, cryptoKeyMeta.ID, cryptoKeyMeta.KeyPairID, cryptoKeyMeta.Type)
 	require.NoError(t, err)
 }
 
+func TestAzureVaultConnector_Download_NotFound(t *testing.T) {
+	avct := NewAzureVaultConnectorTest(t, TestCloudProvider, TestConnectionString, TestContainerName)
+
+	nonExistentID := uuid.New().String()
+	keyPairID := uuid.New().String()
+	ctx := context.Background()
+
+	_, err := avct.vaultConnector.Download(ctx, nonExistentID, keyPairID, "private")
+	assert.Error(t, err)
+}
+
 func TestAzureVaultConnector_Delete(t *testing.T) {
-	avct := NewAzureVaultConnectorTest(t, "azure", "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;", "testblobs")
+	avct := NewAzureVaultConnectorTest(t, TestCloudProvider, TestConnectionString, TestContainerName)
 
 	testFileContent := []byte("This is a test file content.")
-
 	userID := uuid.New().String()
 	keyPairID := uuid.New().String()
 	keyAlgorithm := "RSA"
 	keyType := "private"
-	keySize := 2048
+	keySize := uint32(2048)
 	ctx := context.Background()
 
-	cryptoKeyMeta, err := avct.vaultConnector.Upload(ctx, testFileContent, userID, keyPairID, keyType, keyAlgorithm, uint32(keySize))
+	cryptoKeyMeta, err := avct.vaultConnector.Upload(ctx, testFileContent, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	require.NoError(t, err)
 
 	err = avct.vaultConnector.Delete(ctx, cryptoKeyMeta.ID, cryptoKeyMeta.KeyPairID, cryptoKeyMeta.Type)
 	require.NoError(t, err)
 
 	_, err = avct.vaultConnector.Download(ctx, cryptoKeyMeta.ID, cryptoKeyMeta.KeyPairID, cryptoKeyMeta.Type)
+	assert.Error(t, err)
+}
+
+func TestNewAzureVaultConnector_InvalidSettings(t *testing.T) {
+	logger := pkgTesting.SetupTestLogger(t)
+	ctx := context.Background()
+
+	invalidSettings := &config.KeyConnectorSettings{
+		CloudProvider:    "",
+		ConnectionString: "",
+		ContainerName:    "",
+	}
+
+	_, err := NewAzureVaultConnector(ctx, invalidSettings, logger)
 	assert.Error(t, err)
 }

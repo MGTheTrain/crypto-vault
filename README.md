@@ -1,4 +1,4 @@
-# crypto-vault-service
+# crypto-vault
 
 ## Summary
 
@@ -6,7 +6,7 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 
 ## References
 
-- [OpenSSL with libp11 for Signing, Verifying and Encrypting, Decrypting](https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pkcs)
+- [OpenSSL with libp11 for Signing, Verifying and Encrypting, Decrypting](https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pkcs)
 - [pkcs11-tool usage](https://docs.nitrokey.com/nethsm/pkcs11-tool#id1)
 - [OpenFGA online editor](https://play.fga.dev/sandbox/?store=github)
 - [Adding gRPC-Gateway annotations to an existing proto file](https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/)
@@ -41,8 +41,8 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 - [x] **CI workflows for quality checks**: Set up continuous integration workflows with GitHub Actions for automated linting, functional and non-functional testing, building and pushing artifacts.
 - [ ] **Security checks in CI workflows**: Consider non-functional testing (vulnerability scanning, SBOM generation, Static Code Analysis) in GitHub Actions.
 - [ ] **Performance optimization**: Ensure cryptographic operations are optimized for performance, especially for large files and high throughput environments.
-- [x] **Logging**: Integrate logging (e.g. using structured logging with `logrus`)
-- [ ] **Monitoring**: Integrate monitoring (e.g. Prometheus, Grafana) to track API usage, performance and errors.
+- [x] **Logging**: Integrated structured logging with Go 1.22+ `slog`
+- [ ] **Distributed Telemetry:** Implement telemetry (e.g. OpenTelemetry with different backends, e.g. Prometheus, Grafana) to address distributed logging, tracing and monitoring concerns
 - [ ] **Security**: Ensure that all cryptographic material and metadata is securely encrypted before storing it using a master key
 - [ ] **Access control**: Secure APIs using authorization mechanisms including OAuth 2.0 and JWTs. Implement relationship-based access control (ReBAC) for APIs, ensuring that users can only perform operations on cryptographic material based on their defined relationships and permissions within the system.
 - [x] **Documentation**: Provide clear API documentation (e.g. Swagger/OpenAPI) for ease of integration by other developers.
@@ -51,10 +51,13 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 
 ## Getting Started
 
-### Preconditions
+### Prerequisites
 
-- Install Go from the official Go website, or use this [devcontainer.json](../../.devcontainer/devcontainer.json) with the [DevContainer extensions in VS Code or other IDE supporting DevContainers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- If the `devcontainer.json` is not used, install the necessary dependencies for PKCS#11 integration on a later Linux distribution such as `Debian 12` or `Ubuntu 22.04`:
+- Go 1.25+ installed
+- Docker (optional, for containerized deployment)
+- Install the [DevContainer extension in VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) or use the provided [devcontainer.json](.devcontainer/devcontainer.json)
+
+If not using devcontainer, install dependencies for PKCS#11 integration on Debian 12+ or Ubuntu 22.04+:
 
 ```sh
 apt-get update
@@ -64,63 +67,91 @@ apt-get install -y openssl opensc softhsm libssl-dev libengine-pkcs11-openssl
 ### Make targets
 
 ```sh
- make help
-Available Makefile targets:
-  format-and-lint                               - Run the format and linting script
-  lint-results                                  - Write golang-ci lint findings to a linter-findings.txt file
-  run-unit-tests                                - Run the unit tests
-  run-integration-tests                         - Run the integration tests
-  run-unit-and-integration-tests                - Run the unit and integration tests
-  check-coverage                                - Run the unit and integration tests and check if code coverage of min 80 percent is achieved
-  run-api-tests                                 - Run the api tests
-  spin-up-integration-test-docker-containers    - Spin up Docker containers for integration tests (Postgres, Azure Blob Storage)
-  spin-up-docker-containers                     - Spin up Docker containers with internal containerized applications
-  shut-down-docker-containers                   - Shut down the application Docker containers
-  generate-swagger-docs                         - Convert Go annotations to Swagger Documentation 2.0
-  generate-grpc-files                           - Generate Go gRPC code from .proto files
-  remove-artifacts                              - Remove artifacts
-```
+Usage: make [target] [PKG=./path/to/package] [TYPE=test,types]
 
-### Formatting and linting
+Available targets:
+  help                                     Show this help message
 
-```sh
-make format-and-lint
-```
+:Development
+  format-and-lint                          Run formatting and linting
+  lint-results                             Write golang-ci lint findings to file
 
-### Run Tests
+:Testing
+  tests                                    Run tests (use PKG=./path TYPE=unit,integration,e2e)
+  coverage-check                           Run unit and integration tests for internal packages and check coverage threshold
 
-To run `unit tests` on Unix-like systems execute
+:Coverage Reports
+  coverage-html                            Generate HTML coverage report. Open HTML file using a HTML viewer in browser
+  coverage-func                            Show coverage by function in terminal
 
-```sh
-make run-unit-tests
-```
+:Docker
+  compose-start-infra                      Start integration test containers (postgres, azure-blob-storage)
+  compose-start                            Start all docker containers
+  compose-stop                             Stop all docker containers
 
-To run `integration tests` on Unix-like systems execute
+:Code Generation
+  swagger-docs-gen                         Generate Swagger documentation
+  grpc-files-gen                           Generate Go gRPC code from proto files
 
-```sh
-make spin-up-integration-test-docker-containers
-make run-integration-tests
-make shut-down-docker-containers
-```
+:Cleanup
+  clean                                    Remove generated artifacts
 
-To run both `unit and integration tests` including a `coverage report in HTML format` on Unix-like systems execute
+Test type options (TYPE parameter):
+  unit         - Run unit tests only
+  integration  - Run integration tests only
+  e2e          - Run end-to-end tests only
+  unit,integration         - Run both unit and integration tests
+  unit,integration,e2e     - Run all test types
 
-```sh
-make spin-up-integration-test-docker-containers
-make run-unit-and-integration-tests
-make shut-down-docker-containers
-```
-
-To run `e2e-tests` on Unix-like systems execute
-
-```sh
-make run-e2e-tests
+Examples:
+  make tests                                              # Run unit tests for all packages
+  make tests PKG=./internal/pkg/config                    # Run unit tests for specific package
+  make tests TYPE=integration                             # Run integration tests for all packages
+  make tests TYPE=unit,integration                        # Run unit and integration tests for all packages
+  make tests PKG=./internal/app TYPE=integration          # Run integration tests for specific package
+  make tests PKG=./cmd/crypto-vault-cli/e2e TYPE=e2e      # Run e2e tests for specific package
+  make coverage-check                                     # Run unit and integration tests for internal package and check code coverage
 ```
 
 ### Applications
 
-You can find applications utilizing [internal packages](./internal/) in the [cmd folder](./cmd/).
+You can find applications utilizing [internal packages](./internal/) in the [cmd folder](./cmd/):
+
+- **[crypto-vault-cli](./cmd/crypto-vault-cli)**: Command-line tool for cryptographic operations
+- **[crypto-vault-rest-api](./cmd/crypto-vault-rest-api)**: RESTful API service
+- **[crypto-vault-grpc-api](./cmd/crypto-vault-grpc-api)**: gRPC API service with HTTP gateway
+
+### Quick Start
+
+**Option 1: Local Development**
+
+```bash
+# REST API
+cd cmd/crypto-vault-rest-api
+go run main.go --config ../../configs/rest-app.yaml
+
+# gRPC API
+cd cmd/crypto-vault-grpc-api
+go run main.go --config ../../configs/grpc-app.yaml
+
+# CLI Tool
+cd cmd/crypto-vault-cli
+go run main.go help
+```
+
+**Option 2: Docker Deployment**
+
+```bash
+# From project root
+make compose-start
+```
+
+Access services at:
+
+- REST API Swagger UI: `http://localhost:8080/api/v1/cvs/swagger/index.html`
+- gRPC Server: `localhost:50051`
+- gRPC HTTP Gateway: `http://localhost:8090/api/v1/cvs`
 
 ### Documentation
 
-You can find documentation on architectural decisions, diagrams and concepts [here](./docs).
+You can find documentation [here](./docs)

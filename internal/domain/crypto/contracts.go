@@ -1,5 +1,11 @@
 package crypto
 
+import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rsa"
+)
+
 // TODO(MGTheTrain): Implicitly implement interface signatures
 // // CryptoKeyOperationService defines methods for local cryptographic key management, encryption, signing, and PKCS#11 operations.
 // type CryptoKeyOperationService interface {
@@ -64,7 +70,63 @@ package crypto
 // 	// It returns any error encountered during the addition of the key.
 // 	AddKeyToToken() error
 
-// 	// DeleteKeyFromToken deletes a cryptographic key from a PKCS#11 token by its type and label.
+// 	// DeleteKeyFromToken deletes a cryptographic key from a PKCS#11 token by type and label.
 // 	// It returns any error encountered during the deletion of the key.
 // 	DeleteKeyFromToken(objectType, objectLabel string) error
 // }
+
+// AESProcessor handles AES encryption operations
+type AESProcessor interface {
+	Encrypt(data, key []byte) ([]byte, error)
+	Decrypt(ciphertext, key []byte) ([]byte, error)
+	GenerateKey(keySize int) ([]byte, error)
+}
+
+// ECProcessor handles elliptic curve operations
+type ECProcessor interface {
+	GenerateKeys(curve elliptic.Curve) (*ecdsa.PrivateKey, *ecdsa.PublicKey, error)
+	Sign(message []byte, privateKey *ecdsa.PrivateKey) ([]byte, error)
+	Verify(message, signature []byte, publicKey *ecdsa.PublicKey) (bool, error)
+	SaveSignatureToFile(filename string, data []byte) error
+	SavePrivateKeyToFile(privateKey *ecdsa.PrivateKey, filename string) error
+	SavePublicKeyToFile(publicKey *ecdsa.PublicKey, filename string) error
+	ReadPrivateKey(privateKeyPath string, curve elliptic.Curve) (*ecdsa.PrivateKey, error)
+	ReadPublicKey(publicKeyPath string, curve elliptic.Curve) (*ecdsa.PublicKey, error)
+}
+
+// RSAProcessor handles RSA operations
+type RSAProcessor interface {
+	Encrypt(plainText []byte, publicKey *rsa.PublicKey) ([]byte, error)
+	Decrypt(ciphertext []byte, privateKey *rsa.PrivateKey) ([]byte, error)
+	Sign(data []byte, privateKey *rsa.PrivateKey) ([]byte, error)
+	Verify(data []byte, signature []byte, publicKey *rsa.PublicKey) (bool, error)
+	GenerateKeys(keySize int) (*rsa.PrivateKey, *rsa.PublicKey, error)
+	SavePrivateKeyToFile(privateKey *rsa.PrivateKey, filename string) error
+	SavePublicKeyToFile(publicKey *rsa.PublicKey, filename string) error
+	ReadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, error)
+	ReadPublicKey(publicKeyPath string) (*rsa.PublicKey, error)
+}
+
+// PKCS11Handler defines the operations for working with a PKCS#11 token
+type PKCS11Handler interface {
+	// ListTokenSlots lists all available tokens in the available slots
+	ListTokenSlots() ([]Token, error)
+	// ListObjects lists all objects (e.g. keys) in a specific token based on the token label
+	ListObjects(tokenLabel string) ([]TokenObject, error)
+	// InitializeToken initializes the token with the provided label and pins
+	InitializeToken(label string) error
+	// AddSignKey adds a signing key (ECDSA or RSA) to the token
+	AddSignKey(label, objectLabel, keyType string, keySize uint) error
+	// AddEncryptKey adds an encryption key (RSA only currently) to the token
+	AddEncryptKey(label, objectLabel, keyType string, keySize uint) error
+	// Encrypt encrypts data using the cryptographic capabilities of the PKCS#11 token
+	Encrypt(label, objectLabel, inputFilePath, outputFilePath, keyType string) error
+	// Decrypt decrypts data using the cryptographic capabilities of the PKCS#11 token
+	Decrypt(label, objectLabel, inputFilePath, outputFilePath, keyType string) error
+	// Sign signs data using the cryptographic capabilities of the PKCS#11 token
+	Sign(label, objectLabel, dataFilePath, signatureFilePath, keyType string) error
+	// Verify verifies the signature of data using the cryptographic capabilities of the PKCS#11 token
+	Verify(label, objectLabel, dataFilePath, signatureFilePath, keyType string) (bool, error)
+	// DeleteObject deletes a key or object from the token
+	DeleteObject(label, objectType, objectLabel string) error
+}
