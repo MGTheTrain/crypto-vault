@@ -54,7 +54,7 @@ func (commandHandler *RSACommandHandler) GenerateRSAKeysCmd(cmd *cobra.Command, 
 
 	privateKey, publicKey, err := commandHandler.rsaProcessor.GenerateKeys(keySize)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
@@ -62,14 +62,14 @@ func (commandHandler *RSACommandHandler) GenerateRSAKeysCmd(cmd *cobra.Command, 
 
 	err = commandHandler.rsaProcessor.SavePrivateKeyToFile(privateKey, privateKeyFilePath)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	publicKeyFilePath := fmt.Sprintf("%s/%s-public-key.pem", keyDir, uniqueID.String())
 	err = commandHandler.rsaProcessor.SavePublicKeyToFile(publicKey, publicKeyFilePath)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 }
@@ -94,25 +94,25 @@ func (commandHandler *RSACommandHandler) EncryptRSACmd(cmd *cobra.Command, _ []s
 
 	publicKey, err := commandHandler.rsaProcessor.ReadPublicKey(publicKeyPath)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	plainText, err := os.ReadFile(filepath.Clean(inputFile))
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	encryptedData, err := commandHandler.rsaProcessor.Encrypt(plainText, publicKey)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	err = os.WriteFile(outputFile, encryptedData, 0600)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
@@ -139,25 +139,25 @@ func (commandHandler *RSACommandHandler) DecryptRSACmd(cmd *cobra.Command, _ []s
 
 	privateKey, err := commandHandler.rsaProcessor.ReadPrivateKey(privateKeyPath)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	encryptedData, err := os.ReadFile(filepath.Clean(inputFile))
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	decryptedData, err := commandHandler.rsaProcessor.Decrypt(encryptedData, privateKey)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	err = os.WriteFile(outputFile, decryptedData, 0600)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
@@ -185,28 +185,28 @@ func (commandHandler *RSACommandHandler) SignRSACmd(cmd *cobra.Command, _ []stri
 	// Read private key
 	privateKey, err := commandHandler.rsaProcessor.ReadPrivateKey(privateKeyPath)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	// Read data to sign
 	data, err := os.ReadFile(filepath.Clean(inputFilePath))
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	// Sign the data
 	signature, err := commandHandler.rsaProcessor.Sign(data, privateKey)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	// Save the signature to a file
 	err = os.WriteFile(signatureFilePath, signature, 0600)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
@@ -234,27 +234,27 @@ func (commandHandler *RSACommandHandler) VerifyRSACmd(cmd *cobra.Command, _ []st
 	// Read public key
 	publicKey, err := commandHandler.rsaProcessor.ReadPublicKey(publicKeyPath)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	// Read data and signature
 	data, err := os.ReadFile(filepath.Clean(inputFilePath))
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	signature, err := os.ReadFile(filepath.Clean(signatureFilePath))
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 
 	// Verify the signature
 	valid, err := commandHandler.rsaProcessor.Verify(data, signature, publicKey)
 	if err != nil {
-		commandHandler.logger.Error("%v", err)
+		commandHandler.logger.Error(err)
 		return
 	}
 

@@ -78,7 +78,7 @@ type appDependencies struct {
 
 type cryptoProcessors struct {
 	aes crypto.AESProcessor
-	ec  crypto.ECProcessor
+	ec  crypto.ECDSAProcessor
 	rsa crypto.RSAProcessor
 }
 
@@ -311,7 +311,7 @@ func initializeCryptoProcessors(log logger.Logger) (*cryptoProcessors, error) {
 		return nil, fmt.Errorf("failed to create AES processor: %w", err)
 	}
 
-	ecProcessor, err := cryptography.NewECProcessor(log)
+	ecdsaProcessor, err := cryptography.NewECDSAProcessor(log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create EC processor: %w", err)
 	}
@@ -324,7 +324,7 @@ func initializeCryptoProcessors(log logger.Logger) (*cryptoProcessors, error) {
 	log.Info("Cryptographic processors initialized successfully")
 	return &cryptoProcessors{
 		aes: aesProcessor,
-		ec:  ecProcessor,
+		ec:  ecdsaProcessor,
 		rsa: rsaProcessor,
 	}, nil
 }
@@ -395,7 +395,7 @@ func initializeGRPCServers(services *appServices, log logger.Logger) (*grpcServe
 		return nil, fmt.Errorf("failed to create blob upload server: %w", err)
 	}
 
-	blobDownloadServer, err := v1.NewBlobDownloadServer(services.blobDownload)
+	blobDownloadServer, err := v1.NewBlobDownloadServer(services.blobDownload, services.blobMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create blob download server: %w", err)
 	}
@@ -410,7 +410,7 @@ func initializeGRPCServers(services *appServices, log logger.Logger) (*grpcServe
 		return nil, fmt.Errorf("failed to create crypto key upload server: %w", err)
 	}
 
-	cryptoKeyDownloadServer, err := v1.NewCryptoKeyDownloadServer(services.cryptoKeyDownload)
+	cryptoKeyDownloadServer, err := v1.NewCryptoKeyDownloadServer(services.cryptoKeyDownload, services.cryptoKeyMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create crypto key download server: %w", err)
 	}

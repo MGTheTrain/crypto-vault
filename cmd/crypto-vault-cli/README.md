@@ -56,15 +56,15 @@ go run main.go verify-rsa \
 
 ```sh
 # Generate keys
-go run main.go generate-ecc-keys --key-size 256 --key-dir data
+go run main.go generate-ecdsa-keys --key-size 256 --key-dir data
 
 # Sign/Verify
-go run main.go sign-ecc \
+go run main.go sign-ecdsa \
   --input-file data/input.txt \
   --output-file data/signature.bin \
   --private-key data/<private-key>
 
-go run main.go verify-ecc \
+go run main.go verify-ecdsa \
   --input-file data/input.txt \
   --signature-file data/signature.bin \
   --public-key data/<public-key>

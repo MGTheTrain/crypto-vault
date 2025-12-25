@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"crypto_vault_service/internal/domain/crypto"
 	"crypto_vault_service/internal/domain/keys"
 	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
@@ -208,38 +209,71 @@ func (handler *keyHandler) GetMetadataByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, cryptoKeyMetadataResponse)
 }
 
-// DownloadByID handles the GET request to download a key by ID
+// DownloadByID handles GET request to download a cryptographic key by ID
 // @Summary Download a cryptographic key by ID
-// @Description Download the content of a specific cryptographic key by ID.
+// @Description Download the content of a specific cryptographic key by ID in PEM format.
 // @Tags Key
 // @Accept json
-// @Produce octet-stream
+// @Produce application/x-pem-file
 // @Param id path string true "Key ID"
-// @Success 200 {file} file "Cryptographic key content"
+// @Success 200 {file} file "Cryptographic key content in PEM format"
 // @Failure 404 {object} ErrorResponse
 // @Router /keys/{id}/file [get]
 func (handler *keyHandler) DownloadByID(ctx *gin.Context) {
 	keyID := ctx.Param("id")
 
-	bytes, err := handler.cryptoKeyDownloadService.DownloadByID(ctx, keyID)
+	// Get key metadata to determine filename
+	keyMeta, err := handler.cryptoKeyMetadataService.GetByID(ctx, keyID)
 	if err != nil {
+		ctx.JSON(http.StatusNotFound, ErrorResponse{
+			Message: fmt.Sprintf("key with id %s not found", keyID),
+		})
+		return
+	}
+
+	// Determine file extension and name based on key type
+	var filename string
+	switch keyMeta.Type {
+	case crypto.KeyTypePublic:
+		filename = fmt.Sprintf("%s-public-key.pem", keyID)
+	case crypto.KeyTypeSymmetric:
+		filename = fmt.Sprintf("%s-symmetrics-key.pem", keyID)
+	case crypto.KeyTypePrivate:
 		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("could not download key with id %s: %v", keyID, err.Error())
+		errorResponse.Message = "download forbidden for private keys"
+		ctx.JSON(http.StatusBadRequest, errorResponse)
+		return
+	default:
+		var errorResponse ErrorResponse
+		errorResponse.Message = fmt.Sprintf("unknown key type for %s", keyID)
 		ctx.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 
+	// Download key bytes (already in PEM format from service)
+	pemBytes, err := handler.cryptoKeyDownloadService.DownloadByID(ctx, keyID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: fmt.Sprintf("could not download key with id %s: %v", keyID, err.Error()),
+		})
+		return
+	}
+
+	// Set headers for PEM file download
+	ctx.Writer.Header().Set("Content-Type", "application/x-pem-file")
+	ctx.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	ctx.Writer.WriteHeader(http.StatusOK)
-	ctx.Writer.Header().Set("Content-Type", "application/octet-stream; charset=utf-8")
-	ctx.Writer.Header().Set("Content-Disposition", "attachment; filename="+keyID)
-	_, err = ctx.Writer.Write(bytes)
 
-	if err != nil {
+	if _, err := ctx.Writer.Write(pemBytes); err != nil {
 		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("could not write bytes: %v", err.Error())
+		errorResponse.Message = fmt.Sprintf("failed to write PEM bytes to response with ID %s, error: %s", keyID, err)
 		ctx.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
+
+	var infoResponse InfoResponse
+	infoResponse.Message = fmt.Sprintf("key downloaded successfully %s", keyID)
+	ctx.JSON(http.StatusNoContent, infoResponse)
 }
 
 // DeleteByID handles the DELETE request to delete a key by ID

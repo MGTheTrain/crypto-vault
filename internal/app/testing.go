@@ -72,7 +72,7 @@ func SetupTestServices(t *testing.T, dbType string) *TestServices {
 	aesProcessor, err := cryptography.NewAESProcessor(logger)
 	require.NoError(t, err, "Failed to create AES processor")
 
-	ecProcessor, err := cryptography.NewECProcessor(logger)
+	ecdsaProcessor, err := cryptography.NewECDSAProcessor(logger)
 	require.NoError(t, err, "Failed to create EC processor")
 
 	rsaProcessor, err := cryptography.NewRSAProcessor(logger)
@@ -85,7 +85,7 @@ func SetupTestServices(t *testing.T, dbType string) *TestServices {
 		vaultConnector,
 		dbContext.CryptoKeyRepo,
 		aesProcessor,
-		ecProcessor,
+		ecdsaProcessor,
 		rsaProcessor,
 		logger,
 	)
@@ -114,7 +114,7 @@ func SetupTestServices(t *testing.T, dbType string) *TestServices {
 		vaultConnector,
 		dbContext.CryptoKeyRepo,
 		aesProcessor,
-		ecProcessor,
+		ecdsaProcessor,
 		rsaProcessor,
 		logger,
 	)

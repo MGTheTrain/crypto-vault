@@ -55,7 +55,7 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 
 - Go 1.25+ installed
 - Docker (optional, for containerized deployment)
-- Install the [DevContainer extension in VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) or use the provided [devcontainer.json](.devcontainer/devcontainer.json)
+- Install the [DevContainer extension in VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) and use the provided [devcontainer.json](.devcontainer/devcontainer.json)
 
 If not using devcontainer, install dependencies for PKCS#11 integration on Debian 12+ or Ubuntu 22.04+:
 

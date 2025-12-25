@@ -13,11 +13,15 @@ erDiagram
         string id PK
         string encryption_key_id FK
         string sign_key_id FK
+        string signature_blob_id FK
         string user_id FK
         datetime date_time_created
         string name
-        int size
+        int64 size
         string type
+        string signature_file_name
     }
 
-    CRYPTO_KEY_META ||--o| BLOB_META : "associated with"
+    CRYPTO_KEY_META ||--o{ BLOB_META : "encrypts (encryption_key_id)"
+    CRYPTO_KEY_META ||--o{ BLOB_META : "signs (sign_key_id)"
+    BLOB_META ||--o| BLOB_META : "has_signature (signature_blob_id)"

@@ -12,16 +12,18 @@ import (
 
 // BlobMeta entity
 type BlobMeta struct {
-	ID              string             `gorm:"primaryKey" validate:"required,uuid4"`            // ID is required and must be a valid UUID
-	DateTimeCreated time.Time          `validate:"required"`                                    // DateTimeCreated is required
-	UserID          string             `validate:"required,uuid4"`                              // UserID is required and must be a valid UUID
-	Name            string             `validate:"required,min=1,max=255"`                      // Name is required and length must be between 1 and 255 characters
-	Size            int64              `validate:"required,min=1"`                              // Size must be greater than 0
-	Type            string             `validate:"required,min=1,max=50"`                       // Type is required and length must be between 1 and 50 characters
-	EncryptionKey   keys.CryptoKeyMeta `gorm:"foreignKey:EncryptionKeyID" validate:"omitempty"` // EncryptionKey is optional
-	EncryptionKeyID *string            `validate:"omitempty,uuid4"`                             // EncryptionKeyID is optional and if set must be a valid UUID
-	SignKey         keys.CryptoKeyMeta `gorm:"foreignKey:SignKeyID" validate:"omitempty"`       // SignKey is optional
-	SignKeyID       *string            `validate:"omitempty,uuid4"`                             // SignKeyID is optional and if set must be a valid UUID
+	ID                string             `gorm:"primaryKey" validate:"required,uuid4"`            // ID is required and must be a valid UUID
+	DateTimeCreated   time.Time          `validate:"required"`                                    // DateTimeCreated is required
+	UserID            string             `validate:"required,uuid4"`                              // UserID is required and must be a valid UUID
+	Name              string             `validate:"required,min=1,max=255"`                      // Name is required and length must be between 1 and 255 characters
+	Size              int64              `validate:"required,min=1"`                              // Size must be greater than 0
+	Type              string             `validate:"required,min=1,max=50"`                       // Type is required and length must be between 1 and 50 characters
+	EncryptionKey     keys.CryptoKeyMeta `gorm:"foreignKey:EncryptionKeyID" validate:"omitempty"` // EncryptionKey is optional
+	EncryptionKeyID   *string            `validate:"omitempty,uuid4"`                             // EncryptionKeyID is optional and if set must be a valid UUID
+	SignKey           keys.CryptoKeyMeta `gorm:"foreignKey:SignKeyID" validate:"omitempty"`       // SignKey is optional
+	SignKeyID         *string            `validate:"omitempty,uuid4"`                             // SignKeyID is optional and if set must be a valid UUID
+	SignatureBlobID   *string            `gorm:"index" validate:"omitempty,uuid4"`                // Reference to signature blob
+	SignatureFileName *string            `validate:"omitempty,min=1,max=255"`                     // Original signature filename
 }
 
 // Validate for validating BlobMeta struct

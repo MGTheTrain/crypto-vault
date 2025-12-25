@@ -38,6 +38,10 @@ message BlobDownloadRequest {
   string decryption_key_id = 2;  
 }
 
+message BlobSignatureDownloadRequest {
+  string id = 1; // Blob ID whose signature to download
+}
+
 message KeyMetadataQuery {
   string algorithm = 1;   
   string type = 2;        
@@ -60,6 +64,7 @@ message InfoResponse {
   string message = 1;  
 }
 
+// UPDATED: Added signature fields
 message BlobMetaResponse {
   string id = 1;                      
   google.protobuf.Timestamp date_time_created = 2; 
@@ -68,7 +73,9 @@ message BlobMetaResponse {
   int64 size = 5;                     
   string type = 6;                    
   string encryption_key_id = 7;        
-  string sign_key_id = 8;             
+  string sign_key_id = 8;
+  string signature_blob_id = 9;       
+  string signature_file_name = 10;    
 }
 
 message CryptoKeyMetaResponse {
@@ -89,12 +96,16 @@ message KeyContent {
   bytes content = 1;  
 }
 
-// Service definitions with HTTP mapping and Swagger annotations
+message SignatureContent {
+  bytes content = 1;
+}
+
+// Service definitions with HTTP mapping
 
 service BlobUpload {
     // Upload a blob 
     // Multipart file uploads are not supported with grpc-gateway. For more details, 
-    // see: https://grpc-ecosystem.github.io/grpc-gateway/docs/mapping/binary_file_uploads/. As a result, no annotations are provided.
+    // see: https://grpc-ecosystem.github.io/grpc-gateway/docs/mapping/binary_file_uploads/
     rpc Upload (BlobUploadRequest) returns (stream BlobMetaResponse);
 }
 
@@ -104,7 +115,13 @@ service BlobDownload {
         option (google.api.http) = {
             get: "/api/v1/cvs/blobs/{id}/file"
         };
-    }  
+    }
+
+    rpc DownloadSignatureByID (BlobSignatureDownloadRequest) returns (stream SignatureContent) {
+        option (google.api.http) = {
+            get: "/api/v1/cvs/blobs/{id}/signature"
+        };
+    }
 }
 
 service BlobMetadata {
@@ -141,7 +158,7 @@ service CryptoKeyUpload {
 }
 
 service CryptoKeyDownload {
-    // Download crypto key by ID
+    // Download crypto key by ID (returns PEM format)
     rpc DownloadByID (KeyDownloadRequest) returns (stream KeyContent) {
         option (google.api.http) = {
             get: "/api/v1/cvs/keys/{id}/file"

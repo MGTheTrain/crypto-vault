@@ -14,32 +14,33 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ECCommandHandler encapsulates logic for handling elliptic curve cryptographic operations via CLI.
-type ECCommandHandler struct {
-	ecProcessor crypto.ECProcessor
-	logger      logger.Logger
+// ECDSACommandHandler encapsulates logic for handling elliptic curve cryptographic operations via CLI.
+type ECDSACommandHandler struct {
+	ecdsaProcessor crypto.ECDSAProcessor
+	logger         logger.Logger
 }
 
-// NewECCommandHandler initializes a new ECCommandHandler with logging and an EC processor.
-func NewECCommandHandler() (*ECCommandHandler, error) {
+// NewECDSACommandHandler initializes a new ECDSACommandHandler
+// with configured logger and an ECDSA processor.
+func NewECDSACommandHandler() (*ECDSACommandHandler, error) {
 	loggerInstance, err := setupLogger()
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup logger: %w", err)
 	}
 
-	ecProcessor, err := cryptography.NewECProcessor(loggerInstance)
+	ecdsaProcessor, err := cryptography.NewECDSAProcessor(loggerInstance)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create EC processor: %w", err)
+		return nil, fmt.Errorf("failed to create ECDSA processor: %w", err)
 	}
 
-	return &ECCommandHandler{
-		ecProcessor: ecProcessor,
-		logger:      loggerInstance,
+	return &ECDSACommandHandler{
+		ecdsaProcessor: ecdsaProcessor,
+		logger:         loggerInstance,
 	}, nil
 }
 
-// GenerateECKeysCmd generates EC key pairs and persists those in a selected directory
-func (commandHandler *ECCommandHandler) GenerateECKeysCmd(cmd *cobra.Command, _ []string) {
+// GenerateECDSAKeysCmd generates ECDSA key pairs and persists those in a selected directory
+func (commandHandler *ECDSACommandHandler) GenerateECDSAKeysCmd(cmd *cobra.Command, _ []string) {
 	keySize, err := cmd.Flags().GetInt("key-size")
 	if err != nil {
 		commandHandler.logger.Error("invalid key-size flag ", err)
@@ -64,33 +65,33 @@ func (commandHandler *ECCommandHandler) GenerateECKeysCmd(cmd *cobra.Command, _ 
 	case 521:
 		curve = elliptic.P521()
 	default:
-		commandHandler.logger.Error("key size %v not supported", keySize)
+		commandHandler.logger.Error("key size ", keySize, " not supported")
 		return
 	}
 
-	privateKey, publicKey, err := commandHandler.ecProcessor.GenerateKeys(curve)
+	privateKey, publicKey, err := commandHandler.ecdsaProcessor.GenerateKeys(curve)
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
 	}
 
 	privateKeyFilePath := fmt.Sprintf("%s/%s-private-key.pem", keyDir, uniqueID.String())
-	err = commandHandler.ecProcessor.SavePrivateKeyToFile(privateKey, privateKeyFilePath)
+	err = commandHandler.ecdsaProcessor.SavePrivateKeyToFile(privateKey, privateKeyFilePath)
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
 	}
 
 	publicKeyFilePath := fmt.Sprintf("%s/%s-public-key.pem", keyDir, uniqueID.String())
-	err = commandHandler.ecProcessor.SavePublicKeyToFile(publicKey, publicKeyFilePath)
+	err = commandHandler.ecdsaProcessor.SavePublicKeyToFile(publicKey, publicKeyFilePath)
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
 	}
 }
 
-// SignECCCmd signs the contents of a file with ECDSA
-func (commandHandler *ECCommandHandler) SignECCCmd(cmd *cobra.Command, _ []string) {
+// SignECDSACmd signs the contents of a file with ECDSA
+func (commandHandler *ECDSACommandHandler) SignECDSACmd(cmd *cobra.Command, _ []string) {
 	inputFilePath, err := cmd.Flags().GetString("input-file")
 	if err != nil {
 		commandHandler.logger.Error("invalid input-file flag ", err)
@@ -113,27 +114,27 @@ func (commandHandler *ECCommandHandler) SignECCCmd(cmd *cobra.Command, _ []strin
 		return
 	}
 
-	privateKey, err := commandHandler.ecProcessor.ReadPrivateKey(privateKeyFilePath, elliptic.P256())
+	privateKey, err := commandHandler.ecdsaProcessor.ReadPrivateKey(privateKeyFilePath, elliptic.P256())
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
 	}
 
-	signature, err := commandHandler.ecProcessor.Sign(fileContent, privateKey)
+	signature, err := commandHandler.ecdsaProcessor.Sign(fileContent, privateKey)
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
 	}
 
-	err = commandHandler.ecProcessor.SaveSignatureToFile(signatureFilePath, signature)
+	err = commandHandler.ecdsaProcessor.SaveSignatureToFile(signatureFilePath, signature)
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
 	}
 }
 
-// VerifyECCCmd verifies the signature of a file's content using ECDSA
-func (commandHandler *ECCommandHandler) VerifyECCCmd(cmd *cobra.Command, _ []string) {
+// VerifyECDSACmd verifies the signature of a file's content using ECDSA
+func (commandHandler *ECDSACommandHandler) VerifyECDSACmd(cmd *cobra.Command, _ []string) {
 	inputFilePath, err := cmd.Flags().GetString("input-file")
 	if err != nil {
 		commandHandler.logger.Error("invalid input-file flag ", err)
@@ -150,7 +151,7 @@ func (commandHandler *ECCommandHandler) VerifyECCCmd(cmd *cobra.Command, _ []str
 		return
 	}
 
-	publicKey, err := commandHandler.ecProcessor.ReadPublicKey(publicKeyPath, elliptic.P256())
+	publicKey, err := commandHandler.ecdsaProcessor.ReadPublicKey(publicKeyPath, elliptic.P256())
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
@@ -174,7 +175,7 @@ func (commandHandler *ECCommandHandler) VerifyECCCmd(cmd *cobra.Command, _ []str
 		return
 	}
 
-	valid, err := commandHandler.ecProcessor.Verify(fileContent, signature, publicKey)
+	valid, err := commandHandler.ecdsaProcessor.Verify(fileContent, signature, publicKey)
 	if err != nil {
 		commandHandler.logger.Error(err)
 		return
@@ -189,39 +190,39 @@ func (commandHandler *ECCommandHandler) VerifyECCCmd(cmd *cobra.Command, _ []str
 
 // InitECDSACommands registers EC-related commands
 func InitECDSACommands(rootCmd *cobra.Command) error {
-	handler, err := NewECCommandHandler()
+	handler, err := NewECDSACommandHandler()
 	if err != nil {
-		return fmt.Errorf("failed to create EC command handler %w", err)
+		return fmt.Errorf("failed to create ECDSA command handler %w", err)
 	}
 
-	var generateECKeysCmd = &cobra.Command{
-		Use:   "generate-ecc-keys",
-		Short: "Generate ECC keys",
-		Run:   handler.GenerateECKeysCmd,
+	var generateECDSAKeysCmd = &cobra.Command{
+		Use:   "generate-ecdsa-keys",
+		Short: "Generate ECDSA keys",
+		Run:   handler.GenerateECDSAKeysCmd,
 	}
-	generateECKeysCmd.Flags().IntP("key-size", "", 256, "ECC key size (default 256 bytes for ECC-256)")
-	generateECKeysCmd.Flags().StringP("key-dir", "", "", "Directory to store the ECC keys")
-	rootCmd.AddCommand(generateECKeysCmd)
+	generateECDSAKeysCmd.Flags().IntP("key-size", "", 256, "ECDSA key size (default 256 bytes for ECDSA-256)")
+	generateECDSAKeysCmd.Flags().StringP("key-dir", "", "", "Directory to store the ECDSA keys")
+	rootCmd.AddCommand(generateECDSAKeysCmd)
 
-	var signECCMessageCmd = &cobra.Command{
-		Use:   "sign-ecc",
-		Short: "Sign a message using ECC",
-		Run:   handler.SignECCCmd,
+	var signECDSAMessageCmd = &cobra.Command{
+		Use:   "sign-ecdsa",
+		Short: "Sign a message using ECDSA",
+		Run:   handler.SignECDSACmd,
 	}
-	signECCMessageCmd.Flags().StringP("input-file", "", "", "Path to file that needs to be signed")
-	signECCMessageCmd.Flags().StringP("private-key", "", "", "Path to ECC private key")
-	signECCMessageCmd.Flags().StringP("output-file", "", "", "Path to signature output file")
-	rootCmd.AddCommand(signECCMessageCmd)
+	signECDSAMessageCmd.Flags().StringP("input-file", "", "", "Path to file that needs to be signed")
+	signECDSAMessageCmd.Flags().StringP("private-key", "", "", "Path to ECDSA private key")
+	signECDSAMessageCmd.Flags().StringP("output-file", "", "", "Path to signature output file")
+	rootCmd.AddCommand(signECDSAMessageCmd)
 
-	var verifyECCSignatureCmd = &cobra.Command{
-		Use:   "verify-ecc",
-		Short: "Verify a signature using ECC",
-		Run:   handler.VerifyECCCmd,
+	var verifyECDSASignatureCmd = &cobra.Command{
+		Use:   "verify-ecdsa",
+		Short: "Verify a signature using ECDSA",
+		Run:   handler.VerifyECDSACmd,
 	}
-	verifyECCSignatureCmd.Flags().StringP("input-file", "", "", "Path to file which needs to be validated")
-	verifyECCSignatureCmd.Flags().StringP("public-key", "", "", "Path to ECC public key")
-	verifyECCSignatureCmd.Flags().StringP("signature-file", "", "", "Path to signature input file")
-	rootCmd.AddCommand(verifyECCSignatureCmd)
+	verifyECDSASignatureCmd.Flags().StringP("input-file", "", "", "Path to file which needs to be validated")
+	verifyECDSASignatureCmd.Flags().StringP("public-key", "", "", "Path to ECDSA public key")
+	verifyECDSASignatureCmd.Flags().StringP("signature-file", "", "", "Path to signature input file")
+	rootCmd.AddCommand(verifyECDSASignatureCmd)
 
 	return nil
 }

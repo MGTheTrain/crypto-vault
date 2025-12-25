@@ -46,3 +46,52 @@ func TestUploadKeyRequest_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestBlobMetaResponse_Validation(t *testing.T) {
+	// Test that response DTOs can be created without errors
+	response := BlobMetaResponse{
+		ID:              "blob-123",
+		Name:            "test.pdf",
+		Size:            1024,
+		Type:            ".pdf",
+		EncryptionKeyID: nil,
+		SignKeyID:       nil,
+	}
+
+	require.NotEmpty(t, response.ID)
+	require.Equal(t, "test.pdf", response.Name)
+}
+
+func TestBlobMetaResponse_WithSignature(t *testing.T) {
+	signatureBlobID := "sig-blob-456"
+	signatureFileName := "test.pdf.sig"
+
+	response := BlobMetaResponse{
+		ID:                "blob-123",
+		Name:              "test.pdf",
+		Size:              1024,
+		Type:              ".pdf",
+		SignatureBlobID:   &signatureBlobID,
+		SignatureFileName: &signatureFileName,
+	}
+
+	require.NotNil(t, response.SignatureBlobID)
+	require.Equal(t, "sig-blob-456", *response.SignatureBlobID)
+	require.Equal(t, "test.pdf.sig", *response.SignatureFileName)
+}
+
+func TestErrorResponse_Creation(t *testing.T) {
+	errResp := ErrorResponse{
+		Message: "Test error",
+	}
+
+	require.Equal(t, "Test error", errResp.Message)
+}
+
+func TestInfoResponse_Creation(t *testing.T) {
+	infoResp := InfoResponse{
+		Message: "Operation successful",
+	}
+
+	require.Equal(t, "Operation successful", infoResp.Message)
+}

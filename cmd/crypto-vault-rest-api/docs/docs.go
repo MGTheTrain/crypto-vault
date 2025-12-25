@@ -9,11 +9,8 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "TBD",
         "contact": {
-            "name": "MGTheTrain",
-            "url": "TBD",
-            "email": "TBD"
+            "name": "MGTheTrain"
         },
         "license": {
             "name": "MIT license",
@@ -81,20 +78,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/v1.BlobMetaResponseDto"
+                                "$ref": "#/definitions/v1.BlobMetaResponse"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -138,14 +135,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/v1.BlobMetaResponseDto"
+                                "$ref": "#/definitions/v1.BlobMetaResponse"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -153,7 +150,7 @@ const docTemplate = `{
         },
         "/blobs/{id}": {
             "get": {
-                "description": "Fetch the metadata of a specific blob by its unique ID, including its name, size, type, encryption and signing key IDs, and creation date.",
+                "description": "Fetch the blob metadata by ID, including name, size, type, encryption and signing key IDs, and creation date.",
                 "consumes": [
                     "application/json"
                 ],
@@ -163,7 +160,7 @@ const docTemplate = `{
                 "tags": [
                     "Blob"
                 ],
-                "summary": "Retrieve metadata of a blob by its ID",
+                "summary": "Retrieve blob metadata by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -177,19 +174,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.BlobMetaResponseDto"
+                            "$ref": "#/definitions/v1.BlobMetaResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Delete a specific blob and its associated metadata by its ID.",
+                "description": "Delete a specific blob and associated metadata by ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -199,7 +196,7 @@ const docTemplate = `{
                 "tags": [
                     "Blob"
                 ],
-                "summary": "Delete a blob by its ID",
+                "summary": "Delete a blob by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -213,13 +210,13 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content",
                         "schema": {
-                            "$ref": "#/definitions/v1.InfoResponseDto"
+                            "$ref": "#/definitions/v1.InfoResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -227,7 +224,7 @@ const docTemplate = `{
         },
         "/blobs/{id}/file": {
             "get": {
-                "description": "Download the content of a specific blob by its ID, optionally decrypted with a provided decryption key ID.",
+                "description": "Download the content of a specific blob by ID, optionally decrypted with a provided decryption key ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -237,7 +234,7 @@ const docTemplate = `{
                 "tags": [
                     "Blob"
                 ],
-                "summary": "Download a blob by its ID",
+                "summary": "Download a blob by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -263,7 +260,45 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/blobs/{id}/signature": {
+            "get": {
+                "description": "Download the signature file associated with a specific blob",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Blob"
+                ],
+                "summary": "Download a blob's signature by blob ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Blob ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signature file content",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -271,7 +306,7 @@ const docTemplate = `{
         },
         "/keys": {
             "get": {
-                "description": "Fetch a list of cryptographic key metadata based on filters like algorithm, type, and creation date, with pagination and sorting options.",
+                "description": "Fetch a list of cryptographic key metadata based on filters like algorithm, type and creation date, with pagination and sorting options.",
                 "consumes": [
                     "application/json"
                 ],
@@ -332,20 +367,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/v1.CryptoKeyMetaResponseDto"
+                                "$ref": "#/definitions/v1.CryptoKeyMetaResponse"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -369,7 +404,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.UploadKeyRequestDto"
+                            "$ref": "#/definitions/v1.UploadKeyRequest"
                         }
                     }
                 ],
@@ -379,14 +414,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/v1.CryptoKeyMetaResponseDto"
+                                "$ref": "#/definitions/v1.CryptoKeyMetaResponse"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -394,7 +429,7 @@ const docTemplate = `{
         },
         "/keys/{id}": {
             "get": {
-                "description": "Fetch the metadata of a specific cryptographic key by its unique ID, including algorithm, key size, and creation date.",
+                "description": "Fetch the crypto key metadata by ID, including algorithm, key size and creation date.",
                 "consumes": [
                     "application/json"
                 ],
@@ -404,7 +439,7 @@ const docTemplate = `{
                 "tags": [
                     "Key"
                 ],
-                "summary": "Retrieve metadata of a key by its ID",
+                "summary": "Retrieve crypto key metadata by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -418,19 +453,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.CryptoKeyMetaResponseDto"
+                            "$ref": "#/definitions/v1.CryptoKeyMetaResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Delete a specific cryptographic key and its associated metadata by its ID.",
+                "description": "Delete a specific cryptographic key and associated metadata by ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -440,7 +475,7 @@ const docTemplate = `{
                 "tags": [
                     "Key"
                 ],
-                "summary": "Delete a cryptographic key by its ID",
+                "summary": "Delete a cryptographic key by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -454,13 +489,13 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content",
                         "schema": {
-                            "$ref": "#/definitions/v1.InfoResponseDto"
+                            "$ref": "#/definitions/v1.InfoResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -468,17 +503,17 @@ const docTemplate = `{
         },
         "/keys/{id}/file": {
             "get": {
-                "description": "Download the content of a specific cryptographic key by its ID.",
+                "description": "Download the content of a specific cryptographic key by ID in PEM format.",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
-                    "application/octet-stream"
+                    "application/x-pem-file"
                 ],
                 "tags": [
                     "Key"
                 ],
-                "summary": "Download a cryptographic key by its ID",
+                "summary": "Download a cryptographic key by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -490,7 +525,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Cryptographic key content",
+                        "description": "Cryptographic key content in PEM format",
                         "schema": {
                             "type": "file"
                         }
@@ -498,7 +533,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/v1.ErrorResponseDto"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -506,78 +541,101 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "v1.BlobMetaResponseDto": {
+        "v1.BlobMetaResponse": {
             "type": "object",
             "properties": {
                 "dateTimeCreated": {
+                    "description": "Timestamp when the blob was created",
                     "type": "string"
                 },
                 "encryptionKeyID": {
+                    "description": "Optional encryption key ID for the blob",
                     "type": "string"
                 },
                 "id": {
+                    "description": "Unique identifier for the blob",
                     "type": "string"
                 },
                 "name": {
+                    "description": "Name of the blob",
                     "type": "string"
                 },
                 "signKeyID": {
+                    "description": "Optional signature key ID for the blob",
+                    "type": "string"
+                },
+                "signatureBlobID": {
+                    "type": "string"
+                },
+                "signatureFileName": {
                     "type": "string"
                 },
                 "size": {
+                    "description": "Size of the blob in bytes",
                     "type": "integer"
                 },
                 "type": {
+                    "description": "Type of the blob (e.g., file format)",
                     "type": "string"
                 },
                 "userID": {
+                    "description": "User who uploaded the blob",
                     "type": "string"
                 }
             }
         },
-        "v1.CryptoKeyMetaResponseDto": {
+        "v1.CryptoKeyMetaResponse": {
             "type": "object",
             "properties": {
                 "algorithm": {
+                    "description": "Cryptographic algorithm (e.g., AES, RSA, EC)",
                     "type": "string"
                 },
                 "dateTimeCreated": {
+                    "description": "Timestamp when the key was created",
                     "type": "string"
                 },
                 "id": {
+                    "description": "Unique identifier for the cryptographic key",
                     "type": "string"
                 },
                 "keyPairID": {
+                    "description": "Identifier for the key pair the key belongs to",
                     "type": "string"
                 },
                 "keySize": {
+                    "description": "Size of the cryptographic key",
                     "type": "integer"
                 },
                 "type": {
+                    "description": "Type of the cryptographic key (e.g., public, private)",
                     "type": "string"
                 },
                 "userID": {
+                    "description": "User who created the key",
                     "type": "string"
                 }
             }
         },
-        "v1.ErrorResponseDto": {
+        "v1.ErrorResponse": {
             "type": "object",
             "properties": {
                 "message": {
+                    "description": "The error message",
                     "type": "string"
                 }
             }
         },
-        "v1.InfoResponseDto": {
+        "v1.InfoResponse": {
             "type": "object",
             "properties": {
                 "message": {
+                    "description": "The informational message",
                     "type": "string"
                 }
             }
         },
-        "v1.UploadKeyRequestDto": {
+        "v1.UploadKeyRequest": {
             "type": "object",
             "properties": {
                 "algorithm": {
@@ -602,43 +660,6 @@ const docTemplate = `{
         },
         "BasicAuth": {
             "type": "basic"
-        },
-        "OAuth2AccessCode": {
-            "type": "oauth2",
-            "flow": "accessCode",
-            "authorizationUrl": "https://example.com/oauth/authorize",
-            "tokenUrl": "https://example.com/oauth/token",
-            "scopes": {
-                "admin": "Grants read and write access to administrative information"
-            }
-        },
-        "OAuth2Application": {
-            "type": "oauth2",
-            "flow": "application",
-            "tokenUrl": "https://example.com/oauth/token",
-            "scopes": {
-                "admin": "Grants read and write access to administrative information",
-                "write": "Grants write access"
-            }
-        },
-        "OAuth2Implicit": {
-            "type": "oauth2",
-            "flow": "implicit",
-            "authorizationUrl": "https://example.com/oauth/authorize",
-            "scopes": {
-                "admin": "Grants read and write access to administrative information",
-                "write": "Grants write access"
-            }
-        },
-        "OAuth2Password": {
-            "type": "oauth2",
-            "flow": "password",
-            "tokenUrl": "https://example.com/oauth/token",
-            "scopes": {
-                "admin": "Grants read and write access to administrative information",
-                "read": "Grants read access",
-                "write": "Grants write access"
-            }
         }
     }
 }`
@@ -650,7 +671,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1/cvs",
 	Schemes:          []string{},
 	Title:            "CryptoVault Service API",
-	Description:      "Service capable of managing cryptographic keys and securing data at rest (metadata, BLOB)",
+	Description:      "Service capable of managing cryptographic keys and securing data at rest",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
