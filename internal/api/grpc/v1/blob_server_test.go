@@ -13,109 +13,199 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
-func TestBlobMetadataServer_GetMetadataByID_Success(t *testing.T) {
-	mockService := new(MockBlobMetadataService)
-	server, _ := NewBlobMetadataServer(mockService)
-
-	encryptionKeyID := "enc-key-123"
-	signKeyID := "sign-key-456"
-
-	blobMeta := &blobs.BlobMeta{
-		ID:              "blob-123",
-		UserID:          "user-1",
-		Name:            "test.txt",
-		Size:            1024,
-		Type:            "text/plain",
-		EncryptionKeyID: &encryptionKeyID,
-		SignKeyID:       &signKeyID,
+// TestBlobMetadataServer_GetMetadataByID uses table-driven tests
+func TestBlobMetadataServer_GetMetadataByID(t *testing.T) {
+	tests := []struct {
+		name         string
+		blobID       string
+		mockReturn   *blobs.BlobMeta
+		mockError    error
+		wantErr      bool
+		errContains  string
+		validateResp func(t *testing.T, resp *pb.BlobMetaResponse)
+	}{
+		{
+			name:   "success with all fields populated",
+			blobID: "blob-123",
+			mockReturn: &blobs.BlobMeta{
+				ID:                "blob-123",
+				UserID:            "user-1",
+				Name:              "test.txt",
+				Size:              1024,
+				Type:              "text/plain",
+				EncryptionKeyID:   stringPtr("enc-key-123"),
+				SignKeyID:         stringPtr("sign-key-456"),
+				SignatureBlobID:   stringPtr("sig-blob-789"),
+				SignatureFileName: stringPtr("test.txt.sig"),
+			},
+			mockError: nil,
+			wantErr:   false,
+			validateResp: func(t *testing.T, resp *pb.BlobMetaResponse) {
+				assert.Equal(t, "blob-123", resp.Id)
+				assert.Equal(t, "test.txt", resp.Name)
+				assert.Equal(t, int64(1024), resp.Size)
+				assert.Equal(t, "enc-key-123", resp.EncryptionKeyId)
+				assert.Equal(t, "sign-key-456", resp.SignKeyId)
+				assert.Equal(t, "sig-blob-789", resp.SignatureBlobId)
+				assert.Equal(t, "test.txt.sig", resp.SignatureFileName)
+			},
+		},
+		{
+			name:   "success with nil encryption and signature fields",
+			blobID: "blob-456",
+			mockReturn: &blobs.BlobMeta{
+				ID:                "blob-456",
+				UserID:            "user-2",
+				Name:              "plain.pdf",
+				Size:              2048,
+				Type:              "application/pdf",
+				EncryptionKeyID:   nil,
+				SignKeyID:         nil,
+				SignatureBlobID:   nil,
+				SignatureFileName: nil,
+			},
+			mockError: nil,
+			wantErr:   false,
+			validateResp: func(t *testing.T, resp *pb.BlobMetaResponse) {
+				assert.Equal(t, "blob-456", resp.Id)
+				assert.Equal(t, "plain.pdf", resp.Name)
+				assert.Equal(t, "", resp.EncryptionKeyId)
+				assert.Equal(t, "", resp.SignKeyId)
+				assert.Equal(t, "", resp.SignatureBlobId)
+				assert.Equal(t, "", resp.SignatureFileName)
+			},
+		},
+		{
+			name:        "blob not found error",
+			blobID:      "nonexistent-blob",
+			mockReturn:  nil,
+			mockError:   errors.New("blob not found"),
+			wantErr:     true,
+			errContains: "failed to get metadata by ID",
+		},
+		{
+			name:   "success with signature but no encryption",
+			blobID: "blob-signed-only",
+			mockReturn: &blobs.BlobMeta{
+				ID:                "blob-signed-only",
+				UserID:            "user-3",
+				Name:              "signed.doc",
+				Size:              512,
+				Type:              "application/msword",
+				EncryptionKeyID:   nil,
+				SignKeyID:         stringPtr("sign-key-999"),
+				SignatureBlobID:   stringPtr("sig-blob-111"),
+				SignatureFileName: stringPtr("signed.doc.sig"),
+			},
+			mockError: nil,
+			wantErr:   false,
+			validateResp: func(t *testing.T, resp *pb.BlobMetaResponse) {
+				assert.Equal(t, "blob-signed-only", resp.Id)
+				assert.Equal(t, "", resp.EncryptionKeyId)
+				assert.Equal(t, "sign-key-999", resp.SignKeyId)
+				assert.Equal(t, "sig-blob-111", resp.SignatureBlobId)
+				assert.Equal(t, "signed.doc.sig", resp.SignatureFileName)
+			},
+		},
 	}
 
-	mockService.On("GetByID", mock.Anything, "blob-123").Return(blobMeta, nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockService := new(MockBlobMetadataService)
+			server, err := NewBlobMetadataServer(mockService)
+			require.NoError(t, err)
 
-	req := &pb.IdRequest{Id: "blob-123"}
-	resp, err := server.GetMetadataByID(context.Background(), req)
+			mockService.On("GetByID", mock.Anything, tt.blobID).
+				Return(tt.mockReturn, tt.mockError)
 
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "blob-123", resp.Id)
-	assert.Equal(t, "test.txt", resp.Name)
-	assert.Equal(t, encryptionKeyID, resp.EncryptionKeyId)
-	assert.Equal(t, signKeyID, resp.SignKeyId)
-	mockService.AssertExpectations(t)
+			req := &pb.IdRequest{Id: tt.blobID}
+			resp, err := server.GetMetadataByID(context.Background(), req)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, resp)
+				if tt.errContains != "" {
+					assert.Contains(t, err.Error(), tt.errContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, resp)
+				if tt.validateResp != nil {
+					tt.validateResp(t, resp)
+				}
+			}
+
+			mockService.AssertExpectations(t)
+		})
+	}
 }
 
-func TestBlobMetadataServer_GetMetadataByID_Error(t *testing.T) {
-	mockService := new(MockBlobMetadataService)
-	server, _ := NewBlobMetadataServer(mockService)
-
-	mockService.On("GetByID", mock.Anything, "blob-123").
-		Return(nil, errors.New("not found"))
-
-	req := &pb.IdRequest{Id: "blob-123"}
-	resp, err := server.GetMetadataByID(context.Background(), req)
-
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "failed to get metadata by ID")
-	mockService.AssertExpectations(t)
-}
-
-func TestBlobMetadataServer_GetMetadataByID_NilPointers(t *testing.T) {
-	mockService := new(MockBlobMetadataService)
-	server, _ := NewBlobMetadataServer(mockService)
-
-	blobMeta := &blobs.BlobMeta{
-		ID:              "blob-123",
-		UserID:          "user-1",
-		Name:            "test.txt",
-		Size:            1024,
-		Type:            "text/plain",
-		EncryptionKeyID: nil,
-		SignKeyID:       nil,
+// TestBlobMetadataServer_DeleteByID uses table-driven tests
+func TestBlobMetadataServer_DeleteByID(t *testing.T) {
+	tests := []struct {
+		name        string
+		blobID      string
+		mockError   error
+		wantErr     bool
+		errContains string
+		wantMessage string
+	}{
+		{
+			name:        "successful deletion",
+			blobID:      "blob-to-delete",
+			mockError:   nil,
+			wantErr:     false,
+			wantMessage: "blob with id blob-to-delete deleted successfully",
+		},
+		{
+			name:        "deletion fails - blob not found",
+			blobID:      "nonexistent-blob",
+			mockError:   errors.New("blob not found"),
+			wantErr:     true,
+			errContains: "failed to delete blob",
+		},
+		{
+			name:        "deletion fails - database error",
+			blobID:      "blob-db-error",
+			mockError:   errors.New("database connection failed"),
+			wantErr:     true,
+			errContains: "failed to delete blob",
+		},
 	}
 
-	mockService.On("GetByID", mock.Anything, "blob-123").Return(blobMeta, nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockService := new(MockBlobMetadataService)
+			server, err := NewBlobMetadataServer(mockService)
+			require.NoError(t, err)
 
-	req := &pb.IdRequest{Id: "blob-123"}
-	resp, err := server.GetMetadataByID(context.Background(), req)
+			mockService.On("DeleteByID", mock.Anything, tt.blobID).
+				Return(tt.mockError)
 
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "", resp.EncryptionKeyId)
-	assert.Equal(t, "", resp.SignKeyId)
-	mockService.AssertExpectations(t)
+			req := &pb.IdRequest{Id: tt.blobID}
+			resp, err := server.DeleteByID(context.Background(), req)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, resp)
+				if tt.errContains != "" {
+					assert.Contains(t, err.Error(), tt.errContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, resp)
+				assert.Contains(t, resp.Message, tt.wantMessage)
+			}
+
+			mockService.AssertExpectations(t)
+		})
+	}
 }
 
-func TestBlobMetadataServer_DeleteByID_Success(t *testing.T) {
-	mockService := new(MockBlobMetadataService)
-	server, _ := NewBlobMetadataServer(mockService)
-
-	mockService.On("DeleteByID", mock.Anything, "blob-123").Return(nil)
-
-	req := &pb.IdRequest{Id: "blob-123"}
-	resp, err := server.DeleteByID(context.Background(), req)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Contains(t, resp.Message, "blob-123")
-	assert.Contains(t, resp.Message, "deleted successfully")
-	mockService.AssertExpectations(t)
-}
-
-func TestBlobMetadataServer_DeleteByID_Error(t *testing.T) {
-	mockService := new(MockBlobMetadataService)
-	server, _ := NewBlobMetadataServer(mockService)
-
-	mockService.On("DeleteByID", mock.Anything, "blob-123").
-		Return(errors.New("delete failed"))
-
-	req := &pb.IdRequest{Id: "blob-123"}
-	resp, err := server.DeleteByID(context.Background(), req)
-
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "failed to delete blob")
-	mockService.AssertExpectations(t)
+// Helper function for creating string pointers
+func stringPtr(s string) *string {
+	return &s
 }

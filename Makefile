@@ -100,7 +100,7 @@ swagger-docs-gen: ## Generate Swagger documentation
 
 grpc-files-gen: ## Generate Go gRPC code from proto files
 	@echo "Generating Go gRPC code from .proto files..."
-	@cd $(SCRIPT_DIR) && ./grpc-files-gen.sh
+	@cd $(SCRIPT_DIR) && ./generate-grpc-files.sh
 
 ##@  Cleanup
 clean: ## Remove generated artifacts

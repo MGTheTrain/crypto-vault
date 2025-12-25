@@ -395,7 +395,7 @@ func initializeGRPCServers(services *appServices, log logger.Logger) (*grpcServe
 		return nil, fmt.Errorf("failed to create blob upload server: %w", err)
 	}
 
-	blobDownloadServer, err := v1.NewBlobDownloadServer(services.blobDownload)
+	blobDownloadServer, err := v1.NewBlobDownloadServer(services.blobDownload, services.blobMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create blob download server: %w", err)
 	}
@@ -410,7 +410,7 @@ func initializeGRPCServers(services *appServices, log logger.Logger) (*grpcServe
 		return nil, fmt.Errorf("failed to create crypto key upload server: %w", err)
 	}
 
-	cryptoKeyDownloadServer, err := v1.NewCryptoKeyDownloadServer(services.cryptoKeyDownload)
+	cryptoKeyDownloadServer, err := v1.NewCryptoKeyDownloadServer(services.cryptoKeyDownload, services.cryptoKeyMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create crypto key download server: %w", err)
 	}

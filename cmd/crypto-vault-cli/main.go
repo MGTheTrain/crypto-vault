@@ -65,11 +65,8 @@ func initializeCommands(rootCmd *cobra.Command) error {
 		return fmt.Errorf("failed to initialize ECDSA commands: %w", err)
 	}
 
-	// Attempt to register PKCS#11 commands (optional, requires environment config)
-	if err := initializePKCS11Commands(rootCmd); err != nil {
-		// PKCS#11 is optional; log warning but don't fail
-		// log.Printf("Warning: PKCS#11 commands disabled: %v", err)
-	}
+	// PKCS#11 is optional; initialization errors are ignored
+	_ = initializePKCS11Commands(rootCmd)
 
 	return nil
 }

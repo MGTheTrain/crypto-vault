@@ -61,7 +61,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 		return nil, fmt.Errorf("no files provided in upload request")
 	}
 
-	var uploadForm *multipart.Form = form
+	uploadForm := form
 	var signatureBlobMetas []*blobs.BlobMeta
 
 	// Step 1: Process signing if signKeyID is provided

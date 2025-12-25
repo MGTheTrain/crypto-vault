@@ -231,15 +231,6 @@ func (handler *keyHandler) DownloadByID(ctx *gin.Context) {
 		return
 	}
 
-	// Download key bytes (already in PEM format from service)
-	pemBytes, err := handler.cryptoKeyDownloadService.DownloadByID(ctx, keyID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{
-			Message: fmt.Sprintf("could not download key with id %s: %v", keyID, err.Error()),
-		})
-		return
-	}
-
 	// Determine file extension and name based on key type
 	var filename string
 	switch keyMeta.Type {
@@ -256,6 +247,15 @@ func (handler *keyHandler) DownloadByID(ctx *gin.Context) {
 		var errorResponse ErrorResponse
 		errorResponse.Message = fmt.Sprintf("unknown key type for %s", keyID)
 		ctx.JSON(http.StatusBadRequest, errorResponse)
+		return
+	}
+
+	// Download key bytes (already in PEM format from service)
+	pemBytes, err := handler.cryptoKeyDownloadService.DownloadByID(ctx, keyID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: fmt.Sprintf("could not download key with id %s: %v", keyID, err.Error()),
+		})
 		return
 	}
 

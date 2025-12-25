@@ -304,38 +304,40 @@ func (s *cryptoKeyDownloadService) convertToPEM(rawBytes []byte, algorithm, keyT
 
 	switch algorithm {
 	case crypto.AlgorithmRSA:
-		if keyType == crypto.KeyTypePublic {
+		switch keyType {
+		case crypto.KeyTypePublic:
 			// RSA public key - already in PKIX/DER format from x509.MarshalPKIXPublicKey
 			pemBlock = &pem.Block{
 				Type:  "PUBLIC KEY",
 				Bytes: rawBytes,
 			}
-		} else if keyType == crypto.KeyTypePrivate {
+		case crypto.KeyTypePrivate:
 			// RSA private key - already in PKCS#1/DER format from x509.MarshalPKCS1PrivateKey
 			pemBlock = &pem.Block{
 				Type:  "RSA PRIVATE KEY",
 				Bytes: rawBytes,
 			}
-		} else {
+		default:
 			return nil, fmt.Errorf("unsupported RSA key type: %s", keyType)
 		}
 
 	case crypto.AlgorithmECDSA:
-		if keyType == crypto.KeyTypePublic {
+		switch keyType {
+		case crypto.KeyTypePublic:
 			// ECDSA public key - raw bytes (X || Y coordinates)
 			// Wrap in PKIX format for standard PEM
 			pemBlock = &pem.Block{
 				Type:  "PUBLIC KEY",
 				Bytes: rawBytes,
 			}
-		} else if keyType == crypto.KeyTypePrivate {
+		case crypto.KeyTypePrivate:
 			// ECDSA private key - raw bytes (D || X || Y)
 			// Keep as custom EC PRIVATE KEY format
 			pemBlock = &pem.Block{
 				Type:  "EC PRIVATE KEY",
 				Bytes: rawBytes,
 			}
-		} else {
+		default:
 			return nil, fmt.Errorf("unsupported ECDSA key type: %s", keyType)
 		}
 

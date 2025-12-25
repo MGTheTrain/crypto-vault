@@ -73,7 +73,7 @@ internal.CryptoKeyUpload
 
 #### Upload Blob (via grpcurl)
 
-**Note**: Multipart file uploads are not supported with grpc-gateway. Use grpcurl for uploads.
+**NOTE**: Multipart file uploads are not supported with grpc-gateway. Use grpcurl for uploads.
 
 ```bash
 cd ../../  # Navigate to project root
@@ -126,6 +126,8 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
 
 #### Download Blob
 
+> **NOTE**: HTTP Gateway and gRPC API returns responses in JSON format with base64-encoded binary content. Use `jq -r '.result.content' | base64 --decode` to extract the raw binary data. The gRPC interface returns raw binary directly.
+
 **Via HTTP Gateway**:
 
 ```bash
@@ -141,6 +143,27 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
   -proto internal/api/grpc/v1/proto/internal/service.proto \
   -d '{"id": "<blob_id>"}' \
   -plaintext localhost:50051 internal.BlobDownload/DownloadByID
+```
+
+#### Download Blob Signature
+
+> **NOTE**: HTTP Gateway and gRPC API returns responses in JSON format with base64-encoded binary content. Use `jq -r '.result.content' | base64 --decode` to extract the raw binary data. The gRPC interface returns raw binary directly.
+
+**Via HTTP Gateway**:
+
+```bash
+curl -X GET 'http://localhost:8090/api/v1/cvs/blobs/<blob_id>/signature' \
+  -H 'accept: application/octet-stream' \
+  --output signature.sig
+```
+
+**Via grpcurl**:
+
+```bash
+grpcurl -import-path ./internal/api/grpc/v1/proto \
+  -proto internal/api/grpc/v1/proto/internal/service.proto \
+  -d '{"id": "<blob_id>"}' \
+  -plaintext localhost:50051 internal.BlobDownload/DownloadSignatureByID
 ```
 
 #### Delete Blob
@@ -197,6 +220,8 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
 
 #### Download Key
 
+> **NOTE**: HTTP Gateway and gRPC API returns responses in JSON format with base64-encoded binary content. Use `jq -r '.result.content' | base64 --decode` to extract the raw binary data. The gRPC interface returns raw binary directly.
+
 ```bash
 grpcurl -import-path ./internal/api/grpc/v1/proto \
   -proto internal/api/grpc/v1/proto/internal/service.proto \
@@ -211,6 +236,46 @@ grpcurl -import-path ./internal/api/grpc/v1/proto \
 ```bash
 curl -X DELETE 'http://localhost:8090/api/v1/cvs/keys/<key_id>' \
   -H 'accept: application/json'
+```
+
+### Example Workflow
+
+```bash
+# 1. Generate RSA key pair
+grpcurl -import-path ./internal/api/grpc/v1/proto \
+  -proto internal/api/grpc/v1/proto/internal/service.proto \
+  -d '{"algorithm": "RSA", "key_size": "2048"}' \
+  -plaintext localhost:50051 internal.CryptoKeyUpload/Upload
+
+# Note the private_key_id and public_key_id from response
+
+# 2. Upload blob with signing
+echo "Important document" > document.txt
+grpcurl -import-path ./internal/api/grpc/v1/proto \
+  -proto internal/api/grpc/v1/proto/internal/service.proto \
+  -d "{
+    \"file_name\": \"document.txt\",
+    \"file_content\": \"$(base64 -w 0 document.txt)\",
+    \"sign_key_id\": \"<private_key_id>\"
+  }" \
+  -plaintext localhost:50051 internal.BlobUpload/Upload
+
+# Note the blob_id and signature_blob_id from response
+
+# 3. Download the original blob
+curl -X GET 'http://localhost:8090/api/v1/cvs/blobs/<blob_id>/file' -H 'accept: application/json' | jq -r '.result.content' | base64 --decode > document_downloaded.txt
+
+# 4. Download the signature
+curl -X GET 'http://localhost:8090/api/v1/cvs/blobs/<blob_id>/signature' -H 'accept: application/json' | jq -r '.result.content' | base64 --decode > document.sig
+
+# 5. Download the public key for verification
+curl -X GET 'http://localhost:8090/api/v1/cvs/keys/<public_key_id>/file' -H 'accept: application/json' | jq -r '.result.content' | base64 --decode > public_key.pem
+
+# 6. Verify signature with CLI
+go run cmd/crypto-vault-cli/main.go verify-rsa \
+  --input-file document_downloaded.txt \
+  --signature-file document.sig \
+  --public-key public_key.pem
 ```
 
 ## Key Features

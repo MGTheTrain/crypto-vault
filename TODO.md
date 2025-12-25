@@ -1,5 +1,0 @@
-- fix 29 - signature file generation (keep debugging until it upload and blob and blob signature download works, add needed tests to keep code coverage high)
-- remove userId since well retrieve the user id from the JWT in a separate PR
-- improve documentation, particularly ADRs on correctness using the golden template, etc. in a separate issue
-- feature 26 - improve API to use key pair id instead of specific id letting the logic decide which key to pick based on the required key operation (signing, verifying, encrypt, decrypt)
-- feature 37 - OpenAPI first approach and generation of server (similar to gRPC consumed by the REST API app) and client code from it using swagger-codegen
