@@ -19,16 +19,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupECProcessor(t *testing.T) crypto.ECProcessor {
+func setupECDSAProcessor(t *testing.T) crypto.ECDSAProcessor {
 	t.Helper()
 	logger := pkgTesting.SetupTestLogger(t)
-	processor, err := NewECProcessor(logger)
+	processor, err := NewECDSAProcessor(logger)
 	require.NoError(t, err)
 	return processor
 }
 
-func TestECProcessor(t *testing.T) {
-	processor := setupECProcessor(t)
+func TestECDSAProcessor(t *testing.T) {
+	processor := setupECDSAProcessor(t)
 
 	t.Run("GenerateKeys", func(t *testing.T) {
 		priv, pub, err := processor.GenerateKeys(elliptic.P256())

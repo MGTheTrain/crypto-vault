@@ -24,6 +24,7 @@ func SetupRoutes(r *gin.Engine,
 	v1.GET("/blobs", blobHandler.ListMetadata)
 	v1.GET("/blobs/:id", blobHandler.GetMetadataByID)
 	v1.GET("/blobs/:id/file", blobHandler.DownloadByID)
+	v1.GET("/blobs/:id/signature", blobHandler.DownloadSignatureByID)
 	v1.DELETE("/blobs/:id", blobHandler.DeleteByID)
 
 	// Keys Routes

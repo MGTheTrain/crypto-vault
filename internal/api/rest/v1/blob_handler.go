@@ -19,6 +19,7 @@ type BlobHandler interface {
 	ListMetadata(ctx *gin.Context)
 	GetMetadataByID(ctx *gin.Context)
 	DownloadByID(ctx *gin.Context)
+	DownloadSignatureByID(ctx *gin.Context)
 	DeleteByID(ctx *gin.Context)
 }
 
@@ -99,6 +100,12 @@ func (handler *blobHandler) Upload(ctx *gin.Context) {
 		}
 		if blobMeta.SignKeyID != nil {
 			blobMetadataResponse.SignKeyID = blobMeta.SignKeyID
+		}
+		if blobMeta.SignatureBlobID != nil {
+			blobMetadataResponse.SignatureBlobID = blobMeta.SignatureBlobID
+		}
+		if blobMeta.SignatureFileName != nil {
+			blobMetadataResponse.SignatureFileName = blobMeta.SignatureFileName
 		}
 		blobMetadataResponses = append(blobMetadataResponses, blobMetadataResponse)
 	}
@@ -193,6 +200,12 @@ func (handler *blobHandler) ListMetadata(ctx *gin.Context) {
 		if blobMeta.SignKeyID != nil {
 			blobMetadataResponse.SignKeyID = blobMeta.SignKeyID
 		}
+		if blobMeta.SignatureBlobID != nil {
+			blobMetadataResponse.SignatureBlobID = blobMeta.SignatureBlobID
+		}
+		if blobMeta.SignatureFileName != nil {
+			blobMetadataResponse.SignatureFileName = blobMeta.SignatureFileName
+		}
 		listResponse = append(listResponse, blobMetadataResponse)
 	}
 
@@ -236,6 +249,12 @@ func (handler *blobHandler) GetMetadataByID(ctx *gin.Context) {
 	}
 	if blobMeta.SignKeyID != nil {
 		blobMetadataResponse.SignKeyID = blobMeta.SignKeyID
+	}
+	if blobMeta.SignatureBlobID != nil {
+		blobMetadataResponse.SignatureBlobID = blobMeta.SignatureBlobID
+	}
+	if blobMeta.SignatureFileName != nil {
+		blobMetadataResponse.SignatureFileName = blobMeta.SignatureFileName
 	}
 
 	ctx.JSON(http.StatusOK, blobMetadataResponse)
@@ -286,6 +305,62 @@ func (handler *blobHandler) DownloadByID(ctx *gin.Context) {
 		errorResponse.Message = fmt.Sprintf("could not write bytes: %v", err.Error())
 		ctx.JSON(http.StatusBadRequest, errorResponse)
 		return
+	}
+}
+
+// DownloadSignatureByID handles GET request to download a blob's signature
+// @Summary Download a blob's signature by blob ID
+// @Description Download the signature file associated with a specific blob
+// @Tags Blob
+// @Accept json
+// @Produce octet-stream
+// @Param id path string true "Blob ID"
+// @Success 200 {file} file "Signature file content"
+// @Failure 404 {object} ErrorResponse
+// @Router /blobs/{id}/signature [get]
+func (handler *blobHandler) DownloadSignatureByID(ctx *gin.Context) {
+	blobID := ctx.Param("id")
+
+	// Get blob metadata
+	blobMeta, err := handler.blobMetadataService.GetByID(ctx, blobID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, ErrorResponse{
+			Message: fmt.Sprintf("blob with id %s not found", blobID),
+		})
+		return
+	}
+
+	// Check if signature exists
+	if blobMeta.SignatureBlobID == nil {
+		ctx.JSON(http.StatusNotFound, ErrorResponse{
+			Message: fmt.Sprintf("no signature found for blob %s", blobID),
+		})
+		return
+	}
+
+	// Download signature blob
+	signatureBytes, err := handler.blobDownloadService.DownloadByID(ctx, *blobMeta.SignatureBlobID, nil)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: fmt.Sprintf("could not download signature: %v", err),
+		})
+		return
+	}
+
+	// Return signature file
+	filename := "signature.sig"
+	if blobMeta.SignatureFileName != nil {
+		filename = *blobMeta.SignatureFileName
+	}
+
+	ctx.Writer.WriteHeader(http.StatusOK)
+	ctx.Writer.Header().Set("Content-Type", "application/octet-stream")
+	ctx.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+
+	if _, err := ctx.Writer.Write(signatureBytes); err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{
+			Message: fmt.Sprintf("failed to write signature: %v", err),
+		})
 	}
 }
 

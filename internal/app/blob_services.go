@@ -15,7 +15,6 @@ import (
 	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 	"io"
-	"log"
 	"math/big"
 	"mime/multipart"
 )
@@ -25,7 +24,7 @@ type blobUploadService struct {
 	blobConnector  blobs.BlobConnector
 	blobRepository blobs.BlobRepository
 	aesProcessor   crypto.AESProcessor
-	ecProcessor    crypto.ECProcessor
+	ecdsaProcessor crypto.ECDSAProcessor
 	rsaProcessor   crypto.RSAProcessor
 	vaultConnector keys.VaultConnector
 	cryptoKeyRepo  keys.CryptoKeyRepository
@@ -39,7 +38,7 @@ func NewBlobUploadService(
 	vaultConnector keys.VaultConnector,
 	cryptoKeyRepo keys.CryptoKeyRepository,
 	aesProcessor crypto.AESProcessor,
-	ecProcessor crypto.ECProcessor,
+	ecdsaProcessor crypto.ECDSAProcessor,
 	rsaProcessor crypto.RSAProcessor,
 	logger logger.Logger,
 ) (blobs.BlobUploadService, error) {
@@ -49,81 +48,147 @@ func NewBlobUploadService(
 		cryptoKeyRepo:  cryptoKeyRepo,
 		vaultConnector: vaultConnector,
 		aesProcessor:   aesProcessor,
-		ecProcessor:    ecProcessor,
+		ecdsaProcessor: ecdsaProcessor,
 		rsaProcessor:   rsaProcessor,
 		logger:         logger,
 	}, nil
 }
 
 // Upload transfers blobs with the option to encrypt them using an encryption key or sign them with a signing key.
-// It returns a slice of Blob for the uploaded blobs and any error encountered during the upload process.
+// It returns a slice of BlobMeta for the uploaded blobs and any error encountered during the upload process.
 func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, userID string, encryptionKeyID, signKeyID *string) ([]*blobs.BlobMeta, error) {
-	var newForm *multipart.Form
+	if form == nil || len(form.File["files"]) == 0 {
+		return nil, fmt.Errorf("no files provided in upload request")
+	}
 
-	// Process signKeyID if provided
+	var uploadForm *multipart.Form = form
+	var signatureBlobMetas []*blobs.BlobMeta
+
+	// Step 1: Process signing if signKeyID is provided
 	if signKeyID != nil {
 		keyBytes, cryptoKeyMeta, err := s.getCryptoKeyAndData(ctx, *signKeyID)
 		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("failed to get signing key: %w", err)
 		}
 
-		cryptoOperation := crypto.OperationSigning
-		contents, fileNames, err := s.applyCryptographicOperation(form, cryptoKeyMeta.Algorithm, cryptoOperation, keyBytes, cryptoKeyMeta.KeySize)
+		// Generate signatures for all files (raw binary data, like CLI does)
+		signatures, originalFileNames, err := s.applyCryptographicOperation(
+			form,
+			cryptoKeyMeta.Algorithm,
+			crypto.OperationSigning,
+			keyBytes,
+			cryptoKeyMeta.KeySize,
+		)
 		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("failed to generate signatures: %w", err)
 		}
 
-		newForm, err = utils.CreateMultipleFilesForm(contents, fileNames)
-		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+		// Create signature filenames with .sig extension
+		// CLI: os.WriteFile(signatureFilePath, signature, 0600)
+		// We do the same but with .sig extension
+		signatureFileNames := make([]string, len(originalFileNames))
+		for i, originalName := range originalFileNames {
+			signatureFileNames[i] = originalName + ".sig"
 		}
+
+		// Create multipart form for signature files
+		signatureForm, err := utils.CreateMultipleFilesForm(signatures, signatureFileNames)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create signature form: %w", err)
+		}
+
+		// Upload signatures as separate blobs (without encryption/signing metadata)
+		// Signatures are standalone files, just like CLI saves them separately
+		signatureBlobMetas, err = s.blobConnector.Upload(ctx, signatureForm, userID, nil, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload signature blobs: %w", err)
+		}
+
+		// Persist signature blob metadata to database
+		for i, signatureBlobMeta := range signatureBlobMetas {
+			if err := s.blobRepository.Create(ctx, signatureBlobMeta); err != nil {
+				return nil, fmt.Errorf("failed to save signature blob metadata for '%s': %w", signatureBlobMeta.Name, err)
+			}
+
+			s.logger.Info("signature blob persisted",
+				"signature_blob_id", signatureBlobMeta.ID,
+				"filename", signatureBlobMeta.Name,
+				"size", signatureBlobMeta.Size,
+				"algorithm", cryptoKeyMeta.Algorithm,
+				"original_file", originalFileNames[i])
+		}
+
+		s.logger.Info("signatures uploaded",
+			"count", len(signatureBlobMetas),
+			"algorithm", cryptoKeyMeta.Algorithm,
+			"sign_key_id", *signKeyID)
 	}
 
-	// Process encryptionKeyID if provided
+	// Step 2: Process encryption if encryptionKeyID is provided
 	if encryptionKeyID != nil {
 		keyBytes, cryptoKeyMeta, err := s.getCryptoKeyAndData(ctx, *encryptionKeyID)
 		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("failed to get encryption key: %w", err)
 		}
 
-		cryptoOperation := crypto.OperationEncryption
-		contents, fileNames, err := s.applyCryptographicOperation(form, cryptoKeyMeta.Algorithm, cryptoOperation, keyBytes, cryptoKeyMeta.KeySize)
+		// Encrypt the original files (not the signatures)
+		encryptedContents, encryptedFileNames, err := s.applyCryptographicOperation(
+			form,
+			cryptoKeyMeta.Algorithm,
+			crypto.OperationEncryption,
+			keyBytes,
+			cryptoKeyMeta.KeySize,
+		)
 		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("failed to encrypt files: %w", err)
 		}
 
-		newForm, err = utils.CreateMultipleFilesForm(contents, fileNames)
+		// Create form with encrypted files
+		uploadForm, err = utils.CreateMultipleFilesForm(encryptedContents, encryptedFileNames)
 		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("failed to create encrypted form: %w", err)
 		}
+
+		s.logger.Info("files encrypted",
+			"count", len(encryptedContents),
+			"algorithm", cryptoKeyMeta.Algorithm,
+			"encryption_key_id", *encryptionKeyID)
 	}
 
-	if signKeyID != nil || encryptionKeyID != nil {
-		blobMetas, err := s.blobConnector.Upload(ctx, newForm, userID, encryptionKeyID, signKeyID)
-		if err != nil {
-			return nil, fmt.Errorf("%w", err)
-		}
-
-		for _, blobMeta := range blobMetas {
-			err := s.blobRepository.Create(ctx, blobMeta)
-			if err != nil {
-				return nil, fmt.Errorf("%w", err)
-			}
-		}
-		return blobMetas, nil
-	}
-
-	blobMetas, err := s.blobConnector.Upload(ctx, form, userID, encryptionKeyID, signKeyID)
+	// Step 3: Upload original files (or encrypted files if encryption was applied)
+	blobMetas, err := s.blobConnector.Upload(ctx, uploadForm, userID, encryptionKeyID, signKeyID)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("failed to upload blobs: %w", err)
 	}
 
-	for _, blobMeta := range blobMetas {
-		err := s.blobRepository.Create(ctx, blobMeta)
-		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+	// Step 4: Link signature blobs to original blobs and persist metadata
+	for i, blobMeta := range blobMetas {
+		// Link signature if one was generated for this file
+		// This creates the association: original file <-> signature file
+		if signKeyID != nil && i < len(signatureBlobMetas) {
+			signatureBlobID := signatureBlobMetas[i].ID
+			signatureFileName := signatureBlobMetas[i].Name
+			blobMeta.SignatureBlobID = &signatureBlobID
+			blobMeta.SignatureFileName = &signatureFileName
+
+			s.logger.Info("linked signature to blob",
+				"blob_id", blobMeta.ID,
+				"blob_name", blobMeta.Name,
+				"signature_blob_id", signatureBlobID,
+				"signature_filename", signatureFileName)
+		}
+
+		// Persist blob metadata with signature reference
+		if err := s.blobRepository.Create(ctx, blobMeta); err != nil {
+			return nil, fmt.Errorf("failed to save blob metadata for '%s': %w", blobMeta.Name, err)
 		}
 	}
+
+	s.logger.Info("blob upload completed",
+		"blob_count", len(blobMetas),
+		"encrypted", encryptionKeyID != nil,
+		"signed", signKeyID != nil,
+		"signature_count", len(signatureBlobMetas))
 
 	return blobMetas, nil
 }
@@ -148,26 +213,37 @@ func (s *blobUploadService) getCryptoKeyAndData(ctx context.Context, cryptoKeyID
 
 // applyCryptographicOperation performs cryptographic operations (encryption or signing)
 // on files within a multipart form using the specified algorithm and key.
+//
+// Supported operations:
+//   - AES: Encryption only (no signing support)
+//   - RSA: Encryption and signing
+//   - ECDSA: Signing only (no encryption support)
+//
+// Returns processed bytes and original filenames, or an error if the operation fails.
 func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, algorithm, operation string, keyBytes []byte, keySize uint32) ([][]byte, []string, error) {
 	var contents [][]byte
 	var fileNames []string
 
 	fileHeaders := form.File["files"]
+	if len(fileHeaders) == 0 {
+		return nil, nil, fmt.Errorf("no files provided in form")
+	}
+
 	for _, fileHeader := range fileHeaders {
 		file, err := fileHeader.Open()
 		if err != nil {
-			return nil, nil, fmt.Errorf("%w", err)
+			return nil, nil, fmt.Errorf("failed to open file '%s': %w", fileHeader.Filename, err)
 		}
 		defer func() {
 			if err := file.Close(); err != nil {
-				log.Printf("warning: failed to close file: %v\n", err)
+				s.logger.Error("failed to close file", "filename", fileHeader.Filename, "error", err)
 			}
 		}()
 
 		buffer := bytes.NewBuffer(make([]byte, 0))
 		_, err = io.Copy(buffer, file)
 		if err != nil {
-			return nil, nil, fmt.Errorf("%w", err)
+			return nil, nil, fmt.Errorf("failed to read file '%s': %w", fileHeader.Filename, err)
 		}
 		data := buffer.Bytes()
 
@@ -175,44 +251,64 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 
 		switch algorithm {
 		case crypto.AlgorithmAES:
-			if operation == crypto.OperationEncryption {
-				processedBytes, err = s.aesProcessor.Encrypt(data, keyBytes)
-				if err != nil {
-					return nil, nil, fmt.Errorf("%w", err)
-				}
-			}
-		case crypto.AlgorithmRSA:
+			// AES only supports encryption, not signing
 			switch operation {
 			case crypto.OperationEncryption:
+				processedBytes, err = s.aesProcessor.Encrypt(data, keyBytes)
+				if err != nil {
+					return nil, nil, fmt.Errorf("AES encryption failed for '%s': %w", fileHeader.Filename, err)
+				}
+			case crypto.OperationSigning:
+				return nil, nil, fmt.Errorf("AES does not support signing operations; use RSA or ECDSA for digital signatures")
+			default:
+				return nil, nil, fmt.Errorf("unsupported operation '%s' for AES; only encryption is supported", operation)
+			}
+
+		case crypto.AlgorithmRSA:
+			// RSA supports both encryption and signing
+			switch operation {
+			case crypto.OperationEncryption:
+				// Unmarshal public key from PKIX format
 				publicKeyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 				if err != nil {
-					return nil, nil, fmt.Errorf("error parsing public key: %w", err)
+					return nil, nil, fmt.Errorf("failed to parse RSA public key: %w", err)
 				}
 				publicKey, ok := publicKeyInterface.(*crypto_rsa.PublicKey)
 				if !ok {
-					return nil, nil, fmt.Errorf("public key is not of type RSA")
+					return nil, nil, fmt.Errorf("key is not an RSA public key")
 				}
+
 				processedBytes, err = s.rsaProcessor.Encrypt(data, publicKey)
 				if err != nil {
-					return nil, nil, fmt.Errorf("encryption error: %w", err)
+					return nil, nil, fmt.Errorf("RSA encryption failed for '%s': %w", fileHeader.Filename, err)
 				}
 
 			case crypto.OperationSigning:
+				// Unmarshal private key from PKCS#1 format
 				privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
 				if err != nil {
-					return nil, nil, fmt.Errorf("error parsing private key: %w", err)
+					return nil, nil, fmt.Errorf("failed to parse RSA private key: %w", err)
 				}
+
 				processedBytes, err = s.rsaProcessor.Sign(data, privateKey)
 				if err != nil {
-					return nil, nil, fmt.Errorf("signing error: %w", err)
+					return nil, nil, fmt.Errorf("RSA signing failed for '%s': %w", fileHeader.Filename, err)
 				}
 
 			default:
-				return nil, nil, fmt.Errorf("unsupported operation: %s", operation)
+				return nil, nil, fmt.Errorf("unsupported operation '%s' for RSA; use 'encryption' or 'signing'", operation)
 			}
-		case crypto.AlgorithmECDSA:
-			if operation == crypto.OperationSigning {
 
+		case crypto.AlgorithmECDSA:
+			// ECDSA only supports signing, not encryption
+			switch operation {
+			case crypto.OperationSigning:
+				// Validate key bytes length for ECDSA
+				if len(keyBytes) < 96 {
+					return nil, nil, fmt.Errorf("ECDSA key bytes too short: expected at least 96 bytes, got %d", len(keyBytes))
+				}
+
+				// Reconstruct ECDSA private key from raw bytes (D, X, Y components)
 				privateKeyD := new(big.Int).SetBytes(keyBytes[:32])
 				pubKeyX := new(big.Int).SetBytes(keyBytes[32:64])
 				pubKeyY := new(big.Int).SetBytes(keyBytes[64:96])
@@ -228,7 +324,7 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 				case 521:
 					curve = elliptic.P521()
 				default:
-					return nil, nil, fmt.Errorf("key size %v not supported for EC", keySize)
+					return nil, nil, fmt.Errorf("unsupported ECDSA key size: %d; use 224, 256, 384, or 521", keySize)
 				}
 
 				publicKey := &crypto_ec.PublicKey{
@@ -241,13 +337,26 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 					D:         privateKeyD,
 					PublicKey: *publicKey,
 				}
-				processedBytes, err = s.ecProcessor.Sign(data, privateKey)
+
+				processedBytes, err = s.ecdsaProcessor.Sign(data, privateKey)
 				if err != nil {
-					return nil, nil, fmt.Errorf("%w", err)
+					return nil, nil, fmt.Errorf("ECDSA signing failed for '%s': %w", fileHeader.Filename, err)
 				}
+
+			case crypto.OperationEncryption:
+				return nil, nil, fmt.Errorf("ECDSA does not support encryption; use RSA for asymmetric encryption")
+
+			default:
+				return nil, nil, fmt.Errorf("unsupported operation '%s' for ECDSA; only signing is supported", operation)
 			}
+
 		default:
-			return nil, nil, fmt.Errorf("unsupported algorithm: %s", algorithm)
+			return nil, nil, fmt.Errorf("unsupported algorithm '%s'; use AES, RSA, or ECDSA", algorithm)
+		}
+
+		// Ensure processed bytes were generated
+		if len(processedBytes) == 0 {
+			return nil, nil, fmt.Errorf("cryptographic operation produced empty result for '%s'", fileHeader.Filename)
 		}
 
 		contents = append(contents, processedBytes)

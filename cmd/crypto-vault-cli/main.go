@@ -25,7 +25,14 @@ func run() error {
 		Short: "Cryptographic operations CLI tool",
 		Long: `crypto-vault-cli is a command-line tool for cryptographic operations.
 Supports AES encryption/decryption, RSA and ECDSA key generation, signing, and verification.
-Also provides PKCS#11 hardware token integration for secure key management.`,
+Also provides PKCS#11 hardware token integration for secure key management.
+
+To enable PKCS#11 functionality, make sure the following environment variables are set:
+- PKCS11_MODULE_PATH
+- PKCS11_SO_PIN
+- PKCS11_USER_PIN
+- PKCS11_SLOT_ID
+If these variables are not set, PKCS#11 functionality will be disabled.`,
 	}
 
 	// Initialize all command groups BEFORE executing
@@ -61,7 +68,7 @@ func initializeCommands(rootCmd *cobra.Command) error {
 	// Attempt to register PKCS#11 commands (optional, requires environment config)
 	if err := initializePKCS11Commands(rootCmd); err != nil {
 		// PKCS#11 is optional; log warning but don't fail
-		log.Printf("Warning: PKCS#11 commands disabled: %v", err)
+		// log.Printf("Warning: PKCS#11 commands disabled: %v", err)
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package testing
 
 import (
+	"bytes"
 	"crypto_vault_service/internal/pkg/config"
 	"crypto_vault_service/internal/pkg/logger"
 	"crypto_vault_service/internal/pkg/utils"
@@ -52,6 +53,47 @@ func CreateTestFileAndForm(t *testing.T, fileName string, fileContent []byte) (*
 
 	form, err := utils.CreateForm(fileContent, fileName)
 	require.NoError(t, err)
+
+	return form, nil
+}
+
+// CreateEmptyForm creates an empty multipart form for testing
+func CreateEmptyForm() *multipart.Form {
+	return &multipart.Form{
+		File: make(map[string][]*multipart.FileHeader),
+	}
+}
+
+// CreateMultipleTestFilesForm creates a multipart form with multiple test files
+func CreateMultipleTestFilesForm(t *testing.T, files map[string][]byte) (*multipart.Form, error) {
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	for filename, content := range files {
+		part, err := writer.CreateFormFile("files", filename)
+		require.NoError(t, err)
+
+		_, err = part.Write(content)
+		require.NoError(t, err)
+	}
+
+	err := writer.Close()
+	require.NoError(t, err)
+
+	reader := multipart.NewReader(&buf, writer.Boundary())
+	form, err := reader.ReadForm(32 << 20) // 32 MB
+	require.NoError(t, err)
+
+	// Set FileHeader.Size manually (same fix as utils.CreateMultipleFilesForm)
+	if fileHeaders, ok := form.File["files"]; ok {
+		i := 0
+		for _, content := range files {
+			if i < len(fileHeaders) {
+				fileHeaders[i].Size = int64(len(content))
+				i++
+			}
+		}
+	}
 
 	return form, nil
 }

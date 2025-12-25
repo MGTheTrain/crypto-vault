@@ -2,7 +2,6 @@ erDiagram
     CRYPTO_KEY_META {
         string id PK
         string key_pair_id FK
-        string user_id FK
         datetime date_time_created
         string algorithm
         uint key_size
@@ -11,9 +10,8 @@ erDiagram
 
     BLOB_META {
         string id PK
-        string encryption_key_id FK
-        string sign_key_id FK
-        string user_id FK
+        string encryption_crypto_key_id FK
+        string sign_crypto_key_id FK
         datetime date_time_created
         string name
         int size

@@ -51,14 +51,16 @@ type InfoResponse struct {
 
 // BlobMetaResponse contains metadata about a blob, such as ID, size, and encryption details.
 type BlobMetaResponse struct {
-	ID              string    `json:"id"`              // Unique identifier for the blob
-	DateTimeCreated time.Time `json:"dateTimeCreated"` // Timestamp when the blob was created
-	UserID          string    `json:"userID"`          // User who uploaded the blob
-	Name            string    `json:"name"`            // Name of the blob
-	Size            int64     `json:"size"`            // Size of the blob in bytes
-	Type            string    `json:"type"`            // Type of the blob (e.g., file format)
-	EncryptionKeyID *string   `json:"encryptionKeyID"` // Optional encryption key ID for the blob
-	SignKeyID       *string   `json:"signKeyID"`       // Optional signature key ID for the blob
+	ID                string    `json:"id"`              // Unique identifier for the blob
+	DateTimeCreated   time.Time `json:"dateTimeCreated"` // Timestamp when the blob was created
+	UserID            string    `json:"userID"`          // User who uploaded the blob
+	Name              string    `json:"name"`            // Name of the blob
+	Size              int64     `json:"size"`            // Size of the blob in bytes
+	Type              string    `json:"type"`            // Type of the blob (e.g., file format)
+	EncryptionKeyID   *string   `json:"encryptionKeyID"` // Optional encryption key ID for the blob
+	SignKeyID         *string   `json:"signKeyID"`       // Optional signature key ID for the blob
+	SignatureBlobID   *string   `json:"signatureBlobID"`
+	SignatureFileName *string   `json:"signatureFileName"`
 }
 
 // CryptoKeyMetaResponse contains metadata about a cryptographic key.

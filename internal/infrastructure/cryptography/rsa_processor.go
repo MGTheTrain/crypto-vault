@@ -28,7 +28,8 @@ func NewRSAProcessor(logger logger.Logger) (cryptoDomain.RSAProcessor, error) {
 	}, nil
 }
 
-// GenerateRSAKeys generates RSA key pair
+// GenerateKeys generates an RSA key pair with the specified bit size.
+// Recommended sizes: 2048 (minimum), 3072, 4096 bits.
 func (r *rsaProcessor) GenerateKeys(keySize int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, keySize)
 	if err != nil {
@@ -39,9 +40,9 @@ func (r *rsaProcessor) GenerateKeys(keySize int) (*rsa.PrivateKey, *rsa.PublicKe
 	return privateKey, publicKey, nil
 }
 
-// Encrypt data using RSA public key
-// Encrypt encrypts the given plaintext using RSA encryption.
-// If the plaintext is too large, it will split it into smaller chunks and encrypt each one separately.
+// Encrypt encrypts plaintext using RSA-OAEP with the public key.
+// NOTE: RSA can only encrypt small amounts of data (< key size - padding).
+// For large files, use hybrid encryption (encrypt data with AES, encrypt AES key with RSA).
 func (r *rsaProcessor) Encrypt(plainText []byte, publicKey *rsa.PublicKey) ([]byte, error) {
 	if publicKey == nil {
 		return nil, errors.New("public key cannot be nil")
@@ -77,7 +78,8 @@ func (r *rsaProcessor) Encrypt(plainText []byte, publicKey *rsa.PublicKey) ([]by
 	return encryptedData, nil
 }
 
-// Decrypt data using RSA private key. It handles multiple chunks of encrypted data.
+// Decrypt decrypts RSA-OAEP ciphertext using the private key.
+// Returns the original plaintext or an error if decryption fails.
 func (r *rsaProcessor) Decrypt(ciphertext []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 	if privateKey == nil {
 		return nil, fmt.Errorf("private key cannot be nil")
@@ -111,7 +113,8 @@ func (r *rsaProcessor) Decrypt(ciphertext []byte, privateKey *rsa.PrivateKey) ([
 	return decryptedData, nil
 }
 
-// Sign data using RSA private key
+// Sign creates a digital signature using RSA-PSS with the private key.
+// Returns the signature bytes or an error if signing fails.
 func (r *rsaProcessor) Sign(data []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 	if privateKey == nil {
 		return nil, fmt.Errorf("private key cannot be nil")
@@ -130,7 +133,8 @@ func (r *rsaProcessor) Sign(data []byte, privateKey *rsa.PrivateKey) ([]byte, er
 	return signature, nil
 }
 
-// Verify RSA signature with public key
+// Verify verifies an RSA-PSS signature using the public key.
+// Returns true if the signature is valid, false otherwise.
 func (r *rsaProcessor) Verify(data []byte, signature []byte, publicKey *rsa.PublicKey) (bool, error) {
 	if publicKey == nil {
 		return false, fmt.Errorf("public key cannot be nil")
@@ -149,7 +153,7 @@ func (r *rsaProcessor) Verify(data []byte, signature []byte, publicKey *rsa.Publ
 	return true, nil
 }
 
-// SavePrivateKeyToFile saves the private key to a PEM file using encoding/pem
+// SavePrivateKeyToFile saves the RSA private key to a PEM-encoded file (PKCS#1 format).
 func (r *rsaProcessor) SavePrivateKeyToFile(privateKey *rsa.PrivateKey, filename string) error {
 	privKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 	privKeyPem := &pem.Block{
@@ -176,7 +180,7 @@ func (r *rsaProcessor) SavePrivateKeyToFile(privateKey *rsa.PrivateKey, filename
 	return nil
 }
 
-// SavePublicKeyToFile saves the public key to a PEM file using encoding/pem
+// SavePublicKeyToFile saves the RSA public key to a PEM-encoded file (PKIX format).
 func (r *rsaProcessor) SavePublicKeyToFile(publicKey *rsa.PublicKey, filename string) error {
 	pubKeyBytes, err := x509.MarshalPKIXPublicKey(publicKey)
 	if err != nil {
@@ -208,7 +212,7 @@ func (r *rsaProcessor) SavePublicKeyToFile(publicKey *rsa.PublicKey, filename st
 	return nil
 }
 
-// Read RSA private key from PEM file
+// ReadPrivateKey reads an RSA private key from a PEM-encoded file (PKCS#1 format).
 func (r *rsaProcessor) ReadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
 	privKeyPEM, err := os.ReadFile(filepath.Clean(privateKeyPath))
 	if err != nil {
@@ -241,7 +245,7 @@ func (r *rsaProcessor) ReadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, e
 	return privateKey, nil
 }
 
-// Read RSA public key from PEM file
+// ReadPublicKey reads an RSA public key from a PEM-encoded file (PKIX format).
 func (r *rsaProcessor) ReadPublicKey(publicKeyPath string) (*rsa.PublicKey, error) {
 	pubKeyPEM, err := os.ReadFile(filepath.Clean(publicKeyPath))
 	if err != nil {

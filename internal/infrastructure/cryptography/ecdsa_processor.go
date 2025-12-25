@@ -16,20 +16,21 @@ import (
 	"path/filepath"
 )
 
-// ecProcessor struct that implements the ECProcessor interface
-type ecProcessor struct {
+// ecdsaProcessor struct that implements the ECDSAProcessor interface
+type ecdsaProcessor struct {
 	logger logger.Logger
 }
 
-// NewECProcessor creates and returns a new instance of ecProcessor
-func NewECProcessor(logger logger.Logger) (crypto.ECProcessor, error) {
-	return &ecProcessor{
+// NewECDSAProcessor creates and returns a new instance of ecdsaProcessor
+func NewECDSAProcessor(logger logger.Logger) (crypto.ECDSAProcessor, error) {
+	return &ecdsaProcessor{
 		logger: logger,
 	}, nil
 }
 
-// GenerateKeys generates an elliptic curve key pair
-func (e *ecProcessor) GenerateKeys(curve elliptic.Curve) (*ecdsa.PrivateKey, *ecdsa.PublicKey, error) {
+// GenerateKeys generates an ECDSA key pair on the specified elliptic curve.
+// Supported curves: P-224, P-256, P-384 P-521.
+func (e *ecdsaProcessor) GenerateKeys(curve elliptic.Curve) (*ecdsa.PrivateKey, *ecdsa.PublicKey, error) {
 	privateKey, err := ecdsa.GenerateKey(curve, rand.Reader)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate elliptic curve keys: %w", err)
@@ -40,8 +41,9 @@ func (e *ecProcessor) GenerateKeys(curve elliptic.Curve) (*ecdsa.PrivateKey, *ec
 	return privateKey, publicKey, nil
 }
 
-// Sign signs a message with the private key
-func (e *ecProcessor) Sign(message []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
+// Sign creates a digital signature of the message using ECDSA with the private key.
+// Returns the signature bytes or an error if signing fails.
+func (e *ecdsaProcessor) Sign(message []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
 	if privateKey == nil {
 		return nil, fmt.Errorf("private key cannot be nil")
 	}
@@ -65,8 +67,9 @@ func (e *ecProcessor) Sign(message []byte, privateKey *ecdsa.PrivateKey) ([]byte
 	return signature, nil
 }
 
-// Verify verifies the signature of a message with the public key
-func (e *ecProcessor) Verify(message, signature []byte, publicKey *ecdsa.PublicKey) (bool, error) {
+// Verify verifies an ECDSA signature using the public key.
+// Returns true if the signature is valid, false otherwise.
+func (e *ecdsaProcessor) Verify(message, signature []byte, publicKey *ecdsa.PublicKey) (bool, error) {
 	if publicKey == nil {
 		return false, fmt.Errorf("public key cannot be nil")
 	}
@@ -86,8 +89,8 @@ func (e *ecProcessor) Verify(message, signature []byte, publicKey *ecdsa.PublicK
 	return valid, nil
 }
 
-// SavePrivateKeyToFile saves the private key to a PEM file using encoding/pem
-func (e *ecProcessor) SavePrivateKeyToFile(privateKey *ecdsa.PrivateKey, filename string) error {
+// SavePrivateKeyToFile saves the ECDSA private key to a PEM-encoded file.
+func (e *ecdsaProcessor) SavePrivateKeyToFile(privateKey *ecdsa.PrivateKey, filename string) error {
 	// Marshal private key components (private key 'D' and public key components 'X' and 'Y')
 	privKeyBytes := append(privateKey.D.Bytes(), privateKey.X.Bytes()...)
 	privKeyBytes = append(privKeyBytes, privateKey.Y.Bytes()...)
@@ -119,8 +122,8 @@ func (e *ecProcessor) SavePrivateKeyToFile(privateKey *ecdsa.PrivateKey, filenam
 	return nil
 }
 
-// SavePublicKeyToFile saves the public key to a PEM file using encoding/pem
-func (e *ecProcessor) SavePublicKeyToFile(publicKey *ecdsa.PublicKey, filename string) error {
+// SavePublicKeyToFile saves the ECDSA public key to a PEM-encoded file.
+func (e *ecdsaProcessor) SavePublicKeyToFile(publicKey *ecdsa.PublicKey, filename string) error {
 	pubKeyBytes := append(publicKey.X.Bytes(), publicKey.Y.Bytes()...)
 
 	// Prepare the PEM block for the public key
@@ -150,8 +153,8 @@ func (e *ecProcessor) SavePublicKeyToFile(publicKey *ecdsa.PublicKey, filename s
 	return nil
 }
 
-// SaveSignatureToFile can be used for storing signature files in hex format
-func (e *ecProcessor) SaveSignatureToFile(filename string, data []byte) error {
+// SaveSignatureToFile saves the signature bytes to a file (typically as hex-encoded text).
+func (e *ecdsaProcessor) SaveSignatureToFile(filename string, data []byte) error {
 	hexData := hex.EncodeToString(data)
 	err := os.WriteFile(filename, []byte(hexData), 0600)
 	if err != nil {
@@ -161,8 +164,8 @@ func (e *ecProcessor) SaveSignatureToFile(filename string, data []byte) error {
 	return nil
 }
 
-// ReadPrivateKey reads an ECDSA private key from a PEM file using encoding/pem
-func (e *ecProcessor) ReadPrivateKey(privateKeyPath string, curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
+// ReadPrivateKey reads an ECDSA private key from a PEM-encoded file.
+func (e *ecdsaProcessor) ReadPrivateKey(privateKeyPath string, curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
 	privKeyPEM, err := os.ReadFile(filepath.Clean(privateKeyPath))
 	if err != nil {
 		return nil, fmt.Errorf("unable to read private key file: %w", err)
@@ -194,8 +197,8 @@ func (e *ecProcessor) ReadPrivateKey(privateKeyPath string, curve elliptic.Curve
 	return privateKey, nil
 }
 
-// ReadPublicKey reads an ECDSA public key from a PEM file using encoding/pem
-func (e *ecProcessor) ReadPublicKey(publicKeyPath string, curve elliptic.Curve) (*ecdsa.PublicKey, error) {
+// ReadPublicKey reads an ECDSA public key from a PEM-encoded file.
+func (e *ecdsaProcessor) ReadPublicKey(publicKeyPath string, curve elliptic.Curve) (*ecdsa.PublicKey, error) {
 	pubKeyPEM, err := os.ReadFile(filepath.Clean(publicKeyPath))
 	if err != nil {
 		return nil, fmt.Errorf("unable to read public key file: %w", err)

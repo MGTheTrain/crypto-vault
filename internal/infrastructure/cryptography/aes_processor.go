@@ -41,7 +41,8 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	return data[:length-padding], nil
 }
 
-// GenerateRandomAESKey generates a random AES key of the specified size
+// GenerateKey generates a random AES key of the specified size.
+// Supported key sizes: 16 (AES-128), 24 (AES-192), 32 (AES-256) bytes.
 func (a *aesProcessor) GenerateKey(keySize int) ([]byte, error) {
 	key := make([]byte, keySize)
 	_, err := rand.Read(key)
@@ -53,7 +54,8 @@ func (a *aesProcessor) GenerateKey(keySize int) ([]byte, error) {
 	return key, nil
 }
 
-// Encrypt data using AES in CBC mode
+// Encrypt encrypts plaintext data using AES with the provided symmetric key.
+// Returns the encrypted ciphertext or an error if encryption fails.
 func (a *aesProcessor) Encrypt(data, key []byte) ([]byte, error) {
 	if key == nil || data == nil {
 		return nil, fmt.Errorf("key and data cannot be nil")
@@ -79,7 +81,8 @@ func (a *aesProcessor) Encrypt(data, key []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-// Decrypt data using AES in CBC mode
+// Decrypt decrypts AES ciphertext using the provided symmetric key.
+// Returns the original plaintext or an error if decryption fails.
 func (a *aesProcessor) Decrypt(ciphertext, key []byte) ([]byte, error) {
 	if key == nil || ciphertext == nil {
 		return nil, fmt.Errorf("ciphertext and key cannot be nil")

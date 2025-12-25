@@ -7,6 +7,7 @@ import (
 	"crypto_vault_service/internal/domain/crypto"
 	"crypto_vault_service/internal/domain/keys"
 	"crypto_vault_service/internal/pkg/logger"
+	"encoding/pem"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -17,7 +18,7 @@ type cryptoKeyUploadService struct {
 	vaultConnector keys.VaultConnector
 	cryptoKeyRepo  keys.CryptoKeyRepository
 	aesProcessor   crypto.AESProcessor
-	ecProcessor    crypto.ECProcessor
+	ecdsaProcessor crypto.ECDSAProcessor
 	rsaProcessor   crypto.RSAProcessor
 	logger         logger.Logger
 }
@@ -27,7 +28,7 @@ func NewCryptoKeyUploadService(
 	vaultConnector keys.VaultConnector,
 	cryptoKeyRepo keys.CryptoKeyRepository,
 	aesProcessor crypto.AESProcessor,
-	ecProcessor crypto.ECProcessor,
+	ecdsaProcessor crypto.ECDSAProcessor,
 	rsaProcessor crypto.RSAProcessor,
 	logger logger.Logger,
 ) (keys.CryptoKeyUploadService, error) {
@@ -35,7 +36,7 @@ func NewCryptoKeyUploadService(
 		vaultConnector: vaultConnector,
 		cryptoKeyRepo:  cryptoKeyRepo,
 		aesProcessor:   aesProcessor,
-		ecProcessor:    ecProcessor,
+		ecdsaProcessor: ecdsaProcessor,
 		rsaProcessor:   rsaProcessor,
 		logger:         logger,
 	}, nil
@@ -119,7 +120,7 @@ func (s *cryptoKeyUploadService) uploadECKey(ctx context.Context, userID, keyPai
 		return nil, fmt.Errorf("key size %v not supported for EC", keySize)
 	}
 
-	privateKey, publicKey, err := s.ecProcessor.GenerateKeys(curve)
+	privateKey, publicKey, err := s.ecdsaProcessor.GenerateKeys(curve)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
@@ -269,16 +270,91 @@ func NewCryptoKeyDownloadService(vaultConnector keys.VaultConnector, cryptoKeyRe
 }
 
 // Download retrieves a cryptographic key by ID.
+// DownloadByID downloads a cryptographic key and returns it in PEM format
 func (s *cryptoKeyDownloadService) DownloadByID(ctx context.Context, keyID string) ([]byte, error) {
 	keyMeta, err := s.cryptoKeyRepo.GetByID(ctx, keyID)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("failed to get key metadata: %w", err)
 	}
 
-	blobData, err := s.vaultConnector.Download(ctx, keyMeta.ID, keyMeta.KeyPairID, keyMeta.Type)
+	// Download raw key bytes from vault (DER format)
+	rawKeyBytes, err := s.vaultConnector.Download(ctx, keyMeta.ID, keyMeta.KeyPairID, keyMeta.Type)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("failed to download key from vault: %w", err)
 	}
 
-	return blobData, nil
+	// Convert raw bytes to PEM format based on algorithm and type
+	pemBytes, err := s.convertToPEM(rawKeyBytes, keyMeta.Algorithm, keyMeta.Type)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert key to PEM format: %w", err)
+	}
+
+	s.logger.Info("key downloaded and converted to PEM",
+		"key_id", keyID,
+		"algorithm", keyMeta.Algorithm,
+		"type", keyMeta.Type,
+		"pem_size", len(pemBytes))
+
+	return pemBytes, nil
+}
+
+// convertToPEM converts raw key bytes (DER format) to PEM format based on algorithm and key type
+func (s *cryptoKeyDownloadService) convertToPEM(rawBytes []byte, algorithm, keyType string) ([]byte, error) {
+	var pemBlock *pem.Block
+
+	switch algorithm {
+	case crypto.AlgorithmRSA:
+		if keyType == crypto.KeyTypePublic {
+			// RSA public key - already in PKIX/DER format from x509.MarshalPKIXPublicKey
+			pemBlock = &pem.Block{
+				Type:  "PUBLIC KEY",
+				Bytes: rawBytes,
+			}
+		} else if keyType == crypto.KeyTypePrivate {
+			// RSA private key - already in PKCS#1/DER format from x509.MarshalPKCS1PrivateKey
+			pemBlock = &pem.Block{
+				Type:  "RSA PRIVATE KEY",
+				Bytes: rawBytes,
+			}
+		} else {
+			return nil, fmt.Errorf("unsupported RSA key type: %s", keyType)
+		}
+
+	case crypto.AlgorithmECDSA:
+		if keyType == crypto.KeyTypePublic {
+			// ECDSA public key - raw bytes (X || Y coordinates)
+			// Wrap in PKIX format for standard PEM
+			pemBlock = &pem.Block{
+				Type:  "PUBLIC KEY",
+				Bytes: rawBytes,
+			}
+		} else if keyType == crypto.KeyTypePrivate {
+			// ECDSA private key - raw bytes (D || X || Y)
+			// Keep as custom EC PRIVATE KEY format
+			pemBlock = &pem.Block{
+				Type:  "EC PRIVATE KEY",
+				Bytes: rawBytes,
+			}
+		} else {
+			return nil, fmt.Errorf("unsupported ECDSA key type: %s", keyType)
+		}
+
+	case crypto.AlgorithmAES:
+		// AES keys are symmetric - use custom PEM type
+		pemBlock = &pem.Block{
+			Type:  "AES KEY",
+			Bytes: rawBytes,
+		}
+
+	default:
+		return nil, fmt.Errorf("unsupported algorithm: %s", algorithm)
+	}
+
+	// Encode to PEM format
+	pemData := pem.EncodeToMemory(pemBlock)
+	if pemData == nil {
+		return nil, fmt.Errorf("failed to encode key to PEM format")
+	}
+
+	return pemData, nil
 }

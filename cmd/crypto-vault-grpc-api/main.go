@@ -78,7 +78,7 @@ type appDependencies struct {
 
 type cryptoProcessors struct {
 	aes crypto.AESProcessor
-	ec  crypto.ECProcessor
+	ec  crypto.ECDSAProcessor
 	rsa crypto.RSAProcessor
 }
 
@@ -311,7 +311,7 @@ func initializeCryptoProcessors(log logger.Logger) (*cryptoProcessors, error) {
 		return nil, fmt.Errorf("failed to create AES processor: %w", err)
 	}
 
-	ecProcessor, err := cryptography.NewECProcessor(log)
+	ecdsaProcessor, err := cryptography.NewECDSAProcessor(log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create EC processor: %w", err)
 	}
@@ -324,7 +324,7 @@ func initializeCryptoProcessors(log logger.Logger) (*cryptoProcessors, error) {
 	log.Info("Cryptographic processors initialized successfully")
 	return &cryptoProcessors{
 		aes: aesProcessor,
-		ec:  ecProcessor,
+		ec:  ecdsaProcessor,
 		rsa: rsaProcessor,
 	}, nil
 }
