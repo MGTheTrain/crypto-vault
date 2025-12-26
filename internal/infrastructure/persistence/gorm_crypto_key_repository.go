@@ -2,11 +2,12 @@ package persistence
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/persistence/models"
-	"crypto_vault_service/internal/pkg/logger"
 	"errors"
 	"fmt"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence/models"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
 	"gorm.io/gorm"
 )

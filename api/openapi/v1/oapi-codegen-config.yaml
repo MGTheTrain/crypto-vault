@@ -1,0 +1,8 @@
+package: stub
+generate:
+  models: true
+  gin-server: true
+  embedded-spec: true
+output: ./internal/api/rest/v1/stub/generated_types.go
+output-options:
+  skip-prune: true

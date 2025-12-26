@@ -1,12 +1,13 @@
 package commands
 
 import (
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/infrastructure/cryptography"
-	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"

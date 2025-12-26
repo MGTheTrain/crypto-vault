@@ -5,13 +5,14 @@ package app
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/infrastructure/persistence/models"
-	"crypto_vault_service/internal/pkg/config"
-	pkgTesting "crypto_vault_service/internal/pkg/testing"
 	"mime/multipart"
 	"testing"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence/models"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"

@@ -3,11 +3,12 @@ package connector
 import (
 	"bytes"
 	"context"
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/pkg/config"
-	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
 	"time"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/google/uuid"

@@ -1,13 +1,15 @@
 package v1
 
 import (
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 	"mime/multipart"
 	"net/http"
 	"time"
+
+	"github.com/MGTheTrain/crypto-vault/internal/api/rest/v1/stub"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -41,18 +43,7 @@ func NewBlobHandler(blobUploadService blobs.BlobUploadService, blobDownloadServi
 	}
 }
 
-// Upload handles the POST request to upload a blob with optional encryption/signing
-// @Summary Upload a blob with optional encryption and signing
-// @Description Upload a blob to the system with optional encryption and signing using the provided keys
-// @Tags Blob
-// @Accept multipart/form-data
-// @Produce json
-// @Param files formData file true "Blob File"
-// @Param encryption_key_id formData string false "Encryption Key ID"
-// @Param sign_key_id formData string false "Sign Key ID"
-// @Success 201 {array} BlobMetaResponse
-// @Failure 400 {object} ErrorResponse
-// @Router /blobs [post]
+// Upload uploads a blob with optional encryption/signing
 func (handler *blobHandler) Upload(ctx *gin.Context) {
 	var form *multipart.Form
 	var encryptionKeyID *string
@@ -61,8 +52,9 @@ func (handler *blobHandler) Upload(ctx *gin.Context) {
 
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = "invalid form data"
+		var errorResponse stub.ErrorResponse
+		errorMessage := "invalid form data"
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
@@ -77,16 +69,17 @@ func (handler *blobHandler) Upload(ctx *gin.Context) {
 
 	blobMetas, err := handler.blobUploadService.Upload(ctx, form, userID, encryptionKeyID, signKeyID)
 	if err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("error uploading blob: %v", err.Error())
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("error uploading blob: %v", err.Error())
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 
-	var blobMetadataResponses []BlobMetaResponse
+	var blobMetadataResponses []stub.BlobMetaResponse
 	for _, blobMeta := range blobMetas {
-		blobMetadataResponse := BlobMetaResponse{
-			ID:              blobMeta.ID,
+		blobMetadataResponse := stub.BlobMetaResponse{
+			Id:              blobMeta.ID,
 			DateTimeCreated: blobMeta.DateTimeCreated,
 			UserID:          blobMeta.UserID,
 			Name:            blobMeta.Name,
@@ -113,22 +106,7 @@ func (handler *blobHandler) Upload(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, blobMetadataResponses)
 }
 
-// ListMetadata handles the GET request to fetch blobs metadata optionally with query parameters
-// @Summary List blob metadata based on query parameters
-// @Description Fetch a list of metadata for blobs based on query filters like name, size, type, and creation date.
-// @Tags Blob
-// @Accept json
-// @Produce json
-// @Param name query string false "Blob Name"
-// @Param size query int false "Blob Size"
-// @Param type query string false "Blob Type"
-// @Param dateTimeCreated query string false "Blob Creation Date (RFC3339)"
-// @Param limit query int false "Limit the number of results"
-// @Param offset query int false "Offset the results"
-// @Success 200 {array} BlobMetaResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Router /blobs [get]
+// ListMetadata fetches blobs metadata optionally with query parameters
 func (handler *blobHandler) ListMetadata(ctx *gin.Context) {
 	query := blobs.NewBlobMetaQuery()
 
@@ -168,24 +146,26 @@ func (handler *blobHandler) ListMetadata(ctx *gin.Context) {
 	}
 
 	if err := query.Validate(); err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("validation failed: %v", err.Error())
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("validation failed: %v", err.Error())
+		errorResponse.Message = &errorMessage
 		ctx.JSON(400, errorResponse)
 		return
 	}
 
 	blobMetas, err := handler.blobMetadataService.List(ctx, query)
 	if err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("list query failed: %v", err.Error())
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("list query failed: %v", err.Error())
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusNotFound, errorResponse)
 		return
 	}
 
-	var listResponse = []BlobMetaResponse{}
+	var listResponse = []stub.BlobMetaResponse{}
 	for _, blobMeta := range blobMetas {
-		blobMetadataResponse := BlobMetaResponse{
-			ID:              blobMeta.ID,
+		blobMetadataResponse := stub.BlobMetaResponse{
+			Id:              blobMeta.ID,
 			DateTimeCreated: blobMeta.DateTimeCreated,
 			UserID:          blobMeta.UserID,
 			Name:            blobMeta.Name,
@@ -212,29 +192,21 @@ func (handler *blobHandler) ListMetadata(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, listResponse)
 }
 
-// GetMetadataByID handles the GET request to fetch blob metadata by ID
-// @Summary Retrieve blob metadata by ID
-// @Description Fetch the blob metadata by ID, including name, size, type, encryption and signing key IDs, and creation date.
-// @Tags Blob
-// @Accept json
-// @Produce json
-// @Param id path string true "Blob ID"
-// @Success 200 {object} BlobMetaResponse
-// @Failure 404 {object} ErrorResponse
-// @Router /blobs/{id} [get]
+// GetMetadataByID fetches blob metadata by ID
 func (handler *blobHandler) GetMetadataByID(ctx *gin.Context) {
 	blobID := ctx.Param("id")
 
 	blobMeta, err := handler.blobMetadataService.GetByID(ctx, blobID)
 	if err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("blob with id %s not found", blobID)
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("blob with id %s not found", blobID)
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusNotFound, errorResponse)
 		return
 	}
 
-	blobMetadataResponse := BlobMetaResponse{
-		ID:              blobMeta.ID,
+	blobMetadataResponse := stub.BlobMetaResponse{
+		Id:              blobMeta.ID,
 		DateTimeCreated: blobMeta.DateTimeCreated,
 		UserID:          blobMeta.UserID,
 		Name:            blobMeta.Name,
@@ -260,17 +232,7 @@ func (handler *blobHandler) GetMetadataByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, blobMetadataResponse)
 }
 
-// DownloadByID handles the GET request to download a blob by ID
-// @Summary Download a blob by ID
-// @Description Download the content of a specific blob by ID, optionally decrypted with a provided decryption key ID.
-// @Tags Blob
-// @Accept json
-// @Produce octet-stream
-// @Param id path string true "Blob ID"
-// @Param decryption_key_id query string false "Decryption Key ID"
-// @Success 200 {file} file "Blob content"
-// @Failure 404 {object} ErrorResponse
-// @Router /blobs/{id}/file [get]
+// DownloadByID downloads a blob by ID
 func (handler *blobHandler) DownloadByID(ctx *gin.Context) {
 	blobID := ctx.Param("id")
 
@@ -281,16 +243,18 @@ func (handler *blobHandler) DownloadByID(ctx *gin.Context) {
 
 	bytes, err := handler.blobDownloadService.DownloadByID(ctx, blobID, decryptionKeyID)
 	if err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("could not download blob with id %s: %v", blobID, err.Error())
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("could not download blob with id %s: %v", blobID, err.Error())
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 
 	blobMeta, err := handler.blobMetadataService.GetByID(ctx, blobID)
 	if err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("blob with id %s not found", blobID)
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("blob with id %s not found", blobID)
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusNotFound, errorResponse)
 		return
 	}
@@ -301,39 +265,33 @@ func (handler *blobHandler) DownloadByID(ctx *gin.Context) {
 	_, err = ctx.Writer.Write(bytes)
 
 	if err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("could not write bytes: %v", err.Error())
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("could not write bytes: %v", err.Error())
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusBadRequest, errorResponse)
 		return
 	}
 }
 
-// DownloadSignatureByID handles GET request to download a blob's signature
-// @Summary Download a blob's signature by blob ID
-// @Description Download the signature file associated with a specific blob
-// @Tags Blob
-// @Accept json
-// @Produce octet-stream
-// @Param id path string true "Blob ID"
-// @Success 200 {file} file "Signature file content"
-// @Failure 404 {object} ErrorResponse
-// @Router /blobs/{id}/signature [get]
+// DownloadSignatureByID downloads a blob's signature
 func (handler *blobHandler) DownloadSignatureByID(ctx *gin.Context) {
 	blobID := ctx.Param("id")
 
 	// Get blob metadata
 	blobMeta, err := handler.blobMetadataService.GetByID(ctx, blobID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, ErrorResponse{
-			Message: fmt.Sprintf("blob with id %s not found", blobID),
+		errorMessage := fmt.Sprintf("blob with id %s not found", blobID)
+		ctx.JSON(http.StatusNotFound, stub.ErrorResponse{
+			Message: &errorMessage,
 		})
 		return
 	}
 
 	// Check if signature exists
 	if blobMeta.SignatureBlobID == nil {
-		ctx.JSON(http.StatusNotFound, ErrorResponse{
-			Message: fmt.Sprintf("no signature found for blob %s", blobID),
+		errorMessage := fmt.Sprintf("no signature found for blob %s", blobID)
+		ctx.JSON(http.StatusNotFound, stub.ErrorResponse{
+			Message: &errorMessage,
 		})
 		return
 	}
@@ -341,8 +299,9 @@ func (handler *blobHandler) DownloadSignatureByID(ctx *gin.Context) {
 	// Download signature blob
 	signatureBytes, err := handler.blobDownloadService.DownloadByID(ctx, *blobMeta.SignatureBlobID, nil)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{
-			Message: fmt.Sprintf("could not download signature: %v", err),
+		errorMessage := fmt.Sprintf("could not download signature: %v", err)
+		ctx.JSON(http.StatusBadRequest, stub.ErrorResponse{
+			Message: &errorMessage,
 		})
 		return
 	}
@@ -358,33 +317,27 @@ func (handler *blobHandler) DownloadSignatureByID(ctx *gin.Context) {
 	ctx.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 
 	if _, err := ctx.Writer.Write(signatureBytes); err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{
-			Message: fmt.Sprintf("failed to write signature: %v", err),
+		errorMessage := fmt.Sprintf("failed to write signature: %v", err)
+		ctx.JSON(http.StatusInternalServerError, stub.ErrorResponse{
+			Message: &errorMessage,
 		})
 	}
 }
 
-// DeleteByID handles the DELETE request to delete a blob by ID
-// @Summary Delete a blob by ID
-// @Description Delete a specific blob and associated metadata by ID.
-// @Tags Blob
-// @Accept json
-// @Produce json
-// @Param id path string true "Blob ID"
-// @Success 204 {object} InfoResponse
-// @Failure 404 {object} ErrorResponse
-// @Router /blobs/{id} [delete]
+// DeleteByID deletes a blob by ID
 func (handler *blobHandler) DeleteByID(ctx *gin.Context) {
 	blobID := ctx.Param("id")
 
 	if err := handler.blobMetadataService.DeleteByID(ctx, blobID); err != nil {
-		var errorResponse ErrorResponse
-		errorResponse.Message = fmt.Sprintf("blob with id %s not found", blobID)
+		var errorResponse stub.ErrorResponse
+		errorMessage := fmt.Sprintf("blob with id %s not found", blobID)
+		errorResponse.Message = &errorMessage
 		ctx.JSON(http.StatusNotFound, errorResponse)
 		return
 	}
 
-	var infoResponse InfoResponse
-	infoResponse.Message = fmt.Sprintf("deleted blob with id %s", blobID)
+	var infoResponse stub.InfoResponse
+	infoMessage := fmt.Sprintf("deleted blob with id %s", blobID)
+	infoResponse.Message = &infoMessage
 	ctx.JSON(http.StatusNoContent, infoResponse)
 }

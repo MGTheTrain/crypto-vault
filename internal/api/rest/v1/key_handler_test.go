@@ -5,13 +5,14 @@ package v1
 
 import (
 	"bytes"
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/domain/keys"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

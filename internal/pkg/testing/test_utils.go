@@ -2,13 +2,14 @@ package testing
 
 import (
 	"bytes"
-	"crypto_vault_service/internal/pkg/config"
-	"crypto_vault_service/internal/pkg/logger"
-	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 	"mime/multipart"
 	"os"
 	"testing"
+
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
 
 	"github.com/stretchr/testify/require"
 )

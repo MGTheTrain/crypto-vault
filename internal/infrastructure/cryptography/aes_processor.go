@@ -5,9 +5,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 )
 
 // aesProcessor struct that implements the AESProcessor interface

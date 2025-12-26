@@ -5,8 +5,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/pkg/logger"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
@@ -14,6 +12,9 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 )
 
 // ecdsaProcessor struct that implements the ECDSAProcessor interface

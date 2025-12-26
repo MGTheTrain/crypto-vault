@@ -1,0 +1,393 @@
+openapi: 3.0.0
+info:
+  title: CryptoVault REST API
+  version: v1
+  description: REST API capable of managing cryptographic keys and securing data at rest
+  contact:
+    name: MGTheTrain
+  license:
+    name: MIT license
+    url: https://github.com/MGTheTrain/crypto-vault/blob/main/LICENSE
+
+servers:
+  - url: http://localhost:8081/api/v1/cvs
+    description: Local development server
+  - url: https://api.crypto-vault.com/api/v1/cvs
+    description: Production server
+
+tags:
+  - name: Blob
+    description: Blob storage operations
+  - name: Key
+    description: Cryptographic key management
+
+paths:
+  /blobs:
+    post:
+      tags: [Blob]
+      summary: Upload a blob with optional encryption and signing
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files:
+                  type: string
+                  format: binary
+                encryption_key_id:
+                  type: string
+                sign_key_id:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlobMetaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      tags: [Blob]
+      summary: List blob metadata
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: size
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: dateTimeCreated
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlobMetaResponse'
+
+  /blobs/{id}:
+    get:
+      tags: [Blob]
+      summary: Get blob metadata by ID
+      parameters:
+        - $ref: '#/components/parameters/BlobId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlobMetaResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Blob]
+      summary: Delete blob by ID
+      parameters:
+        - $ref: '#/components/parameters/BlobId'
+      responses:
+        '204':
+          description: No Content
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /blobs/{id}/file:
+    get:
+      tags: [Blob]
+      summary: Download blob file
+      parameters:
+        - $ref: '#/components/parameters/BlobId'
+        - name: decryption_key_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Blob content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /blobs/{id}/signature:
+    get:
+      tags: [Blob]
+      summary: Download blob signature
+      parameters:
+        - $ref: '#/components/parameters/BlobId'
+      responses:
+        '200':
+          description: Signature content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /keys:
+    post:
+      tags: [Key]
+      summary: Upload cryptographic keys
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadKeyRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CryptoKeyMetaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      tags: [Key]
+      summary: List cryptographic keys
+      parameters:
+        - name: algorithm
+          in: query
+          schema:
+            type: string
+            enum: [AES, RSA, ECDSA]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [symmetric, public, private]
+        - name: dateTimeCreated
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CryptoKeyMetaResponse'
+
+  /keys/{id}:
+    get:
+      tags: [Key]
+      summary: Get key metadata by ID
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CryptoKeyMetaResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Key]
+      summary: Delete key by ID
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '204':
+          description: No Content
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /keys/{id}/file:
+    get:
+      tags: [Key]
+      summary: Download key file (PEM format)
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: Key content in PEM format
+          content:
+            application/x-pem-file:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    BlobMetaResponse:
+      type: object
+      required: [id, userID, name, size, type, dateTimeCreated]
+      properties:
+        id:
+          type: string
+        userID:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+          format: int64
+        type:
+          type: string
+        dateTimeCreated:
+          type: string
+          format: date-time
+        encryptionKeyID:
+          type: string
+        signKeyID:
+          type: string
+        signatureBlobID:
+          type: string
+        signatureFileName:
+          type: string
+
+    CryptoKeyMetaResponse:
+      type: object
+      required: [id, keyPairID, algorithm, keySize, type, userID, dateTimeCreated]
+      properties:
+        id:
+          type: string
+        keyPairID:
+          type: string
+        algorithm:
+          type: string
+          enum: [AES, RSA, ECDSA]
+        keySize:
+          type: integer
+          format: uint32
+        type:
+          type: string
+          enum: [symmetric, public, private]
+        userID:
+          type: string
+        dateTimeCreated:
+          type: string
+          format: date-time
+
+    UploadKeyRequest:
+      type: object
+      required: [algorithm, key_size]
+      properties:
+        algorithm:
+          type: string
+          enum: [AES, RSA, ECDSA]
+        key_size:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    InfoResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+  parameters:
+    BlobId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+    KeyId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    Offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+security:
+  - BasicAuth: []
+  - ApiKeyAuth: []

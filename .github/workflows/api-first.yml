@@ -1,0 +1,61 @@
+name: API-First Validation
+
+on:
+  pull_request:
+    paths:
+      - 'api/openapi/**'
+      - 'api/openapi/**'
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Go 1.25.x
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25.x'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          go install github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.2.0
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.0
+          go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.25.1
+          go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.25.1
+      
+      - name: Generate Server Stubs
+        run: |
+          make openapi-types-generate
+          make protoc-grpc-stubs-generate
+      
+      - name: Check for Changes
+        run: |
+          if [ -n "$(git status --porcelain internal/api/rest/v1/stub)" ]; then
+            echo " Generated code is out of sync with OpenAPI spec"
+            echo "Run 'make openapi-types-generate' and commit the changes"
+            exit 1
+          fi
+
+          if [ -n "$(git status --porcelain internal/api/grpc/v1/stub)" ]; then
+            echo " Generated code is out of sync with proto"
+            echo "Run 'make protoc-grpc-stubs-generate' and commit the changes"
+            exit 1
+          fi
+
+      
+      - name: Generate Documentation
+        run: make openapi-docs-generate
+      
+      - name: Upload Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: docs/api/index.html
+          retention-days: 1

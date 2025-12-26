@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	commands "crypto_vault_service/cmd/crypto-vault-cli/internal/commands"
+	commands "github.com/MGTheTrain/crypto-vault/cmd/crypto-vault-cli/internal/commands"
 
 	"github.com/spf13/cobra"
 )

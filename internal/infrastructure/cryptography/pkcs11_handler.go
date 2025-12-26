@@ -1,14 +1,15 @@
 package cryptography
 
 import (
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/pkg/config"
-	"crypto_vault_service/internal/pkg/logger"
-	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
 )
 
 // pkcs11Handler represents the parameters and operations for interacting with a PKCS#11 token

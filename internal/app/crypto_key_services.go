@@ -4,11 +4,12 @@ import (
 	"context"
 	"crypto/elliptic"
 	"crypto/x509"
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/pkg/logger"
 	"encoding/pem"
 	"fmt"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
 	"github.com/google/uuid"
 )

@@ -6,7 +6,7 @@ Package __ is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package __
+package stub
 
 import (
 	"context"

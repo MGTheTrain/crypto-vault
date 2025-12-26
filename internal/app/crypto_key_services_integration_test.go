@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/persistence/models"
-	"crypto_vault_service/internal/pkg/config"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence/models"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
 )
 
 // TestCryptoKeyUploadService_Upload_Success uses table-driven tests for various algorithms

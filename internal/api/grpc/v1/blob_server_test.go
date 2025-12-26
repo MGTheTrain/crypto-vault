@@ -5,11 +5,13 @@ package v1
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/blobs"
 	"errors"
+
 	"testing"
 
-	pb "proto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+
+	"github.com/MGTheTrain/crypto-vault/internal/api/grpc/v1/stub"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -25,7 +27,7 @@ func TestBlobMetadataServer_GetMetadataByID(t *testing.T) {
 		mockError    error
 		wantErr      bool
 		errContains  string
-		validateResp func(t *testing.T, resp *pb.BlobMetaResponse)
+		validateResp func(t *testing.T, resp *stub.BlobMetaResponse)
 	}{
 		{
 			name:   "success with all fields populated",
@@ -43,7 +45,7 @@ func TestBlobMetadataServer_GetMetadataByID(t *testing.T) {
 			},
 			mockError: nil,
 			wantErr:   false,
-			validateResp: func(t *testing.T, resp *pb.BlobMetaResponse) {
+			validateResp: func(t *testing.T, resp *stub.BlobMetaResponse) {
 				assert.Equal(t, "blob-123", resp.Id)
 				assert.Equal(t, "test.txt", resp.Name)
 				assert.Equal(t, int64(1024), resp.Size)
@@ -69,7 +71,7 @@ func TestBlobMetadataServer_GetMetadataByID(t *testing.T) {
 			},
 			mockError: nil,
 			wantErr:   false,
-			validateResp: func(t *testing.T, resp *pb.BlobMetaResponse) {
+			validateResp: func(t *testing.T, resp *stub.BlobMetaResponse) {
 				assert.Equal(t, "blob-456", resp.Id)
 				assert.Equal(t, "plain.pdf", resp.Name)
 				assert.Equal(t, "", resp.EncryptionKeyId)
@@ -102,7 +104,7 @@ func TestBlobMetadataServer_GetMetadataByID(t *testing.T) {
 			},
 			mockError: nil,
 			wantErr:   false,
-			validateResp: func(t *testing.T, resp *pb.BlobMetaResponse) {
+			validateResp: func(t *testing.T, resp *stub.BlobMetaResponse) {
 				assert.Equal(t, "blob-signed-only", resp.Id)
 				assert.Equal(t, "", resp.EncryptionKeyId)
 				assert.Equal(t, "sign-key-999", resp.SignKeyId)
@@ -121,7 +123,7 @@ func TestBlobMetadataServer_GetMetadataByID(t *testing.T) {
 			mockService.On("GetByID", mock.Anything, tt.blobID).
 				Return(tt.mockReturn, tt.mockError)
 
-			req := &pb.IdRequest{Id: tt.blobID}
+			req := &stub.IdRequest{Id: tt.blobID}
 			resp, err := server.GetMetadataByID(context.Background(), req)
 
 			if tt.wantErr {
@@ -185,7 +187,7 @@ func TestBlobMetadataServer_DeleteByID(t *testing.T) {
 			mockService.On("DeleteByID", mock.Anything, tt.blobID).
 				Return(tt.mockError)
 
-			req := &pb.IdRequest{Id: tt.blobID}
+			req := &stub.IdRequest{Id: tt.blobID}
 			resp, err := server.DeleteByID(context.Background(), req)
 
 			if tt.wantErr {

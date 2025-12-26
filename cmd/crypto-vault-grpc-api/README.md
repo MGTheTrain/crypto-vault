@@ -14,11 +14,11 @@ gRPC API for managing cryptographic keys and securing data at rest (metadata and
 
 ### Development Setup
 
-**Option 1: Local Development**
+#### Local Development
 
 Set up your IDE with Go tooling (including `delve` debugger and `grpcurl`) or use the provided [devcontainer.json](../../.devcontainer/devcontainer.json).
 
-**Option 2: Run Locally**
+#### Run Locally
 
 ```bash
 # From this directory
@@ -30,13 +30,6 @@ Or set the config path via environment variable:
 ```bash
 export CONFIG_PATH=../../configs/grpc-app.yaml
 go run main.go
-```
-
-**Option 3: Docker Deployment**
-
-```bash
-# From project root
-make compose-start
 ```
 
 ### Service Endpoints
@@ -284,7 +277,7 @@ go run cmd/crypto-vault-cli/main.go verify-rsa \
 - **Cryptographic Operations**: Generate, store and manage AES, RSA and ECDSA keys
 - **Blob Storage**: Secure upload/download with optional encryption and signing
 - **Service Reflection**: Browse available services with `grpcurl`
-- **Cloud Integration**: Azure Blob Storage and Key Vault support
+- **Cloud Integration**: Azure Blob Storage support
 - **Graceful Shutdown**: Handles termination signals properly
 
 ## Configuration
