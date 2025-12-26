@@ -2,11 +2,11 @@ package v1
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/pkg/utils"
 	"fmt"
 
-	pb "proto"
+	"github.com/MGTheTrain/crypto-vault/internal/api/grpc/v1/stub"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
 
 	"github.com/google/uuid"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -19,20 +19,20 @@ import (
 
 // BlobUploadServer handles gRPC requests for uploading blobs
 type BlobUploadServer struct {
-	pb.UnimplementedBlobUploadServer
+	stub.UnimplementedBlobUploadServer
 	blobUploadService blobs.BlobUploadService
 }
 
 // BlobDownloadServer handles gRPC requests for downloading blobs
 type BlobDownloadServer struct {
-	pb.UnimplementedBlobDownloadServer
+	stub.UnimplementedBlobDownloadServer
 	blobDownloadService blobs.BlobDownloadService
 	blobMetadataService blobs.BlobMetadataService
 }
 
 // BlobMetadataServer handles gRPC requests for blob metadata operations
 type BlobMetadataServer struct {
-	pb.UnimplementedBlobMetadataServer
+	stub.UnimplementedBlobMetadataServer
 	blobMetadataService blobs.BlobMetadataService
 }
 
@@ -44,7 +44,7 @@ func NewBlobUploadServer(blobUploadService blobs.BlobUploadService) (*BlobUpload
 }
 
 // Upload uploads blobs with optional encryption/signing
-func (s BlobUploadServer) Upload(req *pb.BlobUploadRequest, stream pb.BlobUpload_UploadServer) error {
+func (s BlobUploadServer) Upload(req *stub.BlobUploadRequest, stream stub.BlobUpload_UploadServer) error {
 	fileContent := [][]byte{req.FileContent}
 	fileNames := []string{req.FileName}
 
@@ -71,7 +71,7 @@ func (s BlobUploadServer) Upload(req *pb.BlobUploadRequest, stream pb.BlobUpload
 	}
 
 	for _, blobMeta := range blobMetas {
-		blobMetaResponse := &pb.BlobMetaResponse{
+		blobMetaResponse := &stub.BlobMetaResponse{
 			Id:                blobMeta.ID,
 			DateTimeCreated:   timestamppb.New(blobMeta.DateTimeCreated),
 			UserId:            blobMeta.UserID,
@@ -115,7 +115,7 @@ func NewBlobDownloadServer(blobDownloadService blobs.BlobDownloadService, blobMe
 }
 
 // DownloadByID downloads a blob by ID
-func (s *BlobDownloadServer) DownloadByID(req *pb.BlobDownloadRequest, stream pb.BlobDownload_DownloadByIDServer) error {
+func (s *BlobDownloadServer) DownloadByID(req *stub.BlobDownloadRequest, stream stub.BlobDownload_DownloadByIDServer) error {
 	id := req.Id
 	var decryptionKeyID *string
 	if len(req.DecryptionKeyId) > 0 {
@@ -135,7 +135,7 @@ func (s *BlobDownloadServer) DownloadByID(req *pb.BlobDownloadRequest, stream pb
 			end = len(bytes)
 		}
 
-		chunk := &pb.BlobContent{
+		chunk := &stub.BlobContent{
 			Content: bytes[i:end],
 		}
 
@@ -147,7 +147,7 @@ func (s *BlobDownloadServer) DownloadByID(req *pb.BlobDownloadRequest, stream pb
 }
 
 // DownloadSignatureByID downloads a blob's signature by blob ID
-func (s *BlobDownloadServer) DownloadSignatureByID(req *pb.BlobSignatureDownloadRequest, stream pb.BlobDownload_DownloadSignatureByIDServer) error {
+func (s *BlobDownloadServer) DownloadSignatureByID(req *stub.BlobSignatureDownloadRequest, stream stub.BlobDownload_DownloadSignatureByIDServer) error {
 	blobID := req.Id
 
 	// Get blob metadata to find signature blob ID
@@ -175,7 +175,7 @@ func (s *BlobDownloadServer) DownloadSignatureByID(req *pb.BlobSignatureDownload
 			end = len(signatureBytes)
 		}
 
-		chunk := &pb.SignatureContent{
+		chunk := &stub.SignatureContent{
 			Content: signatureBytes[i:end],
 		}
 
@@ -194,7 +194,7 @@ func NewBlobMetadataServer(blobMetadataService blobs.BlobMetadataService) (*Blob
 }
 
 // ListMetadata fetches blobs metadata with optional query parameters
-func (s *BlobMetadataServer) ListMetadata(req *pb.BlobMetaQuery, stream pb.BlobMetadata_ListMetadataServer) error {
+func (s *BlobMetadataServer) ListMetadata(req *stub.BlobMetaQuery, stream stub.BlobMetadata_ListMetadataServer) error {
 	query := blobs.NewBlobMetaQuery()
 	if len(req.Name) > 0 {
 		query.Name = req.Name
@@ -221,7 +221,7 @@ func (s *BlobMetadataServer) ListMetadata(req *pb.BlobMetaQuery, stream pb.BlobM
 	}
 
 	for _, blobMeta := range blobMetas {
-		blobMetaResponse := &pb.BlobMetaResponse{
+		blobMetaResponse := &stub.BlobMetaResponse{
 			Id:                blobMeta.ID,
 			DateTimeCreated:   timestamppb.New(blobMeta.DateTimeCreated),
 			UserId:            blobMeta.UserID,
@@ -257,13 +257,13 @@ func (s *BlobMetadataServer) ListMetadata(req *pb.BlobMetaQuery, stream pb.BlobM
 }
 
 // GetMetadataByID fetches blob metadata by ID
-func (s *BlobMetadataServer) GetMetadataByID(ctx context.Context, req *pb.IdRequest) (*pb.BlobMetaResponse, error) {
+func (s *BlobMetadataServer) GetMetadataByID(ctx context.Context, req *stub.IdRequest) (*stub.BlobMetaResponse, error) {
 	blobMeta, err := s.blobMetadataService.GetByID(ctx, req.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metadata by ID: %w", err)
 	}
 
-	blobMetaResponse := &pb.BlobMetaResponse{
+	blobMetaResponse := &stub.BlobMetaResponse{
 		Id:                blobMeta.ID,
 		DateTimeCreated:   timestamppb.New(blobMeta.DateTimeCreated),
 		UserId:            blobMeta.UserID,
@@ -293,13 +293,13 @@ func (s *BlobMetadataServer) GetMetadataByID(ctx context.Context, req *pb.IdRequ
 }
 
 // DeleteByID deletes a blob by ID
-func (s *BlobMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequest) (*pb.InfoResponse, error) {
+func (s *BlobMetadataServer) DeleteByID(ctx context.Context, req *stub.IdRequest) (*stub.InfoResponse, error) {
 	err := s.blobMetadataService.DeleteByID(ctx, req.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete blob: %w", err)
 	}
 
-	return &pb.InfoResponse{
+	return &stub.InfoResponse{
 		Message: fmt.Sprintf("blob with id %s deleted successfully", req.Id),
 	}, nil
 }
@@ -308,17 +308,17 @@ func (s *BlobMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequest) 
 
 // RegisterBlobUploadServer registers the BlobUpload gRPC service
 func RegisterBlobUploadServer(server *grpc.Server, blobUploadServer *BlobUploadServer) {
-	pb.RegisterBlobUploadServer(server, blobUploadServer)
+	stub.RegisterBlobUploadServer(server, blobUploadServer)
 }
 
 // RegisterBlobDownloadServer registers the BlobDownload gRPC service
 func RegisterBlobDownloadServer(server *grpc.Server, blobDownloadServer *BlobDownloadServer) {
-	pb.RegisterBlobDownloadServer(server, blobDownloadServer)
+	stub.RegisterBlobDownloadServer(server, blobDownloadServer)
 }
 
 // RegisterBlobMetadataServer registers the BlobMetadata gRPC service
 func RegisterBlobMetadataServer(server *grpc.Server, blobMetadataServer *BlobMetadataServer) {
-	pb.RegisterBlobMetadataServer(server, blobMetadataServer)
+	stub.RegisterBlobMetadataServer(server, blobMetadataServer)
 }
 
 // Register gRPC-Gateway handlers for each service
@@ -327,7 +327,7 @@ func RegisterBlobMetadataServer(server *grpc.Server, blobMetadataServer *BlobMet
 // see: https://grpc-ecosystem.github.io/grpc-gateway/docs/mapping/binary_file_uploads/. As a result, subsequent code can be commented.
 // func RegisterBlobUploadGateway(ctx context.Context, gatewayTarget string, gwmux *runtime.ServeMux, _ *grpc.ClientConn, creds credentials.TransportCredentials) error {
 // 	// Register the handler from the endpoint (this works with gRPC-Gateway)
-// 	err := pb.RegisterBlobUploadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
+// 	err := stub.RegisterBlobUploadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
 // 	if err != nil {
 // 		return fmt.Errorf("failed to register blob upload gateway: %w", err)// 	}
 // 	return nil
@@ -335,7 +335,7 @@ func RegisterBlobMetadataServer(server *grpc.Server, blobMetadataServer *BlobMet
 
 // RegisterBlobDownloadGateway registers the BlobDownload HTTP gateway handler.
 func RegisterBlobDownloadGateway(ctx context.Context, gatewayTarget string, gwmux *runtime.ServeMux, _ *grpc.ClientConn, creds credentials.TransportCredentials) error {
-	err := pb.RegisterBlobDownloadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
+	err := stub.RegisterBlobDownloadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
 	if err != nil {
 		return fmt.Errorf("failed to register blob download gateway: %w", err)
 	}
@@ -344,7 +344,7 @@ func RegisterBlobDownloadGateway(ctx context.Context, gatewayTarget string, gwmu
 
 // RegisterBlobMetadataGateway registers the BlobMetadata HTTP gateway handler.
 func RegisterBlobMetadataGateway(ctx context.Context, gatewayTarget string, gwmux *runtime.ServeMux, _ *grpc.ClientConn, creds credentials.TransportCredentials) error {
-	err := pb.RegisterBlobMetadataHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
+	err := stub.RegisterBlobMetadataHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
 	if err != nil {
 		return fmt.Errorf("failed to register blob metadata gateway: %w", err)
 	}

@@ -34,3 +34,6 @@ coverage.html
 
 # linter findings
 linter-findings*
+
+# code gen tools
+openapitools.json

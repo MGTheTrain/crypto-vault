@@ -5,12 +5,13 @@ package v1
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/keys"
 	"errors"
 	"testing"
 	"time"
 
-	pb "proto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+
+	"github.com/MGTheTrain/crypto-vault/internal/api/grpc/v1/stub"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -28,7 +29,7 @@ func TestCryptoKeyMetadataServer_GetMetadataByID(t *testing.T) {
 		mockError    error
 		wantErr      bool
 		errContains  string
-		validateResp func(t *testing.T, resp *pb.CryptoKeyMetaResponse)
+		validateResp func(t *testing.T, resp *stub.CryptoKeyMetaResponse)
 	}{
 		{
 			name:  "success with RSA private key",
@@ -44,7 +45,7 @@ func TestCryptoKeyMetadataServer_GetMetadataByID(t *testing.T) {
 			},
 			mockError: nil,
 			wantErr:   false,
-			validateResp: func(t *testing.T, resp *pb.CryptoKeyMetaResponse) {
+			validateResp: func(t *testing.T, resp *stub.CryptoKeyMetaResponse) {
 				assert.Equal(t, "rsa-priv-123", resp.Id)
 				assert.Equal(t, "pair-456", resp.KeyPairId)
 				assert.Equal(t, "RSA", resp.Algorithm)
@@ -66,7 +67,7 @@ func TestCryptoKeyMetadataServer_GetMetadataByID(t *testing.T) {
 			},
 			mockError: nil,
 			wantErr:   false,
-			validateResp: func(t *testing.T, resp *pb.CryptoKeyMetaResponse) {
+			validateResp: func(t *testing.T, resp *stub.CryptoKeyMetaResponse) {
 				assert.Equal(t, "ecdsa-pub-789", resp.Id)
 				assert.Equal(t, "pair-abc", resp.KeyPairId)
 				assert.Equal(t, "ECDSA", resp.Algorithm)
@@ -88,7 +89,7 @@ func TestCryptoKeyMetadataServer_GetMetadataByID(t *testing.T) {
 			},
 			mockError: nil,
 			wantErr:   false,
-			validateResp: func(t *testing.T, resp *pb.CryptoKeyMetaResponse) {
+			validateResp: func(t *testing.T, resp *stub.CryptoKeyMetaResponse) {
 				assert.Equal(t, "aes-sym-999", resp.Id)
 				assert.Equal(t, "AES", resp.Algorithm)
 				assert.Equal(t, uint32(256), resp.KeySize)
@@ -122,7 +123,7 @@ func TestCryptoKeyMetadataServer_GetMetadataByID(t *testing.T) {
 			mockService.On("GetByID", mock.Anything, tt.keyID).
 				Return(tt.mockReturn, tt.mockError)
 
-			req := &pb.IdRequest{Id: tt.keyID}
+			req := &stub.IdRequest{Id: tt.keyID}
 			resp, err := server.GetMetadataByID(context.Background(), req)
 
 			if tt.wantErr {
@@ -193,7 +194,7 @@ func TestCryptoKeyMetadataServer_DeleteByID(t *testing.T) {
 			mockService.On("DeleteByID", mock.Anything, tt.keyID).
 				Return(tt.mockError)
 
-			req := &pb.IdRequest{Id: tt.keyID}
+			req := &stub.IdRequest{Id: tt.keyID}
 			resp, err := server.DeleteByID(context.Background(), req)
 
 			if tt.wantErr {

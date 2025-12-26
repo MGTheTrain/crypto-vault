@@ -5,14 +5,15 @@ package app
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/connector"
-	"crypto_vault_service/internal/infrastructure/cryptography"
-	"crypto_vault_service/internal/infrastructure/persistence"
-	"crypto_vault_service/internal/pkg/config"
-	pkgTesting "crypto_vault_service/internal/pkg/testing"
 	"testing"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/connector"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
 
 	"github.com/stretchr/testify/require"
 )

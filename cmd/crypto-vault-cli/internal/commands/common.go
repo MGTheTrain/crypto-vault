@@ -1,9 +1,10 @@
 package commands
 
 import (
-	"crypto_vault_service/internal/pkg/config"
-	"crypto_vault_service/internal/pkg/logger"
 	"fmt"
+
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 )
 
 // In commands/common.go

@@ -114,7 +114,7 @@ az storage blob list --account-name cryptovault \
 
 ## Pros and Cons of the Options
 
-### Option 1: Hierarchical Schema `/user_id/blob_id/filename` ✅ CHOSEN
+### Option 1: Hierarchical Schema `/user_id/blob_id/filename` (CHOSEN)
 
 **Path Examples:**
 

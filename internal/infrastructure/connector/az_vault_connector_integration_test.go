@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/pkg/config"
-	pkgTesting "crypto_vault_service/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

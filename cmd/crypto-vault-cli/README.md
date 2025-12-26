@@ -160,13 +160,13 @@ go run main.go verify \
 | Operation             | Algorithms | Key Sizes                                               |
 | --------------------- | ---------- | ------------------------------------------------------- |
 | Symmetric Encryption  | AES        | 128, 192, 256-bit                                       |
-| Asymmetric Encryption | RSA        | 2048, 3072, 4096-bit                                    |
+| Asymmetric Encryption | RSA        | 512, 1024, 2048, 3072, 4096-bit                         |
 | Digital Signature     | RSA, ECDSA | RSA: 2048-4096 bit<br>ECDSA: P-224, P-256, P-384, P-521 |
 | PKCS#11               | RSA, ECDSA | Same as above                                           |
 
 ## Testing
 
-End-to-end tests covering the complete flow are available at `../../test/e2e/e2e_test.go`.
+End-to-end tests covering the complete flow are available at `./e2e/e2e_test.go`.
 
 ## Help
 

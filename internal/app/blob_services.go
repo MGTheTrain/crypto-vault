@@ -7,16 +7,18 @@ import (
 	"crypto/elliptic"
 	crypto_rsa "crypto/rsa"
 	"crypto/x509"
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/domain/keys"
 
-	"crypto_vault_service/internal/pkg/logger"
-	"crypto_vault_service/internal/pkg/utils"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+
 	"fmt"
 	"io"
 	"math/big"
 	"mime/multipart"
+
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
 )
 
 // blobUploadService implements the BlobUploadService interface for handling blob uploads

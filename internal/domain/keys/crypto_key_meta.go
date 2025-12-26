@@ -1,10 +1,11 @@
 package keys
 
 import (
-	"crypto_vault_service/internal/pkg/validators"
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/validators"
 
 	"github.com/go-playground/validator/v10"
 )

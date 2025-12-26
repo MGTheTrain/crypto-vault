@@ -1,9 +1,10 @@
 package persistence
 
 import (
-	"crypto_vault_service/internal/pkg/config"
 	"fmt"
 	"log"
+
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"

@@ -10,7 +10,9 @@ TYPE ?= unit
 .PHONY: help format-and-lint lint-results tests \
 	coverage-check coverage-html coverage-func \
 	compose-start-infra compose-start compose-stop \
-	swagger-docs-gen grpc-files-gen clean
+	openapi-validate openapi-types-generate \
+	openapi-docs-generate openapi-docs-serve \
+	docsc-gen protoc-grpc-stubs-generate clean
 
 .DEFAULT_GOAL := help
 
@@ -59,7 +61,9 @@ tests: ## Run tests (use PKG=./path TYPE=unit,integration,e2e)
 coverage-check: ## Run unit and integration tests for internal packages and check coverage threshold
 	@echo "Running unit and integration tests for internal packages..."
 	@go test ./internal/... -tags="unit integration" -coverprofile=$(COVERAGE_OUT) -covermode=atomic
-	@grep -v 'server.go' $(COVERAGE_OUT) > $(FILTERED_COVERAGE_OUT)
+	@grep -v 'server.go' $(COVERAGE_OUT) | \
+	 grep -v 'internal/api/grpc/v1/stub/' | \
+	 grep -v 'internal/api/rest/v1/stub/' > $(FILTERED_COVERAGE_OUT)
 	@go tool cover -html=$(FILTERED_COVERAGE_OUT) -o $(COVERAGE_HTML)
 	@echo "Coverage HTML report generated: $(COVERAGE_HTML)"
 	@echo "Checking if coverage meets minimum threshold ($(MIN_COVERAGE)%)..."
@@ -81,26 +85,48 @@ coverage-func: ## Show coverage by function in terminal
 	@go tool cover -func=$(COVERAGE_OUT)
 
 ##@  Docker
-compose-start-infra: ## Start integration test containers (postgres, azure-blob-storage)
-	@echo "Spinning up integration test docker containers..."
+compose-start-infra: ## Start integration test containers
+	@echo "Starting integration test docker containers..."
 	@docker compose up -d postgres azure-blob-storage
 
-compose-start: ## Start all docker containers
-	@echo "Spinning up docker containers..."
+compose-start: ## Start docker containers
+	@echo "Starting docker containers..."
 	@docker compose up -d --build
 
-compose-stop: ## Stop all docker containers
-	@echo "Shutting down docker containers..."
+compose-stop: ## Stop and remove docker containers
+	@echo "Stopping and removing docker containers..."
 	@docker compose down -v
 
 ##@  Code Generation
-swagger-docs-gen: ## Generate Swagger documentation
-	@echo "Generating Swagger docs..."
-	@swag init -g cmd/crypto-vault-rest-api/main.go -o cmd/crypto-vault-rest-api/docs
+openapi-validate: ## Validate OpenAPI specification
+	@echo "Validating OpenAPI spec..."
+	@openapi-generator-cli validate \
+		-i ./api/openapi/v1/crypto-vault.yaml
 
-grpc-files-gen: ## Generate Go gRPC code from proto files
+openapi-types-generate: ## Generate Go types from OpenAPI spec using oapi-codegen
+	@echo "Generating Go types..."
+	@mkdir -vp ./internal/api/rest/v1/stub
+	@oapi-codegen -config api/openapi/v1/oapi-codegen-config.yaml \
+		api/openapi/v1/crypto-vault.yaml
+	@echo "Types generated in internal/api/rest/v1/stub/generated_types.go"
+
+openapi-docs-generate: ## Generate HTML documentation from OpenAPI spec
+	@echo "Generating API documentation..."
+	@npx @redocly/cli build-docs api/openapi/v1/crypto-vault.yaml \
+		-o docs/api/index.html
+	@echo "Documentation generated at docs/api/index.html"
+
+openapi-docs-serve: ## Serve OpenAPI documentation locally
+	@echo "Starting documentation server on http://localhost:8080..."
+	@docker run --rm -p 8080:8080 \
+		--network host \
+		-e SWAGGER_JSON=/api/crypto-vault.yaml \
+		-v $(PWD)/api/openapi/v1:/api:ro \
+		swaggerapi/swagger-ui:v5.31.0
+
+protoc-grpc-stubs-generate: ## Generate Go gRPC code from proto files
 	@echo "Generating Go gRPC code from .proto files..."
-	@cd $(SCRIPT_DIR) && ./generate-grpc-files.sh
+	@cd $(SCRIPT_DIR) && ./generate-go-stubs.sh
 
 ##@  Cleanup
 clean: ## Remove generated artifacts

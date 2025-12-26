@@ -6,8 +6,8 @@ package cryptography
 import (
 	"testing"
 
-	"crypto_vault_service/internal/domain/crypto"
-	pkgTesting "crypto_vault_service/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -1,8 +1,9 @@
 package models
 
 import (
-	"crypto_vault_service/internal/domain/keys"
 	"time"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 )
 
 // CryptoKeyModel is the GORM database model for crypto keys (infrastructure concern)

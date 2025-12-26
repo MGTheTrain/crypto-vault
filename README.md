@@ -37,7 +37,7 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 
 ### Non-functional
 
-- [x] **Scalable and maintainable project structure**: Refer to the [project-layout GitHub repo](https://github.com/golang-standards/project-layout) and adopt Domain-Driven Design to create a **modular, flexible and maintainable** project structure with a focus on the **domain at its core**
+- [x] **Scalable and maintainable project structure**: Refer to the [project-layout GitHub repo](https://github.com/golang-standards/project-layout) and adopt Clean Architecture with Domain-Driven Design to create a **modular, flexible and maintainable** project structure with a focus on the **domain at its core**
 - [x] **CI workflows for quality checks**: Set up continuous integration workflows with GitHub Actions for automated linting, functional and non-functional testing, building and pushing artifacts.
 - [ ] **Security checks in CI workflows**: Consider non-functional testing (vulnerability scanning, SBOM generation, Static Code Analysis) in GitHub Actions.
 - [ ] **Performance optimization**: Ensure cryptographic operations are optimized for performance, especially for large files and high throughput environments.
@@ -45,7 +45,7 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 - [ ] **Distributed Telemetry:** Implement telemetry (e.g. OpenTelemetry with different backends, e.g. Prometheus, Grafana) to address distributed logging, tracing and monitoring concerns
 - [ ] **Security**: Ensure that all cryptographic material and metadata is securely encrypted before storing it using a master key
 - [ ] **Access control**: Secure APIs using authorization mechanisms including OAuth 2.0 and JWTs. Implement relationship-based access control (ReBAC) for APIs, ensuring that users can only perform operations on cryptographic material based on their defined relationships and permissions within the system.
-- [x] **Documentation**: Provide clear API documentation (e.g. Swagger/OpenAPI) for ease of integration by other developers.
+- [x] **Documentation**: Provide clear API documentation (e.g. OpenAPI) for ease of integration.
 - [x] **Versioning**: Implement proper API versioning to maintain backward compatibility as the API evolves.
 - [ ] **Audit logging**: Maintain logs of all cryptographic operations and key management activities for compliance and auditing purposes.
 
@@ -85,13 +85,16 @@ Available targets:
   coverage-func                            Show coverage by function in terminal
 
 :Docker
-  compose-start-infra                      Start integration test containers (postgres, azure-blob-storage)
-  compose-start                            Start all docker containers
-  compose-stop                             Stop all docker containers
+  compose-start-infra                      Start integration test containers
+  compose-start                            Start docker containers
+  compose-stop                             Stop and remove docker containers
 
 :Code Generation
-  swagger-docs-gen                         Generate Swagger documentation
-  grpc-files-gen                           Generate Go gRPC code from proto files
+  openapi-validate                         Validate OpenAPI specification
+  openapi-types-generate                   Generate Go types from OpenAPI spec using oapi-codegen
+  openapi-docs-generate                    Generate HTML documentation from OpenAPI spec
+  openapi-docs-serve                       Serve OpenAPI documentation locally
+  protoc-grpc-stubs-generate               Generate Go gRPC code from proto files
 
 :Cleanup
   clean                                    Remove generated artifacts
@@ -148,7 +151,8 @@ make compose-start
 
 Access services at:
 
-- REST API Swagger UI: `http://localhost:8080/api/v1/cvs/swagger/index.html`
+- REST API: `http://localhost:8081`
+- Swagger UI for REST API: `http://localhost:8080`
 - gRPC Server: `localhost:50051`
 - gRPC HTTP Gateway: `http://localhost:8090/api/v1/cvs`
 

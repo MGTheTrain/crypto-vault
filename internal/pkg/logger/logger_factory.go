@@ -1,10 +1,11 @@
 package logger
 
 import (
-	"crypto_vault_service/internal/pkg/config"
 	"fmt"
 	"log/slog"
 	"sync"
+
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
 )
 
 var (

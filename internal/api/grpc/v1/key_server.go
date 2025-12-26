@@ -2,11 +2,12 @@ package v1
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/domain/keys"
 	"fmt"
 
-	pb "proto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+
+	"github.com/MGTheTrain/crypto-vault/internal/api/grpc/v1/stub"
 
 	"github.com/google/uuid"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -17,20 +18,20 @@ import (
 
 // CryptoKeyUploadServer handles gRPC requests for uploading cryptographic keys
 type CryptoKeyUploadServer struct {
-	pb.UnimplementedCryptoKeyUploadServer
+	stub.UnimplementedCryptoKeyUploadServer
 	cryptoKeyUploadService keys.CryptoKeyUploadService
 }
 
 // CryptoKeyDownloadServer handles gRPC requests for downloading cryptographic keys
 type CryptoKeyDownloadServer struct {
-	pb.UnimplementedCryptoKeyDownloadServer
+	stub.UnimplementedCryptoKeyDownloadServer
 	cryptoKeyDownloadService keys.CryptoKeyDownloadService
 	cryptoKeyMetadataService keys.CryptoKeyMetadataService
 }
 
 // CryptoKeyMetadataServer handles gRPC requests for cryptographic key metadata
 type CryptoKeyMetadataServer struct {
-	pb.UnimplementedCryptoKeyMetadataServer
+	stub.UnimplementedCryptoKeyMetadataServer
 	cryptoKeyMetadataService keys.CryptoKeyMetadataService
 }
 
@@ -42,7 +43,7 @@ func NewCryptoKeyUploadServer(cryptoKeyUploadService keys.CryptoKeyUploadService
 }
 
 // Upload generates and uploads cryptographic keys
-func (s *CryptoKeyUploadServer) Upload(req *pb.UploadKeyRequest, stream pb.CryptoKeyUpload_UploadServer) error {
+func (s *CryptoKeyUploadServer) Upload(req *stub.UploadKeyRequest, stream stub.CryptoKeyUpload_UploadServer) error {
 	userID := uuid.New().String() // TODO(MGTheTrain): extract user id from JWT
 
 	cryptoKeyMetas, err := s.cryptoKeyUploadService.Upload(stream.Context(), userID, req.Algorithm, req.KeySize)
@@ -51,7 +52,7 @@ func (s *CryptoKeyUploadServer) Upload(req *pb.UploadKeyRequest, stream pb.Crypt
 	}
 
 	for _, cryptoKeyMeta := range cryptoKeyMetas {
-		cryptoKeyMetaResponse := &pb.CryptoKeyMetaResponse{
+		cryptoKeyMetaResponse := &stub.CryptoKeyMetaResponse{
 			Id:              cryptoKeyMeta.ID,
 			DateTimeCreated: timestamppb.New(cryptoKeyMeta.DateTimeCreated),
 			UserId:          cryptoKeyMeta.UserID,
@@ -78,7 +79,7 @@ func NewCryptoKeyDownloadServer(cryptoKeyDownloadService keys.CryptoKeyDownloadS
 }
 
 // DownloadByID downloads a key by ID
-func (s *CryptoKeyDownloadServer) DownloadByID(req *pb.KeyDownloadRequest, stream pb.CryptoKeyDownload_DownloadByIDServer) error {
+func (s *CryptoKeyDownloadServer) DownloadByID(req *stub.KeyDownloadRequest, stream stub.CryptoKeyDownload_DownloadByIDServer) error {
 	// Get key metadata to determine filename
 	keyMeta, err := s.cryptoKeyMetadataService.GetByID(stream.Context(), req.Id)
 	if err != nil {
@@ -111,7 +112,7 @@ func (s *CryptoKeyDownloadServer) DownloadByID(req *pb.KeyDownloadRequest, strea
 		}
 
 		// Create the chunk of data to send
-		chunk := &pb.KeyContent{
+		chunk := &stub.KeyContent{
 			Content: bytes[i:end],
 		}
 
@@ -132,7 +133,7 @@ func NewCryptoKeyMetadataServer(cryptoKeyMetadataService keys.CryptoKeyMetadataS
 }
 
 // ListMetadata lists cryptographic key metadata with optional query parameters
-func (s *CryptoKeyMetadataServer) ListMetadata(req *pb.KeyMetadataQuery, stream pb.CryptoKeyMetadata_ListMetadataServer) error {
+func (s *CryptoKeyMetadataServer) ListMetadata(req *stub.KeyMetadataQuery, stream stub.CryptoKeyMetadata_ListMetadataServer) error {
 	query := keys.NewCryptoKeyQuery()
 	if req.Algorithm != "" {
 		query.Algorithm = req.Algorithm
@@ -156,7 +157,7 @@ func (s *CryptoKeyMetadataServer) ListMetadata(req *pb.KeyMetadataQuery, stream 
 	}
 
 	for _, cryptoKeyMeta := range cryptoKeyMetas {
-		cryptoKeyMetaResponse := &pb.CryptoKeyMetaResponse{
+		cryptoKeyMetaResponse := &stub.CryptoKeyMetaResponse{
 			Id:              cryptoKeyMeta.ID,
 			KeyPairId:       cryptoKeyMeta.KeyPairID,
 			Algorithm:       cryptoKeyMeta.Algorithm,
@@ -176,13 +177,13 @@ func (s *CryptoKeyMetadataServer) ListMetadata(req *pb.KeyMetadataQuery, stream 
 }
 
 // GetMetadataByID retrieves key metadata by ID
-func (s *CryptoKeyMetadataServer) GetMetadataByID(ctx context.Context, req *pb.IdRequest) (*pb.CryptoKeyMetaResponse, error) {
+func (s *CryptoKeyMetadataServer) GetMetadataByID(ctx context.Context, req *stub.IdRequest) (*stub.CryptoKeyMetaResponse, error) {
 	cryptoKeyMeta, err := s.cryptoKeyMetadataService.GetByID(ctx, req.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get crypto key metadata by ID: %w", err)
 	}
 
-	return &pb.CryptoKeyMetaResponse{
+	return &stub.CryptoKeyMetaResponse{
 		Id:              cryptoKeyMeta.ID,
 		KeyPairId:       cryptoKeyMeta.KeyPairID,
 		Algorithm:       cryptoKeyMeta.Algorithm,
@@ -194,13 +195,13 @@ func (s *CryptoKeyMetadataServer) GetMetadataByID(ctx context.Context, req *pb.I
 }
 
 // DeleteByID deletes a key by ID
-func (s *CryptoKeyMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequest) (*pb.InfoResponse, error) {
+func (s *CryptoKeyMetadataServer) DeleteByID(ctx context.Context, req *stub.IdRequest) (*stub.InfoResponse, error) {
 	err := s.cryptoKeyMetadataService.DeleteByID(ctx, req.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete crypto key: %w", err)
 	}
 
-	return &pb.InfoResponse{
+	return &stub.InfoResponse{
 		Message: fmt.Sprintf("crypto key with id %s deleted successfully", req.Id),
 	}, nil
 }
@@ -209,24 +210,24 @@ func (s *CryptoKeyMetadataServer) DeleteByID(ctx context.Context, req *pb.IdRequ
 
 // RegisterCryptoKeyUploadServer registers the CryptoKeyUpload gRPC service
 func RegisterCryptoKeyUploadServer(server *grpc.Server, cryptoKeyUploadServer *CryptoKeyUploadServer) {
-	pb.RegisterCryptoKeyUploadServer(server, cryptoKeyUploadServer)
+	stub.RegisterCryptoKeyUploadServer(server, cryptoKeyUploadServer)
 }
 
 // RegisterCryptoKeyDownloadServer registers the CryptoKeyDownload gRPC service
 func RegisterCryptoKeyDownloadServer(server *grpc.Server, cryptoKeyDownloadServer *CryptoKeyDownloadServer) {
-	pb.RegisterCryptoKeyDownloadServer(server, cryptoKeyDownloadServer)
+	stub.RegisterCryptoKeyDownloadServer(server, cryptoKeyDownloadServer)
 }
 
 // RegisterCryptoKeyMetadataServer registers the CryptoKeyMetadata gRPC service
 func RegisterCryptoKeyMetadataServer(server *grpc.Server, cryptoKeyMetadataServer *CryptoKeyMetadataServer) {
-	pb.RegisterCryptoKeyMetadataServer(server, cryptoKeyMetadataServer)
+	stub.RegisterCryptoKeyMetadataServer(server, cryptoKeyMetadataServer)
 }
 
 // Register gRPC-Gateway handlers for each service
 
 // RegisterCryptoKeyUploadGateway registers the CryptoKeyUpload HTTP gateway handler.
 func RegisterCryptoKeyUploadGateway(ctx context.Context, gatewayTarget string, gwmux *runtime.ServeMux, _ *grpc.ClientConn, creds credentials.TransportCredentials) error {
-	err := pb.RegisterCryptoKeyUploadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
+	err := stub.RegisterCryptoKeyUploadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
 	if err != nil {
 		return fmt.Errorf("failed to register crypto key upload gateway: %w", err)
 	}
@@ -235,7 +236,7 @@ func RegisterCryptoKeyUploadGateway(ctx context.Context, gatewayTarget string, g
 
 // RegisterCryptoKeyDownloadGateway registers the CryptoKeyDownload HTTP gateway handler.
 func RegisterCryptoKeyDownloadGateway(ctx context.Context, gatewayTarget string, gwmux *runtime.ServeMux, _ *grpc.ClientConn, creds credentials.TransportCredentials) error {
-	err := pb.RegisterCryptoKeyDownloadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
+	err := stub.RegisterCryptoKeyDownloadHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
 	if err != nil {
 		return fmt.Errorf("failed to register crypto key download gateway: %w", err)
 	}
@@ -244,7 +245,7 @@ func RegisterCryptoKeyDownloadGateway(ctx context.Context, gatewayTarget string,
 
 // RegisterCryptoKeyMetadataGateway registers the CryptoKeyMetadata HTTP gateway handler.
 func RegisterCryptoKeyMetadataGateway(ctx context.Context, gatewayTarget string, gwmux *runtime.ServeMux, _ *grpc.ClientConn, creds credentials.TransportCredentials) error {
-	err := pb.RegisterCryptoKeyMetadataHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
+	err := stub.RegisterCryptoKeyMetadataHandlerFromEndpoint(ctx, gwmux, gatewayTarget, []grpc.DialOption{grpc.WithTransportCredentials(creds)})
 	if err != nil {
 		return fmt.Errorf("failed to register crypto key metadata gateway: %w", err)
 	}

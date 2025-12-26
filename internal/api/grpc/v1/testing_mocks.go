@@ -5,8 +5,9 @@ package v1
 
 import (
 	"context"
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/domain/keys"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 
 	"github.com/stretchr/testify/mock"
 )

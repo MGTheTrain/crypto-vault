@@ -1,8 +1,9 @@
 package models
 
 import (
-	"crypto_vault_service/internal/domain/blobs"
 	"time"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
 )
 
 // BlobModel is the GORM database model for blobs (infrastructure concern)

@@ -1,5 +1,4 @@
-// Package main is the entry point for the crypto-vault-rest-api application.
-// It sets up and starts the RESTful API server using the Gin framework.
+// cmd/crypto-vault-rest-api/main.go
 package main
 
 import (
@@ -12,36 +11,22 @@ import (
 	"syscall"
 	"time"
 
-	v1 "crypto_vault_service/internal/api/rest/v1"
-	"crypto_vault_service/internal/app"
-	"crypto_vault_service/internal/domain/blobs"
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/infrastructure/connector"
-	"crypto_vault_service/internal/infrastructure/cryptography"
-	"crypto_vault_service/internal/infrastructure/persistence"
-	"crypto_vault_service/internal/infrastructure/persistence/models"
-	"crypto_vault_service/internal/pkg/config"
-	"crypto_vault_service/internal/pkg/logger"
+	v1 "github.com/MGTheTrain/crypto-vault/internal/api/rest/v1"
+	"github.com/MGTheTrain/crypto-vault/internal/app"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/connector"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence/models"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
+	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-
-	"crypto_vault_service/cmd/crypto-vault-rest-api/docs"
 )
 
-// @title CryptoVault Service API
-// @version v1
-// @description Service capable of managing cryptographic keys and securing data at rest
-// @contact.name MGTheTrain
-// @license.name MIT license
-// @license.url https://github.com/MGTheTrain/crypto-vault-service/blob/main/LICENSE
-// @BasePath /api/v1/cvs
-// @securityDefinitions.basic BasicAuth
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Application error: %v\n", err)
@@ -160,6 +145,18 @@ func initializeDependencies(cfg *config.RestConfig, log logger.Logger) (*appDepe
 func startServerWithGracefulShutdown(cfg *config.RestConfig, deps *appDependencies, log logger.Logger) error {
 	// Setup router
 	r := gin.Default()
+
+	// Configure CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	// Setup API routes
 	v1.SetupRoutes(r,
 		deps.services.blobUpload,
 		deps.services.blobDownload,
@@ -169,11 +166,10 @@ func startServerWithGracefulShutdown(cfg *config.RestConfig, deps *appDependenci
 		deps.services.cryptoKeyMetadata,
 	)
 
-	// Setup Swagger
-	docs.SwaggerInfo.Version = v1.Version
-	docs.SwaggerInfo.BasePath = v1.BasePath
-	swaggerRoute := fmt.Sprintf("/api/%s/cvs/swagger/*any", v1.Version)
-	r.GET(swaggerRoute, ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Serve OpenAPI spec (replaces Swagger)
+	r.GET("/api/v1/cvs/openapi.yaml", func(c *gin.Context) {
+		c.File("./api/openapi/v1/crypto-vault.yaml")
+	})
 
 	// Create HTTP server
 	srv := &http.Server{
@@ -188,7 +184,6 @@ func startServerWithGracefulShutdown(cfg *config.RestConfig, deps *appDependenci
 	// Start server in goroutine
 	go func() {
 		log.Info("Starting server on port ", cfg.Port)
-		log.Info("Swagger UI available at: http://localhost:", cfg.Port, "/api/v1/cvs/swagger/index.html")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErrors <- fmt.Errorf("server failed to start: %w", err)
 		}

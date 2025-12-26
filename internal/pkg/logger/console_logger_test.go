@@ -5,9 +5,10 @@ package logger
 
 import (
 	"bytes"
-	"crypto_vault_service/internal/pkg/config"
 	"log/slog"
 	"testing"
+
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

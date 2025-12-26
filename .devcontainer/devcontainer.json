@@ -6,13 +6,15 @@
     // Features to add to the dev container. More info: https://containers.dev/features
     "features": {
         "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-        "ghcr.io/devcontainers/features/node:1": {}
+        "ghcr.io/devcontainers/features/node:1": {},
+        "ghcr.io/devcontainers/features/java:1": {}
     },
     "postCreateCommand": "bash .devcontainer/install.sh",
     "remoteUser": "root",
     "appPort": [
         5000,
         8080,
+        8081,
         8090,
         50051,
         5432,

@@ -6,14 +6,15 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	cryptoDomain "crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/pkg/logger"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+
+	cryptoDomain "github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 )
 
 // rsaProcessor struct that implements the RSAProcessor interface

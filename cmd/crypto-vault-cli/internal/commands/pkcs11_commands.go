@@ -1,14 +1,15 @@
 package commands
 
 import (
-	"crypto_vault_service/internal/domain/crypto"
-	"crypto_vault_service/internal/infrastructure/cryptography"
-	"crypto_vault_service/internal/pkg/config"
-	"crypto_vault_service/internal/pkg/logger"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
 	"github.com/spf13/cobra"
 )
