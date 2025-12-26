@@ -6,6 +6,7 @@ package persistence
 import (
 	"crypto_vault_service/internal/domain/blobs"
 	"crypto_vault_service/internal/domain/keys"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
 	"crypto_vault_service/internal/pkg/config"
 	pkgTesting "crypto_vault_service/internal/pkg/testing"
 	"strings"
@@ -85,7 +86,7 @@ func SetupTestDB(t *testing.T, dbType string) *TestContext {
 	})
 
 	// Migrate schema
-	err = db.AutoMigrate(&blobs.BlobMeta{}, &keys.CryptoKeyMeta{})
+	err = db.AutoMigrate(&models.BlobModel{}, &models.CryptoKeyModel{})
 	require.NoError(t, err, "Failed to migrate schema")
 
 	// Create repositories
@@ -102,13 +103,6 @@ func SetupTestDB(t *testing.T, dbType string) *TestContext {
 		BlobRepo:      blobRepo,
 		CryptoKeyRepo: cryptoKeyRepo,
 	}
-}
-
-// TeardownTestDB is deprecated - use t.Cleanup in SetupTestDB
-// Kept for backward compatibility
-func TeardownTestDB(t *testing.T, ctx *TestContext, dbType string) {
-	t.Helper()
-	// Cleanup now handled automatically by t.Cleanup in SetupTestDB
 }
 
 // CreateTestKey creates a test crypto key with default values
@@ -156,9 +150,7 @@ func CreateTestBlob(t *testing.T, key *keys.CryptoKeyMeta, name string) *blobs.B
 		Name:            name,
 		Size:            1024,
 		Type:            TestBlobTypeText,
-		EncryptionKey:   *key,
 		EncryptionKeyID: &key.ID,
-		SignKey:         *key,
 		SignKeyID:       &key.ID,
 	}
 }
@@ -174,9 +166,7 @@ func CreateTestBlobWithOptions(t *testing.T, key *keys.CryptoKeyMeta, name, blob
 		Name:            name,
 		Size:            size,
 		Type:            blobType,
-		EncryptionKey:   *key,
 		EncryptionKeyID: &key.ID,
-		SignKey:         *key,
 		SignKeyID:       &key.ID,
 	}
 }

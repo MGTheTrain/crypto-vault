@@ -6,6 +6,7 @@ package persistence
 import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
 	"crypto_vault_service/internal/pkg/config"
 	"fmt"
 	"testing"
@@ -25,12 +26,12 @@ func TestBlobSqliteRepository_Create(t *testing.T) {
 	err := ctx.BlobRepo.Create(context.Background(), blob)
 	require.NoError(t, err)
 
-	// Verify
-	var createdBlob blobs.BlobMeta
-	err = ctx.DB.First(&createdBlob, "id = ?", blob.ID).Error
+	// Verify using GORM model (infrastructure concern)
+	var createdBlobModel models.BlobModel
+	err = ctx.DB.First(&createdBlobModel, "id = ?", blob.ID).Error
 	require.NoError(t, err)
-	assert.Equal(t, blob.ID, createdBlob.ID)
-	assert.Equal(t, blob.Name, createdBlob.Name)
+	assert.Equal(t, blob.ID, createdBlobModel.ID)
+	assert.Equal(t, blob.Name, createdBlobModel.Name)
 }
 
 func TestBlobSqliteRepository_GetByID(t *testing.T) {
@@ -121,4 +122,39 @@ func TestBlobRepository_List_InvalidQuery(t *testing.T) {
 	_, err := ctx.BlobRepo.List(context.Background(), query)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid query parameters")
+}
+
+func TestBlobSqliteRepository_UpdateByID(t *testing.T) {
+	ctx := SetupTestDB(t, config.SqliteDbType)
+
+	userID := uuid.NewString()
+	key := CreateTestKey(t, userID)
+	blob := CreateTestBlob(t, key, "test-blob")
+
+	require.NoError(t, ctx.BlobRepo.Create(context.Background(), blob))
+
+	// Update blob name
+	blob.Name = "updated-blob"
+	require.NoError(t, ctx.BlobRepo.UpdateByID(context.Background(), blob))
+
+	// Verify update using GORM model
+	var updatedBlobModel models.BlobModel
+	require.NoError(t, ctx.DB.First(&updatedBlobModel, "id = ?", blob.ID).Error)
+	assert.Equal(t, "updated-blob", updatedBlobModel.Name)
+}
+
+func TestBlobSqliteRepository_DeleteByID(t *testing.T) {
+	ctx := SetupTestDB(t, config.SqliteDbType)
+
+	userID := uuid.NewString()
+	key := CreateTestKey(t, userID)
+	blob := CreateTestBlob(t, key, "test-blob")
+
+	require.NoError(t, ctx.BlobRepo.Create(context.Background(), blob))
+	require.NoError(t, ctx.BlobRepo.DeleteByID(context.Background(), blob.ID))
+
+	// Verify deletion using GORM model
+	var deletedBlobModel models.BlobModel
+	err := ctx.DB.First(&deletedBlobModel, "id = ?", blob.ID).Error
+	assert.Error(t, err)
 }

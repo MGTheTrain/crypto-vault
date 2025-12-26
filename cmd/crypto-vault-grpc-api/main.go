@@ -21,6 +21,7 @@ import (
 	"crypto_vault_service/internal/infrastructure/connector"
 	"crypto_vault_service/internal/infrastructure/cryptography"
 	"crypto_vault_service/internal/infrastructure/persistence"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
 	"crypto_vault_service/internal/pkg/config"
 	"crypto_vault_service/internal/pkg/logger"
 
@@ -109,7 +110,7 @@ func initializeDependencies(cfg *config.GrpcConfig, log logger.Logger) (*appDepe
 	}
 
 	// Run migrations
-	if err := db.AutoMigrate(&blobs.BlobMeta{}, &keys.CryptoKeyMeta{}); err != nil {
+	if err := db.AutoMigrate(&models.BlobModel{}, &models.CryptoKeyModel{}); err != nil {
 		return nil, fmt.Errorf("failed to migrate schema: %w", err)
 	}
 	log.Info("Database migrations completed successfully")

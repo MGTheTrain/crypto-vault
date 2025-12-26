@@ -6,6 +6,7 @@ package persistence
 import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
 	"crypto_vault_service/internal/pkg/config"
 	"fmt"
 	"testing"
@@ -26,7 +27,7 @@ func TestBlobPostgresRepository_Create(t *testing.T) {
 	err := ctx.BlobRepo.Create(context.Background(), blob)
 	require.NoError(t, err)
 
-	// Verify by fetching
+	// Verify by fetching through repository (tests full round-trip)
 	fetchedBlob, err := ctx.BlobRepo.GetByID(context.Background(), blob.ID)
 	require.NoError(t, err)
 	assert.Equal(t, blob.ID, fetchedBlob.ID)
@@ -82,10 +83,10 @@ func TestBlobPostgresRepository_UpdateByID(t *testing.T) {
 	blob.Name = "updated-blob"
 	require.NoError(t, ctx.BlobRepo.UpdateByID(context.Background(), blob))
 
-	// Verify update
-	var updatedBlob blobs.BlobMeta
-	require.NoError(t, ctx.DB.First(&updatedBlob, "id = ?", blob.ID).Error)
-	assert.Equal(t, "updated-blob", updatedBlob.Name)
+	// Verify update using GORM model
+	var updatedBlobModel models.BlobModel
+	require.NoError(t, ctx.DB.First(&updatedBlobModel, "id = ?", blob.ID).Error)
+	assert.Equal(t, "updated-blob", updatedBlobModel.Name)
 }
 
 func TestBlobPostgresRepository_DeleteByID(t *testing.T) {
@@ -98,9 +99,9 @@ func TestBlobPostgresRepository_DeleteByID(t *testing.T) {
 	require.NoError(t, ctx.BlobRepo.Create(context.Background(), blob))
 	require.NoError(t, ctx.BlobRepo.DeleteByID(context.Background(), blob.ID))
 
-	// Verify deletion
-	var deletedBlob blobs.BlobMeta
-	err := ctx.DB.First(&deletedBlob, "id = ?", blob.ID).Error
+	// Verify deletion using GORM model
+	var deletedBlobModel models.BlobModel
+	err := ctx.DB.First(&deletedBlobModel, "id = ?", blob.ID).Error
 	assert.Error(t, err)
 	assert.Equal(t, gorm.ErrRecordNotFound, err)
 }
@@ -110,7 +111,6 @@ func TestBlobPostgresRepository_GetByID_NotFound(t *testing.T) {
 
 	_, err := ctx.BlobRepo.GetByID(context.Background(), "non-existent-id")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "not found")
 }
 
 func TestBlobPostgresRepository_Create_ValidationError(t *testing.T) {

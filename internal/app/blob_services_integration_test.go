@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto_vault_service/internal/domain/blobs"
 	"crypto_vault_service/internal/domain/crypto"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
 	"crypto_vault_service/internal/pkg/config"
 	pkgTesting "crypto_vault_service/internal/pkg/testing"
 	"mime/multipart"
@@ -417,8 +418,9 @@ func TestBlobMetadataService_Operations(t *testing.T) {
 		err = services.BlobMetadataService.DeleteByID(ctx, uploaded[0].ID)
 		require.NoError(t, err)
 
-		var deletedBlob blobs.BlobMeta
-		err = services.DBContext.DB.First(&deletedBlob, "id = ?", uploaded[0].ID).Error
+		// Use GORM model with correct table name
+		var deletedBlobModel models.BlobModel
+		err = services.DBContext.DB.First(&deletedBlobModel, "id = ?", uploaded[0].ID).Error
 		require.Equal(t, gorm.ErrRecordNotFound, err)
 	})
 }

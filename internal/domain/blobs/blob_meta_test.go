@@ -4,7 +4,6 @@
 package blobs
 
 import (
-	"crypto_vault_service/internal/domain/keys"
 	"testing"
 	"time"
 
@@ -31,9 +30,7 @@ func NewBlobValidationTests() *BlobValidationTests {
 		Name:            "test_blobs.txt",
 		Size:            12345,
 		Type:            "text",
-		EncryptionKey:   keys.CryptoKeyMeta{ID: uuid.New().String(), KeyPairID: uuid.New().String(), Algorithm: "AES", KeySize: 256, Type: "private", DateTimeCreated: time.Now(), UserID: uuid.New().String()},
 		EncryptionKeyID: &keyID,
-		SignKey:         keys.CryptoKeyMeta{ID: uuid.New().String(), KeyPairID: uuid.New().String(), Algorithm: "AES", KeySize: 256, Type: "private", DateTimeCreated: time.Now(), UserID: uuid.New().String()},
 		SignKeyID:       &keyID,
 	}
 
@@ -44,9 +41,7 @@ func NewBlobValidationTests() *BlobValidationTests {
 		Name:            "test_blobs.txt",
 		Size:            -12345, // Invalid Size (negative)
 		Type:            "text",
-		EncryptionKey:   keys.CryptoKeyMeta{ID: uuid.New().String(), KeyPairID: uuid.New().String(), Algorithm: "AES", KeySize: 256, Type: "private", DateTimeCreated: time.Now(), UserID: uuid.New().String()},
 		EncryptionKeyID: &keyID,
-		SignKey:         keys.CryptoKeyMeta{ID: uuid.New().String(), KeyPairID: uuid.New().String(), Algorithm: "AES", KeySize: 256, Type: "private", DateTimeCreated: time.Now(), UserID: uuid.New().String()},
 		SignKeyID:       &keyID,
 	}
 
@@ -57,9 +52,7 @@ func NewBlobValidationTests() *BlobValidationTests {
 		Name:            "", // Invalid empty Name
 		Size:            12345,
 		Type:            "text",
-		EncryptionKey:   keys.CryptoKeyMeta{ID: uuid.New().String(), KeyPairID: uuid.New().String(), Algorithm: "AES", KeySize: 256, Type: "private", DateTimeCreated: time.Now(), UserID: uuid.New().String()},
 		EncryptionKeyID: &keyID,
-		SignKey:         keys.CryptoKeyMeta{ID: uuid.New().String(), KeyPairID: uuid.New().String(), Algorithm: "AES", KeySize: 256, Type: "private", DateTimeCreated: time.Now(), UserID: uuid.New().String()},
 		SignKeyID:       &keyID,
 	}
 
