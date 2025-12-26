@@ -6,6 +6,7 @@ package persistence
 import (
 	"context"
 	"crypto_vault_service/internal/domain/keys"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
 	"crypto_vault_service/internal/pkg/config"
 	"testing"
 	"time"
@@ -25,11 +26,12 @@ func TestCryptoKeySqliteRepository_Create(t *testing.T) {
 	err := ctx.CryptoKeyRepo.Create(context.Background(), key)
 	require.NoError(t, err)
 
-	var createdKey keys.CryptoKeyMeta
-	err = ctx.DB.First(&createdKey, "id = ?", key.ID).Error
+	// Verify using GORM model (infrastructure concern)
+	var createdKeyModel models.CryptoKeyModel
+	err = ctx.DB.First(&createdKeyModel, "id = ?", key.ID).Error
 	require.NoError(t, err)
-	assert.Equal(t, key.ID, createdKey.ID)
-	assert.Equal(t, key.Type, createdKey.Type)
+	assert.Equal(t, key.ID, createdKeyModel.ID)
+	assert.Equal(t, key.Type, createdKeyModel.Type)
 }
 
 func TestCryptoKeySqliteRepository_GetByID(t *testing.T) {
@@ -74,9 +76,10 @@ func TestCryptoKeySqliteRepository_UpdateByID(t *testing.T) {
 	key.Type = TestKeyTypePrivate
 	require.NoError(t, ctx.CryptoKeyRepo.UpdateByID(context.Background(), key))
 
-	var updatedKey keys.CryptoKeyMeta
-	require.NoError(t, ctx.DB.First(&updatedKey, "id = ?", key.ID).Error)
-	assert.Equal(t, TestKeyTypePrivate, updatedKey.Type)
+	// Verify using GORM model
+	var updatedKeyModel models.CryptoKeyModel
+	require.NoError(t, ctx.DB.First(&updatedKeyModel, "id = ?", key.ID).Error)
+	assert.Equal(t, TestKeyTypePrivate, updatedKeyModel.Type)
 }
 
 func TestCryptoKeySqliteRepository_DeleteByID(t *testing.T) {
@@ -88,8 +91,9 @@ func TestCryptoKeySqliteRepository_DeleteByID(t *testing.T) {
 	require.NoError(t, ctx.CryptoKeyRepo.Create(context.Background(), key))
 	require.NoError(t, ctx.CryptoKeyRepo.DeleteByID(context.Background(), key.ID))
 
-	var deletedKey keys.CryptoKeyMeta
-	err := ctx.DB.First(&deletedKey, "id = ?", key.ID).Error
+	// Verify deletion using GORM model
+	var deletedKeyModel models.CryptoKeyModel
+	err := ctx.DB.First(&deletedKeyModel, "id = ?", key.ID).Error
 	assert.Error(t, err)
 	assert.Equal(t, gorm.ErrRecordNotFound, err)
 }

@@ -15,6 +15,7 @@ import (
 
 	"crypto_vault_service/internal/domain/crypto"
 	"crypto_vault_service/internal/domain/keys"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
 	"crypto_vault_service/internal/pkg/config"
 )
 
@@ -274,8 +275,9 @@ func TestCryptoKeyMetadataService_Operations(t *testing.T) {
 		err = services.CryptoKeyMetadataService.DeleteByID(ctx, cryptoKeyMetas[0].ID)
 		require.NoError(t, err)
 
-		var deletedCryptoKeyMeta keys.CryptoKeyMeta
-		err = services.DBContext.DB.First(&deletedCryptoKeyMeta, "id = ?", cryptoKeyMetas[0].ID).Error
+		// Use GORM model with correct table name
+		var deletedCryptoKeyModel models.CryptoKeyModel
+		err = services.DBContext.DB.First(&deletedCryptoKeyModel, "id = ?", cryptoKeyMetas[0].ID).Error
 		require.Error(t, err)
 		require.Equal(t, gorm.ErrRecordNotFound, err)
 	})

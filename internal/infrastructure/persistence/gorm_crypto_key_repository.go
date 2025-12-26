@@ -2,38 +2,37 @@ package persistence
 
 import (
 	"context"
+	"crypto_vault_service/internal/domain/keys"
+	"crypto_vault_service/internal/infrastructure/persistence/models"
+	"crypto_vault_service/internal/pkg/logger"
 	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
-
-	"crypto_vault_service/internal/domain/keys"
-	"crypto_vault_service/internal/pkg/logger"
 )
 
-// gormCryptoKeyRepository is the implementation of the CryptoKeyRepository interface
 type gormCryptoKeyRepository struct {
 	db     *gorm.DB
 	logger logger.Logger
 }
 
-// NewGormCryptoKeyRepository creates a new gormCryptoKeyRepository instance
+// NewGormCryptoKeyRepository creates a new GORM-based CryptoKeyRepository implementation
 func NewGormCryptoKeyRepository(db *gorm.DB, logger logger.Logger) (keys.CryptoKeyRepository, error) {
-
 	return &gormCryptoKeyRepository{
 		db:     db,
 		logger: logger,
 	}, nil
 }
 
-// Create adds a new CryptoKey to the database
 func (r *gormCryptoKeyRepository) Create(ctx context.Context, key *keys.CryptoKeyMeta) error {
-	// Validate the CryptoKey before saving
 	if err := key.Validate(); err != nil {
 		return fmt.Errorf("validation error: %w", err)
 	}
 
-	if err := r.db.WithContext(ctx).Create(&key).Error; err != nil {
+	model := &models.CryptoKeyModel{}
+	model.FromDomain(key)
+
+	if err := r.db.WithContext(ctx).Create(model).Error; err != nil {
 		return fmt.Errorf("failed to create cryptographic key: %w", err)
 	}
 
@@ -41,18 +40,14 @@ func (r *gormCryptoKeyRepository) Create(ctx context.Context, key *keys.CryptoKe
 	return nil
 }
 
-// List lists CryptoKeys in the database with optional filter
 func (r *gormCryptoKeyRepository) List(ctx context.Context, query *keys.CryptoKeyQuery) ([]*keys.CryptoKeyMeta, error) {
-	// Validate the query parameters before using them
 	if err := query.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid query parameters: %w", err)
 	}
 
-	// Start building the query
-	var cryptoKeyMetas []*keys.CryptoKeyMeta
-	dbQuery := r.db.WithContext(ctx).Model(&keys.CryptoKeyMeta{})
+	var modelList []*models.CryptoKeyModel
+	dbQuery := r.db.WithContext(ctx).Model(&models.CryptoKeyModel{})
 
-	// Apply filters based on the query
 	if query.Algorithm != "" {
 		dbQuery = dbQuery.Where("algorithm = ?", query.Algorithm)
 	}
@@ -63,16 +58,14 @@ func (r *gormCryptoKeyRepository) List(ctx context.Context, query *keys.CryptoKe
 		dbQuery = dbQuery.Where("date_time_created >= ?", query.DateTimeCreated)
 	}
 
-	// Sorting
 	if query.SortBy != "" {
-		order := query.SortOrder // Default to ascending if not specified
-		if query.SortOrder == "" {
+		order := query.SortOrder
+		if order == "" {
 			order = "asc"
 		}
 		dbQuery = dbQuery.Order(fmt.Sprintf("%s %s", query.SortBy, order))
 	}
 
-	// Pagination
 	if query.Limit > 0 {
 		dbQuery = dbQuery.Limit(query.Limit)
 	}
@@ -80,36 +73,38 @@ func (r *gormCryptoKeyRepository) List(ctx context.Context, query *keys.CryptoKe
 		dbQuery = dbQuery.Offset(query.Offset)
 	}
 
-	// Execute the query
-	if err := dbQuery.Find(&cryptoKeyMetas).Error; err != nil {
+	if err := dbQuery.Find(&modelList).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch crypto key metadata: %w", err)
 	}
 
-	// Return the list of crypto key metadata
-	return cryptoKeyMetas, nil
+	domainList := make([]*keys.CryptoKeyMeta, len(modelList))
+	for i, model := range modelList {
+		domainList[i] = model.ToDomain()
+	}
+
+	return domainList, nil
 }
 
-// GetByID retrieves a CryptoKey from the database by ID
 func (r *gormCryptoKeyRepository) GetByID(ctx context.Context, keyID string) (*keys.CryptoKeyMeta, error) {
-	var key keys.CryptoKeyMeta
-	if err := r.db.WithContext(ctx).Where("id = ?", keyID).First(&key).Error; err != nil {
+	var model models.CryptoKeyModel
+	if err := r.db.WithContext(ctx).Where("id = ?", keyID).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("cryptographic key with ID %s not found", keyID)
 		}
-
 		return nil, fmt.Errorf("failed to fetch cryptographic key: %w", err)
 	}
-	return &key, nil
+	return model.ToDomain(), nil
 }
 
-// UpdateByID updates a CryptoKey in the database by ID
 func (r *gormCryptoKeyRepository) UpdateByID(ctx context.Context, key *keys.CryptoKeyMeta) error {
-	// Validate the CryptoKey before updating
 	if err := key.Validate(); err != nil {
 		return fmt.Errorf("validation error: %w", err)
 	}
 
-	if err := r.db.WithContext(ctx).Save(&key).Error; err != nil {
+	model := &models.CryptoKeyModel{}
+	model.FromDomain(key)
+
+	if err := r.db.WithContext(ctx).Save(model).Error; err != nil {
 		return fmt.Errorf("failed to update cryptographic key: %w", err)
 	}
 
@@ -117,11 +112,11 @@ func (r *gormCryptoKeyRepository) UpdateByID(ctx context.Context, key *keys.Cryp
 	return nil
 }
 
-// DeleteByID deleted a CryptoKey in the database by ID
 func (r *gormCryptoKeyRepository) DeleteByID(ctx context.Context, keyID string) error {
-	if err := r.db.WithContext(ctx).Where("id = ?", keyID).Delete(&keys.CryptoKeyMeta{}).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("id = ?", keyID).Delete(&models.CryptoKeyModel{}).Error; err != nil {
 		return fmt.Errorf("failed to delete cryptographic key: %w", err)
 	}
+
 	r.logger.Info("Deleted key metadata with id ", keyID)
 	return nil
 }
