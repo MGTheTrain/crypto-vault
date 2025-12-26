@@ -1,13 +1,12 @@
-name: Check Git diffs
+name: Checks
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  check-diffs:
+  validate:
     runs-on: ubuntu-24.04
-
     steps:
 
     - name: Checkout repository
@@ -18,24 +17,20 @@ jobs:
       with:
         go-version: '1.25.x'
 
-    - name: Install packages for with tools for auto-formatting and linting
-      run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
-        go install golang.org/x/tools/cmd/goimports@v0.40.0
-
-    - name: Install APT packages
+    - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y shfmt make
-    
-    - name: Install Prettier globally
-      run: |
+        
+        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+        go install golang.org/x/tools/cmd/goimports@v0.40.0
+
         sudo npm install -g prettier@3.7.4
 
-    - name: Auto-format and lint Go
+    - name: Auto-format and lint
       run: make format-and-lint
 
-    - name: Check diffs
+    - name: Check changes
       run: |
         status=$(git status --porcelain=v1)
         if [[ -n "$status" ]]; then

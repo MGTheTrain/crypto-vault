@@ -8,7 +8,7 @@ jobs:
   test:
     uses: ./.github/workflows/_test.yml
 
-  docker-push-pre-release-packages:
+  build-and-push:
     runs-on: ubuntu-24.04
     environment: qas
     needs: test

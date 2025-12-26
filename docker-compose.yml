@@ -1,6 +1,6 @@
 services:
   crypto-vault-rest-api:
-    image: crypto-vault-rest-api:0.3.0
+    image: crypto-vault-rest-api
     build:
       context: .
       dockerfile: cmd/crypto-vault-rest-api/Dockerfile
@@ -14,7 +14,7 @@ services:
     restart: on-failure
   
   crypto-vault-grpc-api:
-    image: crypto-vault-grpc-api:0.3.0
+    image: crypto-vault-grpc-api
     build:
       context: .
       dockerfile: cmd/crypto-vault-grpc-api/Dockerfile
