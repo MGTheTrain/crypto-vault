@@ -8,7 +8,7 @@ jobs:
   test:
     uses: ./.github/workflows/_test.yml
 
-  docker-push-dev-packages:
+  build-and-push:
     runs-on: ubuntu-24.04
     environment: dev
     needs: test
@@ -37,13 +37,13 @@ jobs:
             exit 1
           fi
 
-      - name: Build and push Docker image for REST backend
+      - name: Build and push REST API Docker image
         run: |
           BACKEND_TAG="${{ secrets.DOCKER_USERNAME }}/crypto-vault-rest-api:${{ steps.get_version.outputs.version }}-beta${{ github.run_number }}"  
           docker build -t $BACKEND_TAG -f cmd/crypto-vault-rest-api/Dockerfile .
           docker push $BACKEND_TAG
 
-      - name: Build and push Docker image for gRPC backend
+      - name: Build and push gRPC API Docker image
         run: |
           BACKEND_TAG="${{ secrets.DOCKER_USERNAME }}/crypto-vault-grpc-api:${{ steps.get_version.outputs.version }}-beta${{ github.run_number }}"  
           docker build -t $BACKEND_TAG -f cmd/crypto-vault-grpc-api/Dockerfile .
