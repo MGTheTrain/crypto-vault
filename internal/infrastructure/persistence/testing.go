@@ -12,7 +12,7 @@ import (
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence/models"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -91,7 +91,7 @@ func SetupTestDB(t *testing.T, dbType string) *TestContext {
 	require.NoError(t, err, "Failed to migrate schema")
 
 	// Create repositories
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 
 	blobRepo, err := NewGormBlobRepository(db, logger)
 	require.NoError(t, err, "Failed to create blob repository")

@@ -1,6 +1,6 @@
 model
   schema 1.1
-  
+
 type user
 
 type user_group
@@ -31,7 +31,7 @@ type blob
     define encrypt_decrypt_own_files: owner
     define generate_signature_for_own_files: owner
     define verify_file_signature: owner or grantee  # Public key verification is possible for grantee
-    
+
     # Access control for owners and grantees
     define can_grant_access_to_download_owned_blobs: owner
     define can_grant_access_to_view_owned_blobs: owner

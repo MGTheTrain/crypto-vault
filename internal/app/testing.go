@@ -13,7 +13,7 @@ import (
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/stretchr/testify/require"
 )
@@ -46,7 +46,7 @@ func SetupTestServices(t *testing.T, dbType string) *TestServices {
 	t.Helper()
 
 	ctx := context.Background()
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 
 	// Setup database
 	dbContext := persistence.SetupTestDB(t, dbType)

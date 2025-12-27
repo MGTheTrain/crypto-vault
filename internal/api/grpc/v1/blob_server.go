@@ -6,7 +6,7 @@ import (
 
 	"github.com/MGTheTrain/crypto-vault/internal/api/grpc/v1/stub"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/httputil"
 
 	"github.com/google/uuid"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -60,7 +60,7 @@ func (s BlobUploadServer) Upload(req *stub.BlobUploadRequest, stream stub.BlobUp
 	}
 
 	userID := uuid.New().String() // TODO(MGTheTrain): extract user id from JWT
-	form, err := utils.CreateMultipleFilesForm(fileContent, fileNames)
+	form, err := httputil.CreateMultipleFilesForm(fileContent, fileNames)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to create multiple files form for files %v: %v", fileNames, err)
 	}

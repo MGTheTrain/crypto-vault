@@ -1,7 +1,7 @@
 //go:build unit
 // +build unit
 
-package crypto
+package pkcs11
 
 import (
 	"testing"

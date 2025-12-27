@@ -10,7 +10,7 @@ import (
 
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +23,7 @@ type AzureVaultConnectorTest struct {
 
 func NewAzureVaultConnectorTest(t *testing.T, cloudProvider, connectionString, containerName string) *AzureVaultConnectorTest {
 	t.Helper()
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 
 	keyConnectorSettings := &config.KeyConnectorSettings{
 		CloudProvider:    cloudProvider,
@@ -121,7 +121,7 @@ func TestAzureVaultConnector_Delete(t *testing.T) {
 }
 
 func TestNewAzureVaultConnector_InvalidSettings(t *testing.T) {
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 	ctx := context.Background()
 
 	invalidSettings := &config.KeyConnectorSettings{

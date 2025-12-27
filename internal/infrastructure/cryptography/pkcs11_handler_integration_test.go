@@ -1,5 +1,5 @@
-//go:build unit
-// +build unit
+//go:build integration
+// +build integration
 
 package cryptography
 
@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/pkcs11"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,7 +26,7 @@ const (
 
 type PKCS11HandlerTests struct {
 	objectLabel   string
-	pkcs11Handler crypto.PKCS11Handler
+	pkcs11Handler pkcs11.Handler
 }
 
 func NewPKCS11HandlerTests(t *testing.T, objectLabel string) *PKCS11HandlerTests {
@@ -37,7 +37,7 @@ func NewPKCS11HandlerTests(t *testing.T, objectLabel string) *PKCS11HandlerTests
 		SlotID:     TestSlotID,
 	}
 
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 
 	handler, err := NewPKCS11Handler(pkcs11Settings, logger)
 	require.NoError(t, err, "Failed to initialize PKCS#11 handler")

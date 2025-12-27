@@ -8,27 +8,27 @@ tuples:
   - user: "user:OwnerUser"
     relation: "owner"
     object: "blob:Blob1"
-  
+
   # Owner also owns the signature blob
   - user: "user:OwnerUser"
     relation: "owner"
-    object: "blob:Blob1-signature"  # Signature blob for Blob1
-  
+    object: "blob:Blob1-signature" # Signature blob for Blob1
+
   # Grantee can download main blob
   - user: "user:GranteeUser"
     relation: "grantee"
     object: "blob:Blob1"
-  
+
   # Grantee can download signature blob (for verification)
   - user: "user:GranteeUser"
     relation: "grantee"
     object: "blob:Blob1-signature"
-  
+
   # Owner manages encryption key
   - user: "user:OwnerUser"
     relation: "owner"
     object: "key:RSA-Key-123"
-  
+
   # Owner manages signing key
   - user: "user:OwnerUser"
     relation: "owner"

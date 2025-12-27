@@ -12,12 +12,11 @@ apt-get install -y \
   openssl \
   opensc \
   jq \
-  softhsm \
+  softhsm2 \
   libssl-dev \
   libengine-pkcs11-openssl \
   protobuf-compiler \
-  bc \
-  shfmt
+  bc
 
 # Go tools with pinned versions
 echo "Installing Go tools..."
@@ -31,11 +30,11 @@ go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.25.
 # gRPC tools
 go install github.com/fullstorydev/grpcurl/cmd/grpcurl@v1.9.3
 
-# Code formatting
-go install golang.org/x/tools/cmd/goimports@v0.40.0
-
 # Linting
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+
+# Code formatting
+go install golang.org/x/tools/cmd/goimports@v0.40.0
 
 # OpenAPI documentation
 go install github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.2.0
@@ -43,8 +42,10 @@ go install github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.2.0
 # Node.js tools
 echo "Installing Node.js tools..."
 npm install -g prettier@3.7.4
-npm instal -g @redocly/cli@2.14.1
+npm install -g @redocly/cli@2.14.1
+
+# Pre-commit framework
+echo "Installing pre-commit..."
+pip3 install pre-commit --break-system-packages
 
 echo "Development tools installed successfully"
-
-echo "All tools installed successfully"

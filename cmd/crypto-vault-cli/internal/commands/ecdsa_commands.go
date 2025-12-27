@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
@@ -17,7 +17,7 @@ import (
 
 // ECDSACommandHandler encapsulates logic for handling elliptic curve cryptographic operations via CLI.
 type ECDSACommandHandler struct {
-	ecdsaProcessor crypto.ECDSAProcessor
+	ecdsaProcessor cryptoalg.ECDSAProcessor
 	logger         logger.Logger
 }
 

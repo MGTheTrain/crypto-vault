@@ -7,7 +7,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
@@ -18,9 +18,9 @@ import (
 type cryptoKeyUploadService struct {
 	vaultConnector keys.VaultConnector
 	cryptoKeyRepo  keys.CryptoKeyRepository
-	aesProcessor   crypto.AESProcessor
-	ecdsaProcessor crypto.ECDSAProcessor
-	rsaProcessor   crypto.RSAProcessor
+	aesProcessor   cryptoalg.AESProcessor
+	ecdsaProcessor cryptoalg.ECDSAProcessor
+	rsaProcessor   cryptoalg.RSAProcessor
 	logger         logger.Logger
 }
 
@@ -28,9 +28,9 @@ type cryptoKeyUploadService struct {
 func NewCryptoKeyUploadService(
 	vaultConnector keys.VaultConnector,
 	cryptoKeyRepo keys.CryptoKeyRepository,
-	aesProcessor crypto.AESProcessor,
-	ecdsaProcessor crypto.ECDSAProcessor,
-	rsaProcessor crypto.RSAProcessor,
+	aesProcessor cryptoalg.AESProcessor,
+	ecdsaProcessor cryptoalg.ECDSAProcessor,
+	rsaProcessor cryptoalg.RSAProcessor,
 	logger logger.Logger,
 ) (keys.CryptoKeyUploadService, error) {
 	return &cryptoKeyUploadService{
@@ -51,11 +51,11 @@ func (s *cryptoKeyUploadService) Upload(ctx context.Context, userID, keyAlgorith
 	keyPairID := uuid.New().String()
 	var err error
 	switch keyAlgorithm {
-	case crypto.AlgorithmAES:
+	case cryptoalg.AlgorithmAES:
 		cryptKeyMetas, err = s.uploadAESKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
-	case crypto.AlgorithmECDSA:
+	case cryptoalg.AlgorithmECDSA:
 		cryptKeyMetas, err = s.uploadECKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
-	case crypto.AlgorithmRSA:
+	case cryptoalg.AlgorithmRSA:
 		cryptKeyMetas, err = s.uploadRSAKey(ctx, userID, keyPairID, keyAlgorithm, keySize)
 	default:
 		return nil, fmt.Errorf("unsupported algorithm: %s", keyAlgorithm)
@@ -75,11 +75,11 @@ func (s *cryptoKeyUploadService) uploadAESKey(ctx context.Context, userID, keyPa
 	var keySizeInBytes int
 	switch keySize {
 	case 128:
-		keySizeInBytes = crypto.AESKeySize128
+		keySizeInBytes = cryptoalg.AESKeySize128
 	case 192:
-		keySizeInBytes = crypto.AESKeySize192
+		keySizeInBytes = cryptoalg.AESKeySize192
 	case 256:
-		keySizeInBytes = crypto.AESKeySize256
+		keySizeInBytes = cryptoalg.AESKeySize256
 	default:
 		return nil, fmt.Errorf("key size %v not supported for AES", keySize)
 	}
@@ -89,7 +89,7 @@ func (s *cryptoKeyUploadService) uploadAESKey(ctx context.Context, userID, keyPa
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	keyType := crypto.KeyTypeSymmetric
+	keyType := cryptoalg.KeyTypeSymmetric
 	cryptoKeyMeta, err := s.vaultConnector.Upload(ctx, symmetricKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -129,7 +129,7 @@ func (s *cryptoKeyUploadService) uploadECKey(ctx context.Context, userID, keyPai
 	// Upload Private Key
 	privateKeyBytes := append(privateKey.D.Bytes(), privateKey.X.Bytes()...)
 	privateKeyBytes = append(privateKeyBytes, privateKey.Y.Bytes()...)
-	keyType := crypto.KeyTypePrivate
+	keyType := cryptoalg.KeyTypePrivate
 	cryptoKeyMeta, err := s.vaultConnector.Upload(ctx, privateKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -143,7 +143,7 @@ func (s *cryptoKeyUploadService) uploadECKey(ctx context.Context, userID, keyPai
 
 	// Upload Public Key
 	publicKeyBytes := append(publicKey.X.Bytes(), publicKey.Y.Bytes()...)
-	keyType = crypto.KeyTypePublic
+	keyType = cryptoalg.KeyTypePublic
 	cryptoKeyMeta, err = s.vaultConnector.Upload(ctx, publicKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -168,7 +168,7 @@ func (s *cryptoKeyUploadService) uploadRSAKey(ctx context.Context, userID, keyPa
 
 	// Upload Private Key
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
-	keyType := crypto.KeyTypePrivate
+	keyType := cryptoalg.KeyTypePrivate
 	cryptoKeyMeta, err := s.vaultConnector.Upload(ctx, privateKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -185,7 +185,7 @@ func (s *cryptoKeyUploadService) uploadRSAKey(ctx context.Context, userID, keyPa
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal public key: %w", err)
 	}
-	keyType = crypto.KeyTypePublic
+	keyType = cryptoalg.KeyTypePublic
 	cryptoKeyMeta, err = s.vaultConnector.Upload(ctx, publicKeyBytes, userID, keyPairID, keyType, keyAlgorithm, keySize)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -304,15 +304,15 @@ func (s *cryptoKeyDownloadService) convertToPEM(rawBytes []byte, algorithm, keyT
 	var pemBlock *pem.Block
 
 	switch algorithm {
-	case crypto.AlgorithmRSA:
+	case cryptoalg.AlgorithmRSA:
 		switch keyType {
-		case crypto.KeyTypePublic:
+		case cryptoalg.KeyTypePublic:
 			// RSA public key - already in PKIX/DER format from x509.MarshalPKIXPublicKey
 			pemBlock = &pem.Block{
 				Type:  "PUBLIC KEY",
 				Bytes: rawBytes,
 			}
-		case crypto.KeyTypePrivate:
+		case cryptoalg.KeyTypePrivate:
 			// RSA private key - already in PKCS#1/DER format from x509.MarshalPKCS1PrivateKey
 			pemBlock = &pem.Block{
 				Type:  "RSA PRIVATE KEY",
@@ -322,16 +322,16 @@ func (s *cryptoKeyDownloadService) convertToPEM(rawBytes []byte, algorithm, keyT
 			return nil, fmt.Errorf("unsupported RSA key type: %s", keyType)
 		}
 
-	case crypto.AlgorithmECDSA:
+	case cryptoalg.AlgorithmECDSA:
 		switch keyType {
-		case crypto.KeyTypePublic:
+		case cryptoalg.KeyTypePublic:
 			// ECDSA public key - raw bytes (X || Y coordinates)
 			// Wrap in PKIX format for standard PEM
 			pemBlock = &pem.Block{
 				Type:  "PUBLIC KEY",
 				Bytes: rawBytes,
 			}
-		case crypto.KeyTypePrivate:
+		case cryptoalg.KeyTypePrivate:
 			// ECDSA private key - raw bytes (D || X || Y)
 			// Keep as custom EC PRIVATE KEY format
 			pemBlock = &pem.Block{
@@ -342,7 +342,7 @@ func (s *cryptoKeyDownloadService) convertToPEM(rawBytes []byte, algorithm, keyT
 			return nil, fmt.Errorf("unsupported ECDSA key type: %s", keyType)
 		}
 
-	case crypto.AlgorithmAES:
+	case cryptoalg.AlgorithmAES:
 		// AES keys are symmetric - use custom PEM type
 		pemBlock = &pem.Block{
 			Type:  "AES KEY",

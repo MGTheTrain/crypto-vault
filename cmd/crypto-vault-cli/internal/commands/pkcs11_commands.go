@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/pkcs11"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
@@ -24,7 +25,7 @@ const (
 
 // PKCS11CommandsHandler holds settings and methods for managing PKCS#11 token operations
 type PKCS11CommandsHandler struct {
-	pkcs11Handler crypto.PKCS11Handler
+	pkcs11Handler pkcs11.Handler
 	logger        logger.Logger
 }
 
@@ -172,14 +173,14 @@ func (h *PKCS11CommandsHandler) AddKeyCmd(cmd *cobra.Command, _ []string) {
 	}
 
 	switch operation {
-	case crypto.OperationSigning:
+	case cryptoalg.OperationSigning:
 		if err := h.pkcs11Handler.AddSignKey(tokenLabel, objectLabel, keyType, keySize); err != nil {
 			h.logger.Error("failed to add signing key ", err)
 			return
 		}
 		h.logger.Info("Signing key ", objectLabel, " added successfully to token ", tokenLabel)
 
-	case crypto.OperationEncryption:
+	case cryptoalg.OperationEncryption:
 		if err := h.pkcs11Handler.AddEncryptKey(tokenLabel, objectLabel, keyType, keySize); err != nil {
 			h.logger.Error("failed to add encryption key ", err)
 			return

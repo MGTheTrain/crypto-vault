@@ -9,7 +9,7 @@ import (
 	"github.com/MGTheTrain/crypto-vault/internal/api/rest/v1/stub"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/strutil"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -115,7 +115,7 @@ func (handler *blobHandler) ListMetadata(ctx *gin.Context) {
 	}
 
 	if blobSize := ctx.Query("size"); len(blobSize) > 0 {
-		query.Size = utils.ConvertToInt64(blobSize)
+		query.Size = strutil.ConvertToInt64(blobSize)
 	}
 
 	if blobType := ctx.Query("type"); len(blobType) > 0 {
@@ -130,11 +130,11 @@ func (handler *blobHandler) ListMetadata(ctx *gin.Context) {
 	}
 
 	if limit := ctx.Query("limit"); len(limit) > 0 {
-		query.Limit = utils.ConvertToInt(limit)
+		query.Limit = strutil.ConvertToInt(limit)
 	}
 
 	if offset := ctx.Query("offset"); len(offset) > 0 {
-		query.Offset = utils.ConvertToInt(offset)
+		query.Offset = strutil.ConvertToInt(offset)
 	}
 
 	if sortBy := ctx.Query("sortBy"); len(sortBy) > 0 {

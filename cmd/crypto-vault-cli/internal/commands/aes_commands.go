@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
@@ -15,7 +15,7 @@ import (
 
 // AESCommandHandler encapsulates logic for handling AES operations via CLI.
 type AESCommandHandler struct {
-	aesProcessor crypto.AESProcessor
+	aesProcessor cryptoalg.AESProcessor
 	logger       logger.Logger
 }
 

@@ -7,7 +7,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 )
 
@@ -17,7 +17,7 @@ type aesProcessor struct {
 }
 
 // NewAESProcessor creates and returns a new instance of aesProcessor
-func NewAESProcessor(logger logger.Logger) (crypto.AESProcessor, error) {
+func NewAESProcessor(logger logger.Logger) (cryptoalg.AESProcessor, error) {
 	return &aesProcessor{
 		logger: logger,
 	}, nil

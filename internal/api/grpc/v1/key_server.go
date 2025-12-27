@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 
 	"github.com/MGTheTrain/crypto-vault/internal/api/grpc/v1/stub"
@@ -88,11 +88,11 @@ func (s *CryptoKeyDownloadServer) DownloadByID(req *stub.KeyDownloadRequest, str
 
 	// Determine file extension and name based on key type
 	switch keyMeta.Type {
-	case crypto.KeyTypePublic:
+	case cryptoalg.KeyTypePublic:
 
-	case crypto.KeyTypeSymmetric:
+	case cryptoalg.KeyTypeSymmetric:
 
-	case crypto.KeyTypePrivate:
+	case cryptoalg.KeyTypePrivate:
 		return fmt.Errorf("download forbidden for private keys")
 	default:
 		return fmt.Errorf("unknown key type for: %s", req.Id)

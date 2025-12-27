@@ -1,7 +1,7 @@
 //go:build unit
 // +build unit
 
-package utils
+package validators
 
 import (
 	"os"

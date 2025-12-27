@@ -9,7 +9,7 @@ import (
 
 	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +22,7 @@ type AzureBlobConnectorTest struct {
 
 func NewAzureBlobConnectorTest(t *testing.T, cloudProvider, connectionString, containerName string) *AzureBlobConnectorTest {
 	t.Helper()
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 
 	blobConnectorSettings := &config.BlobConnectorSettings{
 		CloudProvider:    cloudProvider,
@@ -44,7 +44,7 @@ func TestAzureBlobConnector_Upload(t *testing.T) {
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.txt"
-	form, err := pkgTesting.CreateTestFileAndForm(t, testFileName, testFileContent)
+	form, err := testutil.CreateTestFileAndForm(t, testFileName, testFileContent)
 	require.NoError(t, err)
 
 	userID := uuid.New().String()
@@ -71,7 +71,7 @@ func TestAzureBlobConnector_Upload_WithEncryptionAndSignKeys(t *testing.T) {
 
 	testFileContent := []byte("encrypted content")
 	testFileName := "encrypted.txt"
-	form, err := pkgTesting.CreateTestFileAndForm(t, testFileName, testFileContent)
+	form, err := testutil.CreateTestFileAndForm(t, testFileName, testFileContent)
 	require.NoError(t, err)
 
 	userID := uuid.New().String()
@@ -98,7 +98,7 @@ func TestAzureBlobConnector_Download(t *testing.T) {
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.pem"
-	form, err := pkgTesting.CreateTestFileAndForm(t, testFileName, testFileContent)
+	form, err := testutil.CreateTestFileAndForm(t, testFileName, testFileContent)
 	require.NoError(t, err)
 
 	userID := uuid.New().String()
@@ -132,7 +132,7 @@ func TestAzureBlobConnector_Delete(t *testing.T) {
 
 	testFileContent := []byte("This is test file content")
 	testFileName := "testfile.pem"
-	form, err := pkgTesting.CreateTestFileAndForm(t, testFileName, testFileContent)
+	form, err := testutil.CreateTestFileAndForm(t, testFileName, testFileContent)
 	require.NoError(t, err)
 
 	userID := uuid.New().String()
@@ -151,7 +151,7 @@ func TestAzureBlobConnector_Delete(t *testing.T) {
 }
 
 func TestNewAzureBlobConnector_InvalidSettings(t *testing.T) {
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 	ctx := context.Background()
 
 	invalidSettings := &config.BlobConnectorSettings{

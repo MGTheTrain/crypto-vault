@@ -8,21 +8,25 @@ formatters:
 
 linters:
   enable:
-    - errcheck                     # Ensures that all errors returned by functions are properly checked
-    - govet                        # Performs basic checks for suspicious constructs (standard go vet)
-    - staticcheck                  # Comprehensive linter that checks for bugs, performance issues and stylistic problems
-    - wrapcheck                    # Ensures that errors are wrapped with context using %w or fmt.Errorf
-    - importas                     # Enforces specific import aliases for packages
-    - unused                       # Detects unused types, variables, constants and functions (uses staticcheck's unused analyzer)
-    - ineffassign                  # Identifies assignments that are never used (ineffectual assignments)
-    - errorlint                    # Promotes correct practices for working with Go 1.13+ error wrapping
-    - gocritic                     # Detects bugs and style issues using a wide variety of checks (e.g., redundant operations, bad practices)
-    - gosec                        # Scans for potential security issues (e.g., SQL injection, file permissions, hardcoded credentials)
-    - revive                       # A more configurable replacement for `golint`; useful for style and readability checks
-    - misspell                     # Detects common English misspellings in comments and documentation
-    - nakedret                     # Discourages use of naked returns in long functions for better readability
+    - errcheck # Ensures that all errors returned by functions are properly checked
+    - govet # Performs basic checks for suspicious constructs (standard go vet)
+    - staticcheck # Comprehensive linter that checks for bugs, performance issues and stylistic problems
+    - wrapcheck # Ensures that errors are wrapped with context using %w or fmt.Errorf
+    - importas # Enforces specific import aliases for packages
+    - unused # Detects unused types, variables, constants and functions (uses staticcheck's unused analyzer)
+    - ineffassign # Identifies assignments that are never used (ineffectual assignments)
+    - errorlint # Promotes correct practices for working with Go 1.13+ error wrapping
+    - gocritic # Detects bugs and style issues using a wide variety of checks (e.g., redundant operations, bad practices)
+    - gosec # Scans for potential security issues (e.g., SQL injection, file permissions, hardcoded credentials)
+    - revive # A more configurable replacement for `golint`; useful for style and readability checks
+    - misspell # Detects common English misspellings in comments and documentation
+    - nakedret # Discourages use of naked returns in long functions for better readability
 
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+
+linters-settings:
+  errcheck:
+    check-blank: true

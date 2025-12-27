@@ -66,6 +66,7 @@ func initializeCommands(rootCmd *cobra.Command) error {
 	}
 
 	// PKCS#11 is optional; initialization errors are ignored
+	// nolint
 	_ = initializePKCS11Commands(rootCmd)
 
 	return nil

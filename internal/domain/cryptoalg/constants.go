@@ -1,4 +1,4 @@
-package crypto
+package cryptoalg
 
 // OperationEncryption represents the encryption operation type
 const OperationEncryption = "encryption"
