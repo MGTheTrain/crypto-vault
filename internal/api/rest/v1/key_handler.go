@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/MGTheTrain/crypto-vault/internal/api/rest/v1/stub"
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/strutil"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -101,11 +101,11 @@ func (handler *keyHandler) ListMetadata(ctx *gin.Context) {
 	}
 
 	if limit := ctx.Query("limit"); len(limit) > 0 {
-		query.Limit = utils.ConvertToInt(limit)
+		query.Limit = strutil.ConvertToInt(limit)
 	}
 
 	if offset := ctx.Query("offset"); len(offset) > 0 {
-		query.Offset = utils.ConvertToInt(offset)
+		query.Offset = strutil.ConvertToInt(offset)
 	}
 
 	if sortBy := ctx.Query("sortBy"); len(sortBy) > 0 {
@@ -193,11 +193,11 @@ func (handler *keyHandler) DownloadByID(ctx *gin.Context) {
 	// Determine file extension and name based on key type
 	var filename string
 	switch keyMeta.Type {
-	case crypto.KeyTypePublic:
+	case cryptoalg.KeyTypePublic:
 		filename = fmt.Sprintf("%s-public-key.pem", keyID)
-	case crypto.KeyTypeSymmetric:
+	case cryptoalg.KeyTypeSymmetric:
 		filename = fmt.Sprintf("%s-symmetrics-key.pem", keyID)
-	case crypto.KeyTypePrivate:
+	case cryptoalg.KeyTypePrivate:
 		var errorResponse stub.ErrorResponse
 		errorMessage := "download forbidden for private keys"
 		errorResponse.Message = &errorMessage

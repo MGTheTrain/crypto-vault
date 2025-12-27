@@ -1,4 +1,4 @@
-package crypto
+package pkcs11
 
 import (
 	"errors"
@@ -7,17 +7,16 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Token represents a PKCS#11 token with label and other metadata
-type Token struct {
-	SlotID       string `mapstructure:"slot_id" validate:"required"`
-	Label        string `mapstructure:"label" validate:"required"`
-	Manufacturer string `mapstructure:"manufacturer" validate:"required"`
-	Model        string `mapstructure:"model" validate:"required"`
-	SerialNumber string `mapstructure:"serial_number" validate:"required"`
+// TokenObject represents a PKCS#11 object (e.g. public or private key) with metadata.
+type TokenObject struct {
+	Label  string `mapstructure:"label" validate:"required"`
+	Type   string `mapstructure:"type" validate:"required"`
+	Usage  string `mapstructure:"usage" validate:"required"`
+	Access string `mapstructure:"access" validate:"required"`
 }
 
-// Validate for validating Token struct
-func (t *Token) Validate() error {
+// Validate for validating TokenObject struct
+func (t *TokenObject) Validate() error {
 	validate := validator.New()
 
 	err := validate.Struct(t)

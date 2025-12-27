@@ -5,7 +5,7 @@
 - [ ] I follow the [trunk-based workflow](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development).
 - [ ] I ensure that all merge conflicts are resolved before requesting a PR review.
 - [ ] I have tested the changes locally by running the appropriate tests and ensuring the success of all workflows:
-  - [ ] I have run the [format-and-lint.sh](../scripts/format-and-lint.sh) script.
+  - [ ] I have run formatting and linting checks (`make checks`).
   - [ ] I have run the tests locally, verified that they pass and the overall code overage is above 70 percent (`make coverage-check`).
 
 ### Code Quality and Review

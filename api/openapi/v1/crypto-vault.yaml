@@ -42,16 +42,16 @@ paths:
                 sign_key_id:
                   type: string
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BlobMetaResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                  $ref: "#/components/schemas/BlobMetaResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
     get:
       tags: [Blob]
@@ -75,82 +75,82 @@ paths:
           schema:
             type: string
             format: date-time
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Offset'
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BlobMetaResponse'
+                  $ref: "#/components/schemas/BlobMetaResponse"
 
   /blobs/{id}:
     get:
       tags: [Blob]
       summary: Get blob metadata by ID
       parameters:
-        - $ref: '#/components/parameters/BlobId'
+        - $ref: "#/components/parameters/BlobId"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BlobMetaResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/BlobMetaResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     delete:
       tags: [Blob]
       summary: Delete blob by ID
       parameters:
-        - $ref: '#/components/parameters/BlobId'
+        - $ref: "#/components/parameters/BlobId"
       responses:
-        '204':
+        "204":
           description: No Content
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /blobs/{id}/file:
     get:
       tags: [Blob]
       summary: Download blob file
       parameters:
-        - $ref: '#/components/parameters/BlobId'
+        - $ref: "#/components/parameters/BlobId"
         - name: decryption_key_id
           in: query
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Blob content
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /blobs/{id}/signature:
     get:
       tags: [Blob]
       summary: Download blob signature
       parameters:
-        - $ref: '#/components/parameters/BlobId'
+        - $ref: "#/components/parameters/BlobId"
       responses:
-        '200':
+        "200":
           description: Signature content
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /keys:
     post:
@@ -161,18 +161,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UploadKeyRequest'
+              $ref: "#/components/schemas/UploadKeyRequest"
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CryptoKeyMetaResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                  $ref: "#/components/schemas/CryptoKeyMetaResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
     get:
       tags: [Key]
@@ -193,8 +193,8 @@ paths:
           schema:
             type: string
             format: date-time
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Offset'
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
         - name: sortBy
           in: query
           schema:
@@ -205,58 +205,58 @@ paths:
             type: string
             enum: [asc, desc]
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CryptoKeyMetaResponse'
+                  $ref: "#/components/schemas/CryptoKeyMetaResponse"
 
   /keys/{id}:
     get:
       tags: [Key]
       summary: Get key metadata by ID
       parameters:
-        - $ref: '#/components/parameters/KeyId'
+        - $ref: "#/components/parameters/KeyId"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CryptoKeyMetaResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/CryptoKeyMetaResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     delete:
       tags: [Key]
       summary: Delete key by ID
       parameters:
-        - $ref: '#/components/parameters/KeyId'
+        - $ref: "#/components/parameters/KeyId"
       responses:
-        '204':
+        "204":
           description: No Content
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /keys/{id}/file:
     get:
       tags: [Key]
       summary: Download key file (PEM format)
       parameters:
-        - $ref: '#/components/parameters/KeyId'
+        - $ref: "#/components/parameters/KeyId"
       responses:
-        '200':
+        "200":
           description: Key content in PEM format
           content:
             application/x-pem-file:
               schema:
                 type: string
                 format: binary
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 components:
   schemas:
@@ -289,7 +289,8 @@ components:
 
     CryptoKeyMetaResponse:
       type: object
-      required: [id, keyPairID, algorithm, keySize, type, userID, dateTimeCreated]
+      required:
+        [id, keyPairID, algorithm, keySize, type, userID, dateTimeCreated]
       properties:
         id:
           type: string
@@ -370,14 +371,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
 
     BadRequest:
       description: Bad request
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
 
   securitySchemes:
     BasicAuth:

@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 )
 
@@ -23,7 +23,7 @@ type ecdsaProcessor struct {
 }
 
 // NewECDSAProcessor creates and returns a new instance of ecdsaProcessor
-func NewECDSAProcessor(logger logger.Logger) (crypto.ECDSAProcessor, error) {
+func NewECDSAProcessor(logger logger.Logger) (cryptoalg.ECDSAProcessor, error) {
 	return &ecdsaProcessor{
 		logger: logger,
 	}, nil

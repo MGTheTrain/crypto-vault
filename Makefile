@@ -7,7 +7,7 @@ MIN_COVERAGE := 70.0
 PKG ?= ./...
 TYPE ?= unit
 
-.PHONY: help format-and-lint lint-results tests \
+.PHONY: help checks lint-results tests \
 	coverage-check coverage-html coverage-func \
 	compose-start-infra compose-start compose-stop \
 	openapi-validate openapi-types-generate \
@@ -41,9 +41,9 @@ help: ## Show this help message
 	@echo '  make coverage-check						             # Run unit and integration tests for internal package and check code coverage'
 
 ##@  Development
-format-and-lint: ## Run formatting and linting
-	@echo "Running format and lint..."
-	@cd $(SCRIPT_DIR) && ./format-and-lint.sh
+checks: ## Run checks
+	@echo "Running checks..."
+	@pre-commit run --all-files
 
 lint-results: ## Write golang-ci lint findings to file
 	@echo "Running golangci-lint..."
@@ -61,8 +61,8 @@ tests: ## Run tests (use PKG=./path TYPE=unit,integration,e2e)
 coverage-check: ## Run unit and integration tests for internal packages and check coverage threshold
 	@echo "Running unit and integration tests for internal packages..."
 	@go test ./internal/... -tags="unit integration" -coverprofile=$(COVERAGE_OUT) -covermode=atomic
-	@grep -v 'server.go' $(COVERAGE_OUT) | \
-	 grep -v 'internal/api/grpc/v1/stub/' | \
+	@grep -v 'internal/api/grpc/v1/stub/' $(COVERAGE_OUT) | \
+	 grep -v 'internal/pkg/testutil/' | \
 	 grep -v 'internal/api/rest/v1/stub/' > $(FILTERED_COVERAGE_OUT)
 	@go tool cover -html=$(FILTERED_COVERAGE_OUT) -o $(COVERAGE_HTML)
 	@echo "Coverage HTML report generated: $(COVERAGE_HTML)"

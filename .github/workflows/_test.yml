@@ -1,44 +1,126 @@
 on:
   workflow_call:
+    secrets:
+      gh_token:
+        required: true
 
 jobs:
   test:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        include:
+          - os: ubuntu-24.04
+            has_docker: true
+          - os: macos-15
+            has_docker: false
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup Go 1.25.x
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25.x'
+          go-version: "1.25.x"
 
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx (Ubuntu only)
+        if: matrix.has_docker
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Remove previous SoftHSM artifacts
         run: |
-          sudo rm -rf /usr/lib/softhsm /usr/lib/x86_64-linux-gnu/softhsm*
-          sudo rm -rf ~/.config/softhsm2 /tmp/tokens /var/lib/softhsm /etc/softhsm
-      
-      - name: Install dependencies
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo rm -rf /usr/lib/softhsm /usr/lib/x86_64-linux-gnu/softhsm*
+            sudo rm -rf ~/.config/softhsm2 /tmp/tokens /var/lib/softhsm /etc/softhsm
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            rm -rf ~/.config/softhsm2 /tmp/tokens
+          fi
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y openssl opensc softhsm2 libssl-dev libengine-pkcs11-openssl bc make
 
-      - name: Start external services
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-15'
+        run: |
+          brew install openssl make
+
+      - name: Start external services (Ubuntu only)
+        if: matrix.has_docker
         run: make compose-start-infra
 
       - name: Configure SoftHSM token directory
+        if: matrix.os == 'ubuntu-24.04'
         run: |
-          mkdir -vp ~/.config/softhsm2
+          mkdir -p ~/.config/softhsm2
           echo "directories.tokendir = /tmp/tokens" > ~/.config/softhsm2/softhsm2.conf
-          mkdir -vp /tmp/tokens
+          mkdir -p /tmp/tokens
 
-      - name: Run unit and integration tests and check if code coverage is above 70 percent threshold
-        run: make coverage-check
+      - name: Run tests and generate coverage
+        run: |
+          if [ "${{ matrix.has_docker }}" == "true" ]; then
+            make coverage-check
+          else
+            # macOS: Run only unit tests (no Docker services)
+            go test ./internal/... -tags="unit" -coverprofile=coverage.out -covermode=atomic
+            grep -v 'internal/api/grpc/v1/stub/' coverage.out | \
+             grep -v 'internal/api/rest/v1/stub/' > filtered-coverage.out
+            go tool cover -html=filtered-coverage.out -o coverage.html
+          fi
         env:
-          SOFTHSM2_CONF: /home/runner/.config/softhsm2/softhsm2.conf
+          SOFTHSM2_CONF: ${{ runner.os == 'Linux' && '/home/runner/.config/softhsm2/softhsm2.conf' || format('{0}/.config/softhsm2/softhsm2.conf', env.HOME) }}
 
-      - name: Stop external services
+      - name: Stop external services (Ubuntu only)
+        if: matrix.has_docker
         run: make compose-stop
+
+      - name: Generate coverage summary
+        id: coverage
+        run: |
+          COVERAGE=$(go tool cover -func=filtered-coverage.out | grep total | awk '{print $3}')
+          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+          go tool cover -func=filtered-coverage.out > coverage-${{ matrix.os }}.txt
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.os }}
+          path: |
+            coverage-${{ matrix.os }}.txt
+            coverage.html
+          retention-days: 1
+
+      - name: Comment PR with coverage (Ubuntu only)
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-24.04'
+        with:
+          github-token: ${{ secrets.gh_token }}
+          script: |
+            const fs = require('fs');
+            const coverage = '${{ steps.coverage.outputs.percentage }}';
+
+            const comment = `## 📊 Test Coverage Report
+
+            **Overall Coverage:** \`${coverage}\` ${parseFloat(coverage) >= 70 ? '✅' : '❌'}
+
+            <details>
+            <summary>🔗 Additional Resources</summary>
+
+            - [View HTML Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - Minimum threshold: 70%
+            - **Ubuntu (with Docker):** Full integration tests
+            - **macOS (no Docker):** Unit tests only
+            </details>
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

@@ -14,7 +14,7 @@ import (
 	v1 "github.com/MGTheTrain/crypto-vault/internal/api/rest/v1"
 	"github.com/MGTheTrain/crypto-vault/internal/app"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/connector"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
@@ -73,9 +73,9 @@ type appDependencies struct {
 }
 
 type cryptoProcessors struct {
-	aes crypto.AESProcessor
-	ec  crypto.ECDSAProcessor
-	rsa crypto.RSAProcessor
+	aes cryptoalg.AESProcessor
+	ec  cryptoalg.ECDSAProcessor
+	rsa cryptoalg.RSAProcessor
 }
 
 type appServices struct {

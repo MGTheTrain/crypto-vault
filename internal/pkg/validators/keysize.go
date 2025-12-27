@@ -1,6 +1,8 @@
 package validators
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+)
 
 // KeySizeValidation validates the key size based on the algorithm type (AES, RSA or EC).
 func KeySizeValidation(fl validator.FieldLevel) bool {

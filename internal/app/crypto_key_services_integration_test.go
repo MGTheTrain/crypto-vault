@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence/models"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
@@ -31,91 +31,91 @@ func TestCryptoKeyUploadService_Upload_Success(t *testing.T) {
 	}{
 		{
 			name:             "ECDSA 224-bit keys",
-			algorithm:        crypto.AlgorithmECDSA,
+			algorithm:        cryptoalg.AlgorithmECDSA,
 			keySize:          224,
 			expectedKeyCount: 2, // private + public
 			wantErr:          false,
 		},
 		{
 			name:             "ECDSA 256-bit keys",
-			algorithm:        crypto.AlgorithmECDSA,
+			algorithm:        cryptoalg.AlgorithmECDSA,
 			keySize:          256,
 			expectedKeyCount: 2,
 			wantErr:          false,
 		},
 		{
 			name:             "ECDSA 384-bit keys",
-			algorithm:        crypto.AlgorithmECDSA,
+			algorithm:        cryptoalg.AlgorithmECDSA,
 			keySize:          384,
 			expectedKeyCount: 2,
 			wantErr:          false,
 		},
 		{
 			name:             "ECDSA 521-bit keys",
-			algorithm:        crypto.AlgorithmECDSA,
+			algorithm:        cryptoalg.AlgorithmECDSA,
 			keySize:          521,
 			expectedKeyCount: 2,
 			wantErr:          false,
 		},
 		{
 			name:             "RSA 2048-bit keys",
-			algorithm:        crypto.AlgorithmRSA,
+			algorithm:        cryptoalg.AlgorithmRSA,
 			keySize:          2048,
 			expectedKeyCount: 2,
 			wantErr:          false,
 		},
 		{
 			name:             "RSA 3072-bit keys",
-			algorithm:        crypto.AlgorithmRSA,
+			algorithm:        cryptoalg.AlgorithmRSA,
 			keySize:          3072,
 			expectedKeyCount: 2,
 			wantErr:          false,
 		},
 		{
 			name:             "RSA 4096-bit keys",
-			algorithm:        crypto.AlgorithmRSA,
+			algorithm:        cryptoalg.AlgorithmRSA,
 			keySize:          4096,
 			expectedKeyCount: 2,
 			wantErr:          false,
 		},
 		{
 			name:             "AES 128-bit key",
-			algorithm:        crypto.AlgorithmAES,
+			algorithm:        cryptoalg.AlgorithmAES,
 			keySize:          128,
 			expectedKeyCount: 1, // symmetric key only
 			wantErr:          false,
 		},
 		{
 			name:             "AES 192-bit key",
-			algorithm:        crypto.AlgorithmAES,
+			algorithm:        cryptoalg.AlgorithmAES,
 			keySize:          192,
 			expectedKeyCount: 1,
 			wantErr:          false,
 		},
 		{
 			name:             "AES 256-bit key",
-			algorithm:        crypto.AlgorithmAES,
+			algorithm:        cryptoalg.AlgorithmAES,
 			keySize:          256,
 			expectedKeyCount: 1,
 			wantErr:          false,
 		},
 		{
 			name:        "AES invalid 512-bit",
-			algorithm:   crypto.AlgorithmAES,
+			algorithm:   cryptoalg.AlgorithmAES,
 			keySize:     512,
 			wantErr:     true,
 			errContains: "not supported for AES",
 		},
 		{
 			name:        "AES invalid 64-bit",
-			algorithm:   crypto.AlgorithmAES,
+			algorithm:   cryptoalg.AlgorithmAES,
 			keySize:     64,
 			wantErr:     true,
 			errContains: "not supported for AES",
 		},
 		{
 			name:        "ECDSA invalid 512-bit",
-			algorithm:   crypto.AlgorithmECDSA,
+			algorithm:   cryptoalg.AlgorithmECDSA,
 			keySize:     512,
 			wantErr:     true,
 			errContains: "not supported",
@@ -146,10 +146,10 @@ func TestCryptoKeyUploadService_Upload_Success(t *testing.T) {
 					require.Equal(t, tt.keySize, keyMeta.KeySize)
 
 					// Verify key type is set correctly
-					if tt.algorithm == crypto.AlgorithmAES {
-						require.Equal(t, crypto.KeyTypeSymmetric, keyMeta.Type)
+					if tt.algorithm == cryptoalg.AlgorithmAES {
+						require.Equal(t, cryptoalg.KeyTypeSymmetric, keyMeta.Type)
 					} else {
-						require.Contains(t, []string{crypto.KeyTypePrivate, crypto.KeyTypePublic}, keyMeta.Type)
+						require.Contains(t, []string{cryptoalg.KeyTypePrivate, cryptoalg.KeyTypePublic}, keyMeta.Type)
 					}
 				}
 			}
@@ -168,37 +168,37 @@ func TestCryptoKeyDownloadService_DownloadByID_ReturnsPEMFormat(t *testing.T) {
 	}{
 		{
 			name:          "RSA private key returns PEM format",
-			algorithm:     crypto.AlgorithmRSA,
+			algorithm:     cryptoalg.AlgorithmRSA,
 			keySize:       2048,
-			expectedType:  crypto.KeyTypePrivate,
+			expectedType:  cryptoalg.KeyTypePrivate,
 			pemHeaderType: "RSA PRIVATE KEY",
 		},
 		{
 			name:          "RSA public key returns PEM format",
-			algorithm:     crypto.AlgorithmRSA,
+			algorithm:     cryptoalg.AlgorithmRSA,
 			keySize:       2048,
-			expectedType:  crypto.KeyTypePublic,
+			expectedType:  cryptoalg.KeyTypePublic,
 			pemHeaderType: "PUBLIC KEY",
 		},
 		{
 			name:          "ECDSA private key returns PEM format",
-			algorithm:     crypto.AlgorithmECDSA,
+			algorithm:     cryptoalg.AlgorithmECDSA,
 			keySize:       256,
-			expectedType:  crypto.KeyTypePrivate,
+			expectedType:  cryptoalg.KeyTypePrivate,
 			pemHeaderType: "EC PRIVATE KEY",
 		},
 		{
 			name:          "ECDSA public key returns PEM format",
-			algorithm:     crypto.AlgorithmECDSA,
+			algorithm:     cryptoalg.AlgorithmECDSA,
 			keySize:       256,
-			expectedType:  crypto.KeyTypePublic,
+			expectedType:  cryptoalg.KeyTypePublic,
 			pemHeaderType: "PUBLIC KEY",
 		},
 		{
 			name:          "AES key returns PEM format",
-			algorithm:     crypto.AlgorithmAES,
+			algorithm:     cryptoalg.AlgorithmAES,
 			keySize:       256,
-			expectedType:  crypto.KeyTypeSymmetric,
+			expectedType:  cryptoalg.KeyTypeSymmetric,
 			pemHeaderType: "AES KEY",
 		},
 	}
@@ -253,7 +253,7 @@ func TestCryptoKeyMetadataService_Operations(t *testing.T) {
 		userID := uuid.NewString()
 		ctx := context.Background()
 
-		cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
+		cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmECDSA, 256)
 		require.NoError(t, err)
 
 		fetchedCryptoKeyMeta, err := services.CryptoKeyMetadataService.GetByID(ctx, cryptoKeyMetas[0].ID)
@@ -269,7 +269,7 @@ func TestCryptoKeyMetadataService_Operations(t *testing.T) {
 		userID := uuid.NewString()
 		ctx := context.Background()
 
-		cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 521)
+		cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmECDSA, 521)
 		require.NoError(t, err)
 
 		err = services.CryptoKeyMetadataService.DeleteByID(ctx, cryptoKeyMetas[0].ID)
@@ -288,10 +288,10 @@ func TestCryptoKeyMetadataService_Operations(t *testing.T) {
 		ctx := context.Background()
 
 		// Create multiple keys
-		_, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
+		_, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmECDSA, 256)
 		require.NoError(t, err)
 
-		_, err = services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)
+		_, err = services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmRSA, 2048)
 		require.NoError(t, err)
 
 		query := &keys.CryptoKeyQuery{}
@@ -306,7 +306,7 @@ func TestCryptoKeyMetadataService_Operations(t *testing.T) {
 		userID := uuid.NewString()
 		ctx := context.Background()
 
-		cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
+		cryptoKeyMetas, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmECDSA, 256)
 		require.NoError(t, err)
 
 		pemData, err := services.CryptoKeyDownloadService.DownloadByID(ctx, cryptoKeyMetas[0].ID)
@@ -347,12 +347,12 @@ func TestCryptoKeyUploadService_KeyPairLinking(t *testing.T) {
 	}{
 		{
 			name:      "RSA key pair linking",
-			algorithm: crypto.AlgorithmRSA,
+			algorithm: cryptoalg.AlgorithmRSA,
 			keySize:   2048,
 		},
 		{
 			name:      "ECDSA key pair linking",
-			algorithm: crypto.AlgorithmECDSA,
+			algorithm: cryptoalg.AlgorithmECDSA,
 			keySize:   256,
 		},
 	}
@@ -371,8 +371,8 @@ func TestCryptoKeyUploadService_KeyPairLinking(t *testing.T) {
 			privateKey := cryptoKeyMetas[0]
 			publicKey := cryptoKeyMetas[1]
 
-			require.Equal(t, crypto.KeyTypePrivate, privateKey.Type)
-			require.Equal(t, crypto.KeyTypePublic, publicKey.Type)
+			require.Equal(t, cryptoalg.KeyTypePrivate, privateKey.Type)
+			require.Equal(t, cryptoalg.KeyTypePublic, publicKey.Type)
 			require.NotEmpty(t, privateKey.KeyPairID)
 			require.NotEmpty(t, publicKey.KeyPairID)
 			require.Equal(t, privateKey.KeyPairID, publicKey.KeyPairID, "key pair should have matching KeyPairID")

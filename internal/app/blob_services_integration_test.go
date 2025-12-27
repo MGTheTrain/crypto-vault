@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/persistence/models"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -47,7 +47,7 @@ func TestBlobUploadService_Upload_Success(t *testing.T) {
 			fileContent: []byte("RSA encrypted and signed"),
 			fileName:    "secure.pdf",
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)
+				rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmRSA, 2048)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -65,11 +65,11 @@ func TestBlobUploadService_Upload_Success(t *testing.T) {
 			fileContent: []byte("AES encrypted, ECDSA signed"),
 			fileName:    "hybrid.doc",
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
+				ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmECDSA, 256)
 				if err != nil {
 					return nil, nil, err
 				}
-				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, 256)
+				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmAES, 256)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -87,7 +87,7 @@ func TestBlobUploadService_Upload_Success(t *testing.T) {
 			fileContent: []byte("RSA signed document"),
 			fileName:    "contract.txt",
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)
+				rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmRSA, 2048)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -104,7 +104,7 @@ func TestBlobUploadService_Upload_Success(t *testing.T) {
 			fileContent: []byte("ECDSA signed content"),
 			fileName:    "message.bin",
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
+				ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmECDSA, 256)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -121,7 +121,7 @@ func TestBlobUploadService_Upload_Success(t *testing.T) {
 			fileContent: []byte("AES encrypted only"),
 			fileName:    "encrypted.dat",
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, 256)
+				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmAES, 256)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -141,7 +141,7 @@ func TestBlobUploadService_Upload_Success(t *testing.T) {
 			userID := uuid.NewString()
 
 			// Create test form
-			form, err := pkgTesting.CreateTestFileAndForm(t, tt.fileName, tt.fileContent)
+			form, err := testutil.CreateTestFileAndForm(t, tt.fileName, tt.fileContent)
 			require.NoError(t, err)
 
 			// Setup keys
@@ -205,7 +205,7 @@ func TestBlobUploadService_Upload_Errors(t *testing.T) {
 			fileContent: nil,
 			fileName:    "",
 			setupForm: func(t *testing.T, fileName string, content []byte) (*multipart.Form, error) {
-				return pkgTesting.CreateEmptyForm(), nil
+				return testutil.CreateEmptyForm(), nil
 			},
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
 				return nil, nil, nil
@@ -216,7 +216,7 @@ func TestBlobUploadService_Upload_Errors(t *testing.T) {
 			name:        "invalid encryption key ID",
 			fileContent: []byte("Test content"),
 			fileName:    "test.txt",
-			setupForm:   pkgTesting.CreateTestFileAndForm,
+			setupForm:   testutil.CreateTestFileAndForm,
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
 				invalidKeyID := "invalid-key-id"
 				return &invalidKeyID, nil, nil
@@ -227,7 +227,7 @@ func TestBlobUploadService_Upload_Errors(t *testing.T) {
 			name:        "invalid signing key ID",
 			fileContent: []byte("Test content"),
 			fileName:    "test.txt",
-			setupForm:   pkgTesting.CreateTestFileAndForm,
+			setupForm:   testutil.CreateTestFileAndForm,
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
 				invalidKeyID := "invalid-sign-key"
 				return nil, &invalidKeyID, nil
@@ -238,9 +238,9 @@ func TestBlobUploadService_Upload_Errors(t *testing.T) {
 			name:        "AES key used for signing fails",
 			fileContent: []byte("Cannot sign with AES"),
 			fileName:    "fail.txt",
-			setupForm:   pkgTesting.CreateTestFileAndForm,
+			setupForm:   testutil.CreateTestFileAndForm,
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, 256)
+				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmAES, 256)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -253,9 +253,9 @@ func TestBlobUploadService_Upload_Errors(t *testing.T) {
 			name:        "ECDSA key used for encryption fails",
 			fileContent: []byte("Cannot encrypt with ECDSA"),
 			fileName:    "fail2.txt",
-			setupForm:   pkgTesting.CreateTestFileAndForm,
+			setupForm:   testutil.CreateTestFileAndForm,
 			setupKeys: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmECDSA, 256)
+				ecKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmECDSA, 256)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -314,7 +314,7 @@ func TestBlobDownloadService_Download(t *testing.T) {
 			fileContent: []byte("Secret AES content"),
 			fileName:    "secret.txt",
 			setupEncryption: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmAES, 256)
+				aesKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmAES, 256)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -329,7 +329,7 @@ func TestBlobDownloadService_Download(t *testing.T) {
 			fileContent: []byte("Secret RSA content"),
 			fileName:    "rsa_secret.txt",
 			setupEncryption: func(ctx context.Context, services *TestServices, userID string) (*string, *string, error) {
-				rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, crypto.AlgorithmRSA, 2048)
+				rsaKeys, err := services.CryptoKeyUploadService.Upload(ctx, userID, cryptoalg.AlgorithmRSA, 2048)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -353,7 +353,7 @@ func TestBlobDownloadService_Download(t *testing.T) {
 			require.NoError(t, err)
 
 			// Upload file
-			form, err := pkgTesting.CreateTestFileAndForm(t, tt.fileName, tt.fileContent)
+			form, err := testutil.CreateTestFileAndForm(t, tt.fileName, tt.fileContent)
 			require.NoError(t, err)
 
 			blobMetas, err := services.BlobUploadService.Upload(ctx, form, userID, encKeyID, nil)
@@ -380,7 +380,7 @@ func TestBlobMetadataService_Operations(t *testing.T) {
 		services := SetupTestServices(t, config.SqliteDbType)
 		ctx := context.Background()
 
-		form, err := pkgTesting.CreateTestFileAndForm(t, "test.txt", []byte("content"))
+		form, err := testutil.CreateTestFileAndForm(t, "test.txt", []byte("content"))
 		require.NoError(t, err)
 
 		_, err = services.BlobUploadService.Upload(ctx, form, uuid.NewString(), nil, nil)
@@ -395,7 +395,7 @@ func TestBlobMetadataService_Operations(t *testing.T) {
 		services := SetupTestServices(t, config.SqliteDbType)
 		ctx := context.Background()
 
-		form, err := pkgTesting.CreateTestFileAndForm(t, "test.txt", []byte("content"))
+		form, err := testutil.CreateTestFileAndForm(t, "test.txt", []byte("content"))
 		require.NoError(t, err)
 
 		uploaded, err := services.BlobUploadService.Upload(ctx, form, uuid.NewString(), nil, nil)
@@ -410,7 +410,7 @@ func TestBlobMetadataService_Operations(t *testing.T) {
 		services := SetupTestServices(t, config.SqliteDbType)
 		ctx := context.Background()
 
-		form, err := pkgTesting.CreateTestFileAndForm(t, "test.txt", []byte("content"))
+		form, err := testutil.CreateTestFileAndForm(t, "test.txt", []byte("content"))
 		require.NoError(t, err)
 
 		uploaded, err := services.BlobUploadService.Upload(ctx, form, uuid.NewString(), nil, nil)

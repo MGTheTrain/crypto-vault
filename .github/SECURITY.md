@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-We support only the latest version of crypto-vult-service along with the two most recent minor versions of Go.
+We support only the latest version of crypto-vault along with the two most recent minor versions of Go.
 
 ## Reporting a Vulnerability
 

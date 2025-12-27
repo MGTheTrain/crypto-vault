@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +35,7 @@ func TestBlobHandler_Upload_Success(t *testing.T) {
 
 	fileName := "testfile.txt"
 	fileContent := []byte("This is a test file content")
-	form, err := pkgTesting.CreateTestFileAndForm(t, fileName, fileContent)
+	form, err := testutil.CreateTestFileAndForm(t, fileName, fileContent)
 	require.NoError(t, err)
 
 	var b bytes.Buffer

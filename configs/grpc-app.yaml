@@ -2,7 +2,7 @@ port: "50051"
 gateway_port: "8090"
 
 database:
-  type: "postgres" 
+  type: "postgres"
   dsn: "user=postgres password=postgres host=localhost port=5432 sslmode=disable"
   name: "meta"
 
@@ -17,9 +17,9 @@ key_connector:
   container_name: "keys"
 
 logger:
-  log_level: "info"   # Possible values: info, debug, error, warning, critical
-  log_type: "console"    # Possible values: console, file
-  file_path: ""  # Required if log_type is 'file'
+  log_level: "info" # Possible values: info, debug, error, warning, critical
+  log_type: "console" # Possible values: console, file
+  file_path: "" # Required if log_type is 'file'
 
 pkcs11:
   module_path: "/usr/lib/softhsm/libsofthsm2.so"

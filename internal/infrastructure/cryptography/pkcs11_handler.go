@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/pkcs11"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/validators"
 )
 
 // pkcs11Handler represents the parameters and operations for interacting with a PKCS#11 token
@@ -19,7 +19,7 @@ type pkcs11Handler struct {
 }
 
 // NewPKCS11Handler creates and returns a new instance of PKCS11Handler
-func NewPKCS11Handler(settings *config.PKCS11Settings, logger logger.Logger) (crypto.PKCS11Handler, error) {
+func NewPKCS11Handler(settings *config.PKCS11Settings, logger logger.Logger) (pkcs11.Handler, error) {
 	if err := settings.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate settings: %w", err)
 	}
@@ -41,8 +41,8 @@ func (token *pkcs11Handler) executePKCS11ToolCommand(args []string) (string, err
 }
 
 // ListTokenSlots lists all available tokens in the available slots
-func (token *pkcs11Handler) ListTokenSlots() ([]crypto.Token, error) {
-	if err := utils.CheckNonEmptyStrings(token.settings.ModulePath); err != nil {
+func (token *pkcs11Handler) ListTokenSlots() ([]pkcs11.Token, error) {
+	if err := validators.CheckNonEmptyStrings(token.settings.ModulePath); err != nil {
 		return nil, fmt.Errorf("failed to check non-empty string for ModulePath='%s': %w", token.settings.ModulePath, err)
 	}
 
@@ -56,9 +56,9 @@ func (token *pkcs11Handler) ListTokenSlots() ([]crypto.Token, error) {
 		return nil, fmt.Errorf("failed to list tokens with pkcs11-tool: %w\nOutput: %s", err, output)
 	}
 
-	var tokens []crypto.Token
+	var tokens []pkcs11.Token
 	lines := strings.Split(string(output), "\n")
-	var currentToken *crypto.Token
+	var currentToken *pkcs11.Token
 
 	for _, line := range lines {
 
@@ -67,7 +67,7 @@ func (token *pkcs11Handler) ListTokenSlots() ([]crypto.Token, error) {
 				tokens = append(tokens, *currentToken)
 			}
 
-			currentToken = &crypto.Token{
+			currentToken = &pkcs11.Token{
 				SlotID:       "",
 				Label:        "",
 				Manufacturer: "",
@@ -104,8 +104,8 @@ func (token *pkcs11Handler) ListTokenSlots() ([]crypto.Token, error) {
 }
 
 // ListObjects lists all objects (e.g. keys) in a specific token based on the token label.
-func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]crypto.TokenObject, error) {
-	if err := utils.CheckNonEmptyStrings(tokenLabel, token.settings.ModulePath); err != nil {
+func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]pkcs11.TokenObject, error) {
+	if err := validators.CheckNonEmptyStrings(tokenLabel, token.settings.ModulePath); err != nil {
 		return nil, fmt.Errorf("failed to check non-empty strings for tokenLabel='%s' and ModulePath='%s': %w", tokenLabel, token.settings.ModulePath, err)
 	}
 
@@ -119,9 +119,9 @@ func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]crypto.TokenObject
 		return nil, fmt.Errorf("failed to list objects with pkcs11-tool: %w\nOutput: %s", err, output)
 	}
 
-	var objects []crypto.TokenObject
+	var objects []pkcs11.TokenObject
 	lines := strings.Split(string(output), "\n")
-	var currentObject *crypto.TokenObject
+	var currentObject *pkcs11.TokenObject
 
 	for _, line := range lines {
 
@@ -130,7 +130,7 @@ func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]crypto.TokenObject
 				objects = append(objects, *currentObject)
 			}
 
-			currentObject = &crypto.TokenObject{
+			currentObject = &pkcs11.TokenObject{
 				Label:  "",
 				Type:   "",
 				Usage:  "",
@@ -158,7 +158,7 @@ func (token *pkcs11Handler) ListObjects(tokenLabel string) ([]crypto.TokenObject
 
 // isTokenSet checks if the token exists in the given module path
 func (token *pkcs11Handler) isTokenSet(label string) (bool, error) {
-	if err := utils.CheckNonEmptyStrings(label); err != nil {
+	if err := validators.CheckNonEmptyStrings(label); err != nil {
 		return false, fmt.Errorf("failed to check non-empty string for label='%s': %w", label, err)
 	}
 
@@ -179,7 +179,7 @@ func (token *pkcs11Handler) isTokenSet(label string) (bool, error) {
 
 // InitializeToken initializes the token with the provided label and pins
 func (token *pkcs11Handler) InitializeToken(label string) error {
-	if err := utils.CheckNonEmptyStrings(label); err != nil {
+	if err := validators.CheckNonEmptyStrings(label); err != nil {
 		return fmt.Errorf("failed to check non-empty string for label='%s': %w", label, err)
 	}
 
@@ -204,7 +204,7 @@ func (token *pkcs11Handler) InitializeToken(label string) error {
 
 // AddSignKey adds a signing key (ECDSA or RSA) to the token
 func (token *pkcs11Handler) AddSignKey(label, objectLabel, keyType string, keySize uint) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel, keyType); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel, keyType); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', keyType='%s': %w", label, objectLabel, keyType, err)
 	}
 
@@ -220,7 +220,7 @@ func (token *pkcs11Handler) AddSignKey(label, objectLabel, keyType string, keySi
 
 // AddEncryptKey adds an encryption key (RSA only currently) to the token
 func (token *pkcs11Handler) AddEncryptKey(label, objectLabel, keyType string, keySize uint) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel, keyType); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel, keyType); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', keyType='%s': %w", label, objectLabel, keyType, err)
 	}
 
@@ -234,7 +234,7 @@ func (token *pkcs11Handler) AddEncryptKey(label, objectLabel, keyType string, ke
 
 // addECDSASignKey adds an ECDSA signing key to the token
 func (token *pkcs11Handler) addECDSASignKey(label, objectLabel string, keySize uint) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s' and objectLabel='%s': %w", label, objectLabel, err)
 	}
 
@@ -272,7 +272,7 @@ func (token *pkcs11Handler) addECDSASignKey(label, objectLabel string, keySize u
 
 // addRSASignKey adds an RSA signing key to the token
 func (token *pkcs11Handler) addRSASignKey(label, objectLabel string, keySize uint) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s' and objectLabel='%s': %w", label, objectLabel, err)
 	}
 
@@ -311,7 +311,7 @@ func (token *pkcs11Handler) addRSASignKey(label, objectLabel string, keySize uin
 
 // addRSAEncryptKey adds an RSA encryption/decryption key to the token
 func (token *pkcs11Handler) addRSAEncryptKey(label, objectLabel string, keySize uint) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s' and objectLabel='%s': %w", label, objectLabel, err)
 	}
 
@@ -348,12 +348,12 @@ func (token *pkcs11Handler) addRSAEncryptKey(label, objectLabel string, keySize 
 
 // Encrypt encrypts data using the cryptographic capabilities of the PKCS#11 token. Refer to: https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pkcs
 func (token *pkcs11Handler) Encrypt(label, objectLabel, inputFilePath, outputFilePath, keyType string) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel, inputFilePath, outputFilePath, keyType); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel, inputFilePath, outputFilePath, keyType); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', inputFilePath='%s', outputFilePath='%s', keyType='%s': %w",
 			label, objectLabel, inputFilePath, outputFilePath, keyType, err)
 	}
 
-	if err := utils.CheckFilesExist(inputFilePath); err != nil {
+	if err := validators.CheckFilesExist(inputFilePath); err != nil {
 		return fmt.Errorf("failed to check if input file exists (inputFilePath='%s'): %w", inputFilePath, err)
 	}
 
@@ -383,12 +383,12 @@ func (token *pkcs11Handler) Encrypt(label, objectLabel, inputFilePath, outputFil
 
 // Decrypt decrypts data using the cryptographic capabilities of the PKCS#11 token. Refer to: https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pkcs
 func (token *pkcs11Handler) Decrypt(label, objectLabel, inputFilePath, outputFilePath, keyType string) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel, inputFilePath, outputFilePath, keyType); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel, inputFilePath, outputFilePath, keyType); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', inputFilePath='%s', outputFilePath='%s', keyType='%s': %w",
 			label, objectLabel, inputFilePath, outputFilePath, keyType, err)
 	}
 
-	if err := utils.CheckFilesExist(inputFilePath); err != nil {
+	if err := validators.CheckFilesExist(inputFilePath); err != nil {
 		return fmt.Errorf("failed to check if input file exists (inputFilePath='%s'): %w", inputFilePath, err)
 	}
 
@@ -418,12 +418,12 @@ func (token *pkcs11Handler) Decrypt(label, objectLabel, inputFilePath, outputFil
 
 // Sign signs data using the cryptographic capabilities of the PKCS#11 token. Refer to: https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pss
 func (token *pkcs11Handler) Sign(label, objectLabel, dataFilePath, signatureFilePath, keyType string) error {
-	if err := utils.CheckNonEmptyStrings(label, objectLabel, dataFilePath, signatureFilePath, keyType); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel, dataFilePath, signatureFilePath, keyType); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', dataFilePath='%s', signatureFilePath='%s', keyType='%s': %w",
 			label, objectLabel, dataFilePath, signatureFilePath, keyType, err)
 	}
 
-	if err := utils.CheckFilesExist(dataFilePath); err != nil {
+	if err := validators.CheckFilesExist(dataFilePath); err != nil {
 		return fmt.Errorf("failed to check if file exists (dataFilePath='%s'): %w", dataFilePath, err)
 	}
 
@@ -473,12 +473,12 @@ func (token *pkcs11Handler) Sign(label, objectLabel, dataFilePath, signatureFile
 // Verify verifies the signature of data using the cryptographic capabilities of the PKCS#11 token. Refer to: https://docs.yubico.com/hardware/yubihsm-2/hsm-2-user-guide/hsm2-openssl-libp11.html#rsa-pss
 func (token *pkcs11Handler) Verify(label, objectLabel, dataFilePath, signatureFilePath, keyType string) (bool, error) {
 
-	if err := utils.CheckNonEmptyStrings(label, objectLabel, keyType, dataFilePath, signatureFilePath); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectLabel, keyType, dataFilePath, signatureFilePath); err != nil {
 		return false, fmt.Errorf("failed to check non-empty strings for label='%s', objectLabel='%s', keyType='%s', dataFilePath='%s', signatureFilePath='%s': %w",
 			label, objectLabel, keyType, dataFilePath, signatureFilePath, err)
 	}
 
-	if err := utils.CheckFilesExist(dataFilePath, signatureFilePath); err != nil {
+	if err := validators.CheckFilesExist(dataFilePath, signatureFilePath); err != nil {
 		return false, fmt.Errorf("failed to check if files exist (dataFilePath='%s', signatureFilePath='%s'): %w",
 			dataFilePath, signatureFilePath, err)
 	}
@@ -531,7 +531,7 @@ func (token *pkcs11Handler) Verify(label, objectLabel, dataFilePath, signatureFi
 
 // DeleteObject deletes a key or object from the token
 func (token *pkcs11Handler) DeleteObject(label, objectType, objectLabel string) error {
-	if err := utils.CheckNonEmptyStrings(label, objectType, objectLabel); err != nil {
+	if err := validators.CheckNonEmptyStrings(label, objectType, objectLabel); err != nil {
 		return fmt.Errorf("failed to check non-empty strings for label='%s', objectType='%s', objectLabel='%s': %w", label, objectType, objectLabel, err)
 	}
 

@@ -4,7 +4,7 @@ package internal;
 option go_package = ".";
 
 import "google/protobuf/timestamp.proto";
-import "google/api/annotations.proto"; 
+import "google/api/annotations.proto";
 
 message BlobUploadRequest {
   string file_name = 1;
@@ -14,28 +14,28 @@ message BlobUploadRequest {
 }
 
 message UploadKeyRequest {
-  string algorithm = 1;  
-  uint32 key_size = 2;   
+  string algorithm = 1;
+  uint32 key_size = 2;
 }
 
 message IdRequest {
-  string id = 1;  
+  string id = 1;
 }
 
 message BlobMetaQuery {
-  string name = 1;           
-  int64 size = 2;            
-  string type = 3;           
-  google.protobuf.Timestamp date_time_created = 4; 
-  int32 limit = 5;           
-  int32 offset = 6;          
-  string sort_by = 7;        
-  string sort_order = 8;     
+  string name = 1;
+  int64 size = 2;
+  string type = 3;
+  google.protobuf.Timestamp date_time_created = 4;
+  int32 limit = 5;
+  int32 offset = 6;
+  string sort_by = 7;
+  string sort_order = 8;
 }
 
 message BlobDownloadRequest {
-  string id = 1;                
-  string decryption_key_id = 2;  
+  string id = 1;
+  string decryption_key_id = 2;
 }
 
 message BlobSignatureDownloadRequest {
@@ -43,57 +43,57 @@ message BlobSignatureDownloadRequest {
 }
 
 message KeyMetadataQuery {
-  string algorithm = 1;   
-  string type = 2;        
-  google.protobuf.Timestamp date_time_created = 3; 
-  int32 limit = 4;        
-  int32 offset = 5;       
-  string sort_by = 6;     
-  string sort_order = 7;  
+  string algorithm = 1;
+  string type = 2;
+  google.protobuf.Timestamp date_time_created = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+  string sort_by = 6;
+  string sort_order = 7;
 }
 
 message KeyDownloadRequest {
-  string id = 1;                
+  string id = 1;
 }
 
 message ErrorResponse {
-  string message = 1;  
+  string message = 1;
 }
 
 message InfoResponse {
-  string message = 1;  
+  string message = 1;
 }
 
 // UPDATED: Added signature fields
 message BlobMetaResponse {
-  string id = 1;                      
-  google.protobuf.Timestamp date_time_created = 2; 
-  string user_id = 3;                  
-  string name = 4;                     
-  int64 size = 5;                     
-  string type = 6;                    
-  string encryption_key_id = 7;        
+  string id = 1;
+  google.protobuf.Timestamp date_time_created = 2;
+  string user_id = 3;
+  string name = 4;
+  int64 size = 5;
+  string type = 6;
+  string encryption_key_id = 7;
   string sign_key_id = 8;
-  string signature_blob_id = 9;       
-  string signature_file_name = 10;    
+  string signature_blob_id = 9;
+  string signature_file_name = 10;
 }
 
 message CryptoKeyMetaResponse {
-  string id = 1;                        
-  string key_pair_id = 2;               
-  string algorithm = 3;                 
-  uint32 key_size = 4;                  
-  string type = 5;                      
-  google.protobuf.Timestamp date_time_created = 6; 
-  string user_id = 7;                   
+  string id = 1;
+  string key_pair_id = 2;
+  string algorithm = 3;
+  uint32 key_size = 4;
+  string type = 5;
+  google.protobuf.Timestamp date_time_created = 6;
+  string user_id = 7;
 }
 
 message BlobContent {
-  bytes content = 1; 
+  bytes content = 1;
 }
 
 message KeyContent {
-  bytes content = 1;  
+  bytes content = 1;
 }
 
 message SignatureContent {
@@ -103,8 +103,8 @@ message SignatureContent {
 // Service definitions with HTTP mapping
 
 service BlobUpload {
-    // Upload a blob 
-    // Multipart file uploads are not supported with grpc-gateway. For more details, 
+    // Upload a blob
+    // Multipart file uploads are not supported with grpc-gateway. For more details,
     // see: https://grpc-ecosystem.github.io/grpc-gateway/docs/mapping/binary_file_uploads/
     rpc Upload (BlobUploadRequest) returns (stream BlobMetaResponse);
 }
@@ -130,21 +130,21 @@ service BlobMetadata {
         option (google.api.http) = {
             get: "/api/v1/cvs/blobs"
         };
-    }  
+    }
 
     // Get blob metadata by ID
     rpc GetMetadataByID (IdRequest) returns (BlobMetaResponse) {
         option (google.api.http) = {
             get: "/api/v1/cvs/blobs/{id}"
         };
-    }  
+    }
 
     // Delete blob by ID
     rpc DeleteByID (IdRequest) returns (InfoResponse) {
         option (google.api.http) = {
             delete: "/api/v1/cvs/blobs/{id}"
         };
-    }  
+    }
 }
 
 service CryptoKeyUpload {
@@ -154,7 +154,7 @@ service CryptoKeyUpload {
             post: "/api/v1/cvs/keys"
             body: "*"
         };
-    }  
+    }
 }
 
 service CryptoKeyDownload {
@@ -163,7 +163,7 @@ service CryptoKeyDownload {
         option (google.api.http) = {
             get: "/api/v1/cvs/keys/{id}/file"
         };
-    }  
+    }
 }
 
 service CryptoKeyMetadata {
@@ -172,19 +172,19 @@ service CryptoKeyMetadata {
         option (google.api.http) = {
             get: "/api/v1/cvs/keys"
         };
-    }  
+    }
 
     // Get crypto key metadata by ID
     rpc GetMetadataByID (IdRequest) returns (CryptoKeyMetaResponse) {
         option (google.api.http) = {
             get: "/api/v1/cvs/keys/{id}"
         };
-    }  
+    }
 
     // Delete crypto key by ID
     rpc DeleteByID (IdRequest) returns (InfoResponse) {
         option (google.api.http) = {
             delete: "/api/v1/cvs/keys/{id}"
         };
-    }  
+    }
 }

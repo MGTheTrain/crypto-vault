@@ -12,16 +12,16 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func setupECDSAProcessor(t *testing.T) crypto.ECDSAProcessor {
+func setupECDSAProcessor(t *testing.T) cryptoalg.ECDSAProcessor {
 	t.Helper()
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 	processor, err := NewECDSAProcessor(logger)
 	require.NoError(t, err)
 	return processor

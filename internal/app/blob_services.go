@@ -9,7 +9,7 @@ import (
 	"crypto/x509"
 
 	"github.com/MGTheTrain/crypto-vault/internal/domain/blobs"
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/domain/keys"
 
 	"fmt"
@@ -17,17 +17,17 @@ import (
 	"math/big"
 	"mime/multipart"
 
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/httputil"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
 )
 
 // blobUploadService implements the BlobUploadService interface for handling blob uploads
 type blobUploadService struct {
 	blobConnector  blobs.BlobConnector
 	blobRepository blobs.BlobRepository
-	aesProcessor   crypto.AESProcessor
-	ecdsaProcessor crypto.ECDSAProcessor
-	rsaProcessor   crypto.RSAProcessor
+	aesProcessor   cryptoalg.AESProcessor
+	ecdsaProcessor cryptoalg.ECDSAProcessor
+	rsaProcessor   cryptoalg.RSAProcessor
 	vaultConnector keys.VaultConnector
 	cryptoKeyRepo  keys.CryptoKeyRepository
 	logger         logger.Logger
@@ -39,9 +39,9 @@ func NewBlobUploadService(
 	blobRepository blobs.BlobRepository,
 	vaultConnector keys.VaultConnector,
 	cryptoKeyRepo keys.CryptoKeyRepository,
-	aesProcessor crypto.AESProcessor,
-	ecdsaProcessor crypto.ECDSAProcessor,
-	rsaProcessor crypto.RSAProcessor,
+	aesProcessor cryptoalg.AESProcessor,
+	ecdsaProcessor cryptoalg.ECDSAProcessor,
+	rsaProcessor cryptoalg.RSAProcessor,
 	logger logger.Logger,
 ) (blobs.BlobUploadService, error) {
 	return &blobUploadService{
@@ -77,7 +77,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 		signatures, originalFileNames, err := s.applyCryptographicOperation(
 			form,
 			cryptoKeyMeta.Algorithm,
-			crypto.OperationSigning,
+			cryptoalg.OperationSigning,
 			keyBytes,
 			cryptoKeyMeta.KeySize,
 		)
@@ -94,7 +94,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 		}
 
 		// Create multipart form for signature files
-		signatureForm, err := utils.CreateMultipleFilesForm(signatures, signatureFileNames)
+		signatureForm, err := httputil.CreateMultipleFilesForm(signatures, signatureFileNames)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create signature form: %w", err)
 		}
@@ -137,7 +137,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 		encryptedContents, encryptedFileNames, err := s.applyCryptographicOperation(
 			form,
 			cryptoKeyMeta.Algorithm,
-			crypto.OperationEncryption,
+			cryptoalg.OperationEncryption,
 			keyBytes,
 			cryptoKeyMeta.KeySize,
 		)
@@ -146,7 +146,7 @@ func (s *blobUploadService) Upload(ctx context.Context, form *multipart.Form, us
 		}
 
 		// Create form with encrypted files
-		uploadForm, err = utils.CreateMultipleFilesForm(encryptedContents, encryptedFileNames)
+		uploadForm, err = httputil.CreateMultipleFilesForm(encryptedContents, encryptedFileNames)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create encrypted form: %w", err)
 		}
@@ -252,24 +252,24 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 		var processedBytes []byte
 
 		switch algorithm {
-		case crypto.AlgorithmAES:
+		case cryptoalg.AlgorithmAES:
 			// AES only supports encryption, not signing
 			switch operation {
-			case crypto.OperationEncryption:
+			case cryptoalg.OperationEncryption:
 				processedBytes, err = s.aesProcessor.Encrypt(data, keyBytes)
 				if err != nil {
 					return nil, nil, fmt.Errorf("AES encryption failed for '%s': %w", fileHeader.Filename, err)
 				}
-			case crypto.OperationSigning:
+			case cryptoalg.OperationSigning:
 				return nil, nil, fmt.Errorf("AES does not support signing operations; use RSA or ECDSA for digital signatures")
 			default:
 				return nil, nil, fmt.Errorf("unsupported operation '%s' for AES; only encryption is supported", operation)
 			}
 
-		case crypto.AlgorithmRSA:
+		case cryptoalg.AlgorithmRSA:
 			// RSA supports both encryption and signing
 			switch operation {
-			case crypto.OperationEncryption:
+			case cryptoalg.OperationEncryption:
 				// Unmarshal public key from PKIX format
 				publicKeyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 				if err != nil {
@@ -285,7 +285,7 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 					return nil, nil, fmt.Errorf("RSA encryption failed for '%s': %w", fileHeader.Filename, err)
 				}
 
-			case crypto.OperationSigning:
+			case cryptoalg.OperationSigning:
 				// Unmarshal private key from PKCS#1 format
 				privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
 				if err != nil {
@@ -301,10 +301,10 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 				return nil, nil, fmt.Errorf("unsupported operation '%s' for RSA; use 'encryption' or 'signing'", operation)
 			}
 
-		case crypto.AlgorithmECDSA:
+		case cryptoalg.AlgorithmECDSA:
 			// ECDSA only supports signing, not encryption
 			switch operation {
-			case crypto.OperationSigning:
+			case cryptoalg.OperationSigning:
 				// Validate key bytes length for ECDSA
 				if len(keyBytes) < 96 {
 					return nil, nil, fmt.Errorf("ECDSA key bytes too short: expected at least 96 bytes, got %d", len(keyBytes))
@@ -345,7 +345,7 @@ func (s *blobUploadService) applyCryptographicOperation(form *multipart.Form, al
 					return nil, nil, fmt.Errorf("ECDSA signing failed for '%s': %w", fileHeader.Filename, err)
 				}
 
-			case crypto.OperationEncryption:
+			case cryptoalg.OperationEncryption:
 				return nil, nil, fmt.Errorf("ECDSA does not support encryption; use RSA for asymmetric encryption")
 
 			default:
@@ -430,8 +430,8 @@ type blobDownloadService struct {
 	blobRepository blobs.BlobRepository
 	vaultConnector keys.VaultConnector
 	cryptoKeyRepo  keys.CryptoKeyRepository
-	aesProcessor   crypto.AESProcessor
-	rsaProcessor   crypto.RSAProcessor
+	aesProcessor   cryptoalg.AESProcessor
+	rsaProcessor   cryptoalg.RSAProcessor
 	logger         logger.Logger
 }
 
@@ -441,8 +441,8 @@ func NewBlobDownloadService(
 	blobRepository blobs.BlobRepository,
 	vaultConnector keys.VaultConnector,
 	cryptoKeyRepo keys.CryptoKeyRepository,
-	aesProcessor crypto.AESProcessor,
-	rsaProcessor crypto.RSAProcessor,
+	aesProcessor cryptoalg.AESProcessor,
+	rsaProcessor cryptoalg.RSAProcessor,
 	logger logger.Logger,
 ) (blobs.BlobDownloadService, error) {
 	return &blobDownloadService{
@@ -479,12 +479,12 @@ func (s *blobDownloadService) DownloadByID(ctx context.Context, blobID string, d
 		}
 
 		switch cryptoKeyMeta.Algorithm {
-		case crypto.AlgorithmAES:
+		case cryptoalg.AlgorithmAES:
 			processedBytes, err = s.aesProcessor.Decrypt(blobBytes, keyBytes)
 			if err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
-		case crypto.AlgorithmRSA:
+		case cryptoalg.AlgorithmRSA:
 			privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing private key: %w", err)

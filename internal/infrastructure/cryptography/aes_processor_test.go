@@ -6,8 +6,8 @@ package cryptography
 import (
 	"testing"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
-	pkgTesting "github.com/MGTheTrain/crypto-vault/internal/pkg/testing"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/testutil"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,9 +18,9 @@ const (
 	TestAESKey256 = 32
 )
 
-func setupAESProcessor(t *testing.T) crypto.AESProcessor {
+func setupAESProcessor(t *testing.T) cryptoalg.AESProcessor {
 	t.Helper()
-	logger := pkgTesting.SetupTestLogger(t)
+	logger := testutil.SetupTestLogger(t)
 	processor, err := NewAESProcessor(logger)
 	require.NoError(t, err)
 	return processor

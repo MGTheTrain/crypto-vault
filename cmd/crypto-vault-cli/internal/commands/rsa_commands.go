@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/infrastructure/cryptography"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 
@@ -15,7 +15,7 @@ import (
 
 // RSACommandHandler encapsulates logic for handling RSA operations via CLI.
 type RSACommandHandler struct {
-	rsaProcessor crypto.RSAProcessor
+	rsaProcessor cryptoalg.RSAProcessor
 	logger       logger.Logger
 }
 

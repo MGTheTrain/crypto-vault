@@ -1,4 +1,7 @@
-package utils
+//go:build unit
+// +build unit
+
+package strutil
 
 import (
 	"testing"

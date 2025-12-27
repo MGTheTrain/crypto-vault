@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 
-	cryptoDomain "github.com/MGTheTrain/crypto-vault/internal/domain/crypto"
+	"github.com/MGTheTrain/crypto-vault/internal/domain/cryptoalg"
 	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
 )
 
@@ -23,7 +23,7 @@ type rsaProcessor struct {
 }
 
 // NewRSAProcessor creates and returns a new instance of rsaProcessor
-func NewRSAProcessor(logger logger.Logger) (cryptoDomain.RSAProcessor, error) {
+func NewRSAProcessor(logger logger.Logger) (cryptoalg.RSAProcessor, error) {
 	return &rsaProcessor{
 		logger: logger,
 	}, nil

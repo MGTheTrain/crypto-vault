@@ -8,32 +8,34 @@ jobs:
   validate:
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Setup Go 1.25.x
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.25.x"
 
-    - name: Setup Go 1.25.x
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.25.x'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shfmt make
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y shfmt make
-        
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
-        go install golang.org/x/tools/cmd/goimports@v0.40.0
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+          go install golang.org/x/tools/cmd/goimports@v0.40.0
 
-        sudo npm install -g prettier@3.7.4
+          sudo npm install -g prettier@3.7.4
 
-    - name: Auto-format and lint
-      run: make format-and-lint
+          sudo pip3 install pre-commit --break-system-packages
 
-    - name: Check changes
-      run: |
-        status=$(git status --porcelain=v1)
-        if [[ -n "$status" ]]; then
-          git diff
-          exit 1
-        fi
+      - name: Run checks
+        run: |
+          make checks
+
+      - name: Check changes
+        run: |
+          status=$(git status --porcelain=v1)
+          if [[ -n "$status" ]]; then
+            git diff
+            exit 1
+          fi

@@ -1,45 +1,14 @@
-package testing
+package testutil
 
 import (
 	"bytes"
-	"fmt"
 	"mime/multipart"
 	"os"
 	"testing"
 
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/config"
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/logger"
-	"github.com/MGTheTrain/crypto-vault/internal/pkg/utils"
-
+	"github.com/MGTheTrain/crypto-vault/internal/pkg/httputil"
 	"github.com/stretchr/testify/require"
 )
-
-// SetupTestLogger sets up a logger for testing purposes.
-func SetupTestLogger(t *testing.T) logger.Logger {
-	t.Helper()
-
-	settings := &config.LoggerSettings{
-		LogLevel: config.LogLevelInfo,
-		LogType:  config.LogTypeConsole,
-	}
-
-	err := logger.InitLogger(settings)
-	require.NoError(t, err)
-
-	log, err := logger.GetLogger()
-	require.NoError(t, err)
-
-	return log
-}
-
-// CreateTestFile create a test files
-func CreateTestFile(fileName string, content []byte) error {
-	err := os.WriteFile(fileName, content, 0600)
-	if err != nil {
-		return fmt.Errorf("failed to create test file: %w", err)
-	}
-	return nil
-}
 
 // CreateTestFileAndForm creates a test file and form
 func CreateTestFileAndForm(t *testing.T, fileName string, fileContent []byte) (*multipart.Form, error) {
@@ -52,7 +21,7 @@ func CreateTestFileAndForm(t *testing.T, fileName string, fileContent []byte) (*
 		}
 	})
 
-	form, err := utils.CreateForm(fileContent, fileName)
+	form, err := httputil.CreateForm(fileContent, fileName)
 	require.NoError(t, err)
 
 	return form, nil

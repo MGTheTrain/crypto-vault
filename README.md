@@ -72,31 +72,31 @@ Usage: make [target] [PKG=./path/to/package] [TYPE=test,types]
 Available targets:
   help                                     Show this help message
 
-:Development
-  format-and-lint                          Run formatting and linting
+ Development:
+  checks                                   Run checks
   lint-results                             Write golang-ci lint findings to file
 
-:Testing
+ Testing:
   tests                                    Run tests (use PKG=./path TYPE=unit,integration,e2e)
   coverage-check                           Run unit and integration tests for internal packages and check coverage threshold
 
-:Coverage Reports
+ Coverage Reports:
   coverage-html                            Generate HTML coverage report. Open HTML file using a HTML viewer in browser
   coverage-func                            Show coverage by function in terminal
 
-:Docker
+ Docker:
   compose-start-infra                      Start integration test containers
   compose-start                            Start docker containers
   compose-stop                             Stop and remove docker containers
 
-:Code Generation
+ Code Generation:
   openapi-validate                         Validate OpenAPI specification
   openapi-types-generate                   Generate Go types from OpenAPI spec using oapi-codegen
   openapi-docs-generate                    Generate HTML documentation from OpenAPI spec
   openapi-docs-serve                       Serve OpenAPI documentation locally
   protoc-grpc-stubs-generate               Generate Go gRPC code from proto files
 
-:Cleanup
+ Cleanup:
   clean                                    Remove generated artifacts
 
 Test type options (TYPE parameter):
@@ -158,4 +158,4 @@ Access services at:
 
 ### Documentation
 
-You can find documentation [here](./docs)
+You can find documentation [here](./docs).
