@@ -49,10 +49,8 @@ func connectPostgres(settings config.DatabaseSettings) (*gorm.DB, error) {
 		}
 
 		// Try to create database (idempotent - ignore if exists)
-		_, err = sqlDB.Exec(fmt.Sprintf("CREATE DATABASE %s", settings.Name))
-		if err != nil {
-			return nil, fmt.Errorf("failed to create database: %w", err)
-		}
+		// nolint
+		_, _ = sqlDB.Exec(fmt.Sprintf("CREATE DATABASE %s", settings.Name))
 
 		// Close initial connection
 		if err := sqlDB.Close(); err != nil {

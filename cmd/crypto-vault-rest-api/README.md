@@ -8,7 +8,7 @@ RESTful API for managing cryptographic keys and securing data at rest (metadata 
 
 ### Prerequisites
 
-- Go 1.25+ installed
+- Go 1.25.5 installed
 - Docker (optional, for containerized deployment)
 
 ### Development Setup
@@ -16,6 +16,14 @@ RESTful API for managing cryptographic keys and securing data at rest (metadata 
 #### Local Development
 
 Set up your IDE with Go tooling (including the `delve` debugger) or use the provided [devcontainer.json](../../.devcontainer/devcontainer.json) for a consistent development environment.
+
+#### Start external services
+
+```bash
+cd ../..
+make compose-start-infra
+cd -
+```
 
 #### Run Locally
 

@@ -53,15 +53,15 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 
 ### Prerequisites
 
-- Go 1.25+ installed
-- Docker (optional, for containerized deployment)
-- Install the [DevContainer extension in VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) and use the provided [devcontainer.json](.devcontainer/devcontainer.json)
+- Go 1.25.5 installed
+- Docker
+- Optionally install the [DevContainer extension in VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) and use the provided [devcontainer.json](.devcontainer/devcontainer.json) (Recommended)
 
-If not using devcontainer, install dependencies for PKCS#11 integration on Debian 12+ or Ubuntu 22.04+:
+If not using devcontainer, install dependencies on `Debian 12` or `Ubuntu 24.04`:
 
 ```sh
 apt-get update
-apt-get install -y openssl opensc softhsm libssl-dev libengine-pkcs11-openssl
+./scripts/install-deps.sh
 ```
 
 ### Make targets
@@ -126,14 +126,16 @@ You can find applications utilizing [internal packages](./internal/) in the [cmd
 
 ### Quick Start
 
-**Option 1: Local Development**
+#### Run Locally
 
 ```bash
 # REST API
+make compose-start-infra # Start external services (Prerequisite)
 cd cmd/crypto-vault-rest-api
 go run main.go --config ../../configs/rest-app.yaml
 
 # gRPC API
+make compose-start-infra # Start external services (Prerequisite)
 cd cmd/crypto-vault-grpc-api
 go run main.go --config ../../configs/grpc-app.yaml
 
@@ -142,11 +144,13 @@ cd cmd/crypto-vault-cli
 go run main.go help
 ```
 
-**Option 2: Docker Deployment**
+#### Docker Deployment
 
 ```bash
-# From project root
+# Start internal and external services
 make compose-start
+# Stop and clear internal and external services
+make compose-stop
 ```
 
 Access services at:
