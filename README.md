@@ -53,15 +53,15 @@ Interfaces (CLIs, gRPC APIs, RESTful Web APIs) for managing cryptographic keys a
 
 ### Prerequisites
 
-- Go 1.25+ installed
+- Go 1.25.5 installed
 - Docker (optional, for containerized deployment)
 - Install the [DevContainer extension in VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) and use the provided [devcontainer.json](.devcontainer/devcontainer.json)
 
-If not using devcontainer, install dependencies for PKCS#11 integration on Debian 12+ or Ubuntu 22.04+:
+If not using devcontainer, install dependencies on `Debian 12` or `Ubuntu 24.04`:
 
 ```sh
 apt-get update
-apt-get install -y openssl opensc softhsm libssl-dev libengine-pkcs11-openssl
+./scripts/install-deps.sh
 ```
 
 ### Make targets
@@ -126,7 +126,13 @@ You can find applications utilizing [internal packages](./internal/) in the [cmd
 
 ### Quick Start
 
-**Option 1: Local Development**
+#### Start external services
+
+```bash
+make compose-start-infra
+```
+
+#### Run Locally
 
 ```bash
 # REST API
@@ -142,11 +148,13 @@ cd cmd/crypto-vault-cli
 go run main.go help
 ```
 
-**Option 2: Docker Deployment**
+#### Docker Deployment
 
 ```bash
-# From project root
+# Start internal and external services
 make compose-start
+# Stop and clear internal and external services
+make compose-stop
 ```
 
 Access services at:
