@@ -8,7 +8,7 @@ RESTful API for managing cryptographic keys and securing data at rest (metadata 
 
 ### Prerequisites
 
-- Go 1.25+ installed
+- Go 1.25.5 installed
 - Docker (optional, for containerized deployment)
 
 ### Development Setup

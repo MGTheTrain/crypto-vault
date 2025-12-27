@@ -8,7 +8,7 @@ gRPC API for managing cryptographic keys and securing data at rest (metadata and
 
 ### Prerequisites
 
-- Go 1.25+ installed
+- Go 1.25.5 installed
 - Docker (optional, for containerized deployment)
 - `grpcurl` (for testing gRPC endpoints)
 
